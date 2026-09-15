@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conferência Mulheres Plenas 2026</title>
+    <meta name="description" content="Conferência Mulheres Plenas 2026, em Paragominas – PA. Uma realização da Igreja Evangelho Pleno. Garanta seu ingresso.">
+    <meta name="theme-color" content="#F5E8E2">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Conferência Mulheres Plenas 2026">
+    <meta property="og:description" content="Um encontro para mulheres que desejam viver algo novo. Garanta seu ingresso.">
+    <!-- EDITAR: imagem de compartilhamento (1200x630) -->
+    <meta property="og:image" content="assets/imagens/compartilhamento.jpg">
+    <link rel="icon" type="image/png" href="assets/imagens/marca/favicon-64.png">
+    <link rel="apple-touch-icon" href="assets/imagens/marca/apple-touch-180.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@500;700&family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500..900,0..100,0..1;1,9..144,500..900,0..100,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js" defer></script>
+    <script src="script.js" defer></script>
+    <script>
+        /* Abertura: liga antes da página pintar, para a landing não piscar por trás.
+           Se o script.js não começar a abertura em 6s (sem internet, erro), ela sai
+           sozinha. Depois que começou, quem encerra é o próprio script.js. */
+        document.documentElement.classList.add('entrada-ativa');
+        if (!location.hash && 'scrollRestoration' in history) history.scrollRestoration = 'manual';
+        setTimeout(function () {
+            var raiz = document.documentElement;
+            if (window.MP_ENTRADA_RODANDO || !raiz.classList.contains('entrada-ativa')) return;
+            raiz.classList.remove('entrada-ativa');
+            var entrada = document.getElementById('entrada');
+            if (entrada) entrada.remove();
+        }, 6000);
+    </script>
+</head>
+<body>
+
+    <!-- ENTRADA: abertura exibida a cada acesso (o script.js anima e remove) -->
+    <div class="entrada" id="entrada">
+        <div class="entrada-luz entrada-luz-1" aria-hidden="true"></div>
+        <div class="entrada-luz entrada-luz-2" aria-hidden="true"></div>
+        <div class="entrada-clarao" aria-hidden="true"></div>
+        <svg class="entrada-ramo entrada-ramo-1" viewBox="0 0 120 260" aria-hidden="true">
+            <path pathLength="1" d="M62 256C60 200 66 130 58 8"/>
+            <path pathLength="1" d="M61 214C38 206 22 188 16 164C38 168 55 186 61 214Z M61 214C44 196 30 180 16 164"/>
+            <path pathLength="1" d="M62 184C84 174 100 154 104 130C82 136 66 156 62 184Z M62 184C78 164 92 146 104 130"/>
+            <path pathLength="1" d="M61 150C40 142 26 124 22 102C42 106 57 124 61 150Z M61 150C46 132 34 116 22 102"/>
+            <path pathLength="1" d="M61 118C82 110 96 92 98 70C78 76 64 94 61 118Z M61 118C74 100 86 84 98 70"/>
+            <path pathLength="1" d="M60 86C42 78 32 62 30 42C48 48 58 64 60 86Z"/>
+            <path pathLength="1" d="M59 52C74 44 84 30 84 12C70 18 60 32 59 52Z"/>
+        </svg>
+        <svg class="entrada-ramo entrada-ramo-2" viewBox="0 0 120 260" aria-hidden="true">
+            <path pathLength="1" d="M62 256C60 200 66 130 58 8"/>
+            <path pathLength="1" d="M61 214C38 206 22 188 16 164C38 168 55 186 61 214Z M61 214C44 196 30 180 16 164"/>
+            <path pathLength="1" d="M62 184C84 174 100 154 104 130C82 136 66 156 62 184Z M62 184C78 164 92 146 104 130"/>
+            <path pathLength="1" d="M61 150C40 142 26 124 22 102C42 106 57 124 61 150Z M61 150C46 132 34 116 22 102"/>
+            <path pathLength="1" d="M61 118C82 110 96 92 98 70C78 76 64 94 61 118Z M61 118C74 100 86 84 98 70"/>
+            <path pathLength="1" d="M60 86C42 78 32 62 30 42C48 48 58 64 60 86Z"/>
+            <path pathLength="1" d="M59 52C74 44 84 30 84 12C70 18 60 32 59 52Z"/>
+        </svg>
+        <canvas class="entrada-pixels" aria-hidden="true"></canvas>
+        <canvas class="entrada-particulas" aria-hidden="true"></canvas>
+        <div class="entrada-conteudo" aria-hidden="true">
+            <div class="entrada-coracao">
+                <svg class="entrada-anel" viewBox="0 0 200 200">
+                    <defs><path id="entradaAnelTexto" d="M100,100 m-86,0 a86,86 0 1,1 172,0 a86,86 0 1,1 -172,0"/></defs>
+                    <g class="entrada-anel-giro">
+                        <text><textPath href="#entradaAnelTexto" textLength="538" lengthAdjust="spacing">MULHERES PLENAS • CONFERÊNCIA 2026 • PARAGOMINAS •</textPath></text>
+                    </g>
+                </svg>
+                <span class="entrada-onda"></span>
+                <span class="entrada-onda"></span>
+                <div class="entrada-flutua">
+                    <span class="entrada-camada">
+                        <img src="assets/imagens/marca/petala-1.png" alt="" width="900" height="898">
+                        <img class="entrada-petala-clara" src="assets/imagens/marca/petala-1-clara.png" alt="" width="900" height="898">
+                    </span>
+                    <span class="entrada-camada"><img src="assets/imagens/marca/petala-2.png" alt="" width="900" height="898"></span>
+                    <span class="entrada-camada"><img src="assets/imagens/marca/petala-3.png" alt="" width="900" height="898"></span>
+                </div>
+            </div>
+            <p class="entrada-conferencia">Conferência</p>
+            <div class="entrada-nome-wrap">
+                <img class="entrada-nome" src="assets/imagens/marca/mp-nome-claro.png" alt="" width="1000" height="358">
+                <span class="entrada-caneta"></span>
+            </div>
+            <p class="entrada-ano script">2026</p>
+        </div>
+        <button class="entrada-pular" type="button" aria-label="Pular abertura">pular</button>
+    </div>
+
+    <!-- Ramos de folhas reutilizados como decoração -->
+    <svg class="sprite" aria-hidden="true" focusable="false">
+        <symbol id="ramo" viewBox="0 0 120 260">
+            <path d="M62 256C60 200 66 130 58 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+            <path d="M61 214C38 206 22 188 16 164C38 168 55 186 61 214Z"/>
+            <path d="M62 184C84 174 100 154 104 130C82 136 66 156 62 184Z"/>
+            <path d="M61 150C40 142 26 124 22 102C42 106 57 124 61 150Z"/>
+            <path d="M61 118C82 110 96 92 98 70C78 76 64 94 61 118Z"/>
+            <path d="M60 86C42 78 32 62 30 42C48 48 58 64 60 86Z"/>
+            <path d="M59 52C74 44 84 30 84 12C70 18 60 32 59 52Z"/>
+        </symbol>
+        <symbol id="ramo-traco" viewBox="0 0 120 260">
+            <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M62 256C60 200 66 130 58 8"/>
+                <path d="M61 214C38 206 22 188 16 164C38 168 55 186 61 214Z M61 214C44 196 30 180 16 164"/>
+                <path d="M62 184C84 174 100 154 104 130C82 136 66 156 62 184Z M62 184C78 164 92 146 104 130"/>
+                <path d="M61 150C40 142 26 124 22 102C42 106 57 124 61 150Z M61 150C46 132 34 116 22 102"/>
+                <path d="M61 118C82 110 96 92 98 70C78 76 64 94 61 118Z M61 118C74 100 86 84 98 70"/>
+                <path d="M60 86C42 78 32 62 30 42C48 48 58 64 60 86Z"/>
+                <path d="M59 52C74 44 84 30 84 12C70 18 60 32 59 52Z"/>
+            </g>
+        </symbol>
+    </svg>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <a href="#topo" class="nav-logo" aria-label="Mulheres Plenas — início">
+            <img src="assets/imagens/marca/mp-horizontal-escuro.png" alt="Mulheres Plenas" width="1100" height="198">
+        </a>
+        <nav class="nav-links" aria-label="Principal">
+            <a href="#sobre" class="nav-link">Sobre</a>
+            <a href="#lineup" class="nav-link">Line-up</a>
+            <a href="#setores" class="nav-link">Ingressos</a>
+            <a href="#faq" class="nav-link">FAQ</a>
+        </nav>
+        <button class="nav-menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="menuOverlay">
+            <span class="r1"></span>
+            <span class="r2"></span>
+            <span class="r3"></span>
+        </button>
+    </header>
+
+    <!-- MENU (mobile e tablet) -->
+    <div class="menu-overlay" id="menuOverlay" aria-hidden="true">
+        <div class="menu-overlay-topo">
+            <img class="menu-overlay-logo" src="assets/imagens/marca/mp-horizontal-escuro.png" alt="Mulheres Plenas" width="1100" height="198">
+            <button class="menu-fechar" type="button" aria-label="Fechar menu">&#x2715;</button>
+        </div>
+        <nav class="menu-overlay-nav" aria-label="Menu">
+            <a href="#sobre" class="menu-overlay-link" data-fechar-menu><span>sobre</span></a>
+            <a href="#lineup" class="menu-overlay-link" data-fechar-menu><span>line-up</span></a>
+            <a href="#setores" class="menu-overlay-link" data-fechar-menu><span>ingressos</span></a>
+            <a href="#faq" class="menu-overlay-link" data-fechar-menu><span>faq</span></a>
+        </nav>
+        <svg class="folha folha--traco menu-folha" aria-hidden="true"><use href="#ramo-traco"/></svg>
+        <!-- EDITAR: datas -->
+        <p class="menu-overlay-info">00 e 00 de mês · Paragominas – PA</p>
+    </div>
+
+    <main>
+
+        <!-- HERO -->
+        <section class="hero" id="topo">
+            <svg class="folha folha--traco hero-folha-1" aria-hidden="true" data-flutuar><use href="#ramo-traco"/></svg>
+            <svg class="folha hero-folha-2" aria-hidden="true" data-flutuar><use href="#ramo"/></svg>
+
+            <div class="hero-grid">
+                <!-- coração da marca montado com as três pétalas -->
+                <div class="hero-coracao" aria-hidden="true">
+                    <div class="hero-halo"></div>
+                    <svg class="hero-anel" viewBox="0 0 200 200">
+                        <defs><path id="anelTexto" d="M100,100 m-86,0 a86,86 0 1,1 172,0 a86,86 0 1,1 -172,0"/></defs>
+                        <text><textPath href="#anelTexto" textLength="538" lengthAdjust="spacing">MULHERES PLENAS • CONFERÊNCIA 2026 • PARAGOMINAS •</textPath></text>
+                    </svg>
+                    <span class="petala petala-1"><span class="petala-mouse"><img src="assets/imagens/marca/petala-1.png" alt="" width="900" height="898"></span></span>
+                    <span class="petala petala-2"><span class="petala-mouse"><img src="assets/imagens/marca/petala-2.png" alt="" width="900" height="898"></span></span>
+                    <span class="petala petala-3"><span class="petala-mouse"><img src="assets/imagens/marca/petala-3.png" alt="" width="900" height="898"></span></span>
+                </div>
+
+                <div class="hero-texto">
+                    <p class="hero-topo">
+                        <span class="faixa faixa--tijolo">conferência</span>
+                        <span class="script hero-ano">2026</span>
+                    </p>
+                    <h1 class="hero-titulo">
+                        <img src="assets/imagens/marca/mp-nome-escuro.png" alt="Conferência Mulheres Plenas 2026" width="1000" height="358">
+                    </h1>
+                    <p class="hero-frase">um encontro para mulheres que desejam viver algo novo</p>
+                    <!-- EDITAR: datas -->
+                    <p class="hero-info">
+                        <span class="script hero-data">00 e 00 de mês</span>
+                        <span class="hero-local">Paragominas – PA</span>
+                    </p>
+                    <a href="#setores" class="btn-cta"><span class="btn-cta-text">Garanta seu ingresso</span></a>
+                </div>
+            </div>
+
+            <a href="#sobre" class="hero-rolar">role</a>
+        </section>
+
+        <!-- FAIXA CORRENTE -->
+        <div class="faixa-rolante" aria-hidden="true">
+            <div class="faixa-rolante-trilho">
+                <div class="faixa-rolante-grupo">
+                    <span>Mulheres Plenas</span><span class="estrela">✦</span>
+                    <span>Conferência 2026</span><span class="estrela">✦</span>
+                    <span>Paragominas – PA</span><span class="estrela">✦</span>
+                    <span>Garanta seu ingresso</span><span class="estrela">✦</span>
+                </div>
+                <div class="faixa-rolante-grupo">
+                    <span>Mulheres Plenas</span><span class="estrela">✦</span>
+                    <span>Conferência 2026</span><span class="estrela">✦</span>
+                    <span>Paragominas – PA</span><span class="estrela">✦</span>
+                    <span>Garanta seu ingresso</span><span class="estrela">✦</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- VÍDEO DA ÚLTIMA EDIÇÃO -->
+        <section class="recap" aria-labelledby="recapTitulo">
+            <h2 class="recap-titulo" id="recapTitulo">
+                <span class="script recap-kicker">reviva</span>
+                <span class="titulo">a última edição</span>
+            </h2>
+            <button class="recap-thumb" id="recapBtn" type="button" aria-label="Assistir ao vídeo da última edição">
+                <span class="recap-foto midia" data-rotulo="thumb do vídeo">
+                    <img src="assets/imagens/recap-thumb.jpg" alt="" loading="lazy">
+                    <span class="recap-play" aria-hidden="true"></span>
+                </span>
+                <span class="recap-legenda script">Mulheres Plenas 2025</span>
+            </button>
+        </section>
+
+        <!-- GALERIA 3D + SOBRE -->
+        <section class="sobre rasgado" id="sobre" aria-label="Sobre a conferência">
+            <div class="galeria-col">
+                <div class="galeria-sticky">
+                    <p class="galeria-titulo" aria-hidden="true">
+                        <span class="script">foi</span>
+                        <span class="titulo">incrível</span>
+                    </p>
+                    <!-- EDITAR: 8 fotos da edição anterior em assets/imagens/galeria/ -->
+                    <div class="galeria-stage">
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 1"><img src="assets/imagens/galeria/1.jpg" alt=""></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 2"><img src="assets/imagens/galeria/2.jpg" alt=""></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 3"><img src="assets/imagens/galeria/3.jpg" alt=""></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 4"><img src="assets/imagens/galeria/4.jpg" alt=""></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 5"><img src="assets/imagens/galeria/5.jpg" alt=""></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 6"><img src="assets/imagens/galeria/6.jpg" alt=""></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 7"><img src="assets/imagens/galeria/7.jpg" alt=""></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 8"><img src="assets/imagens/galeria/8.jpg" alt=""></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EDITAR: texto de apresentação -->
+            <div class="about">
+                <p class="about-text" data-revelar>A Conferência Mulheres Plenas 2026 é mais do que um evento, é uma <span class="highlight">convocação</span> para mulheres que desejam viver algo novo.</p>
+                <p class="about-text" data-revelar>Um lugar para se reunir, adorar, <span class="highlight">aprender</span> e voltar para casa transformada.</p>
+                <p class="about-text" data-revelar>Dias intensos, com preletoras, louvor e momentos que vão ficar na memória.</p>
+                <p class="about-text" data-revelar>E se fosse agora? E se fosse com você?</p>
+                <p class="about-text" data-revelar>Mais do que uma programação, um <span class="highlight">encontro marcado</span> com o seu propósito.</p>
+                <a href="#setores" class="btn-cta"><span class="btn-cta-text">Garanta seu ingresso</span></a>
+            </div>
+        </section>
+
+        <!-- O QUE TE ESPERA -->
+        <section class="espera" aria-labelledby="esperaTitulo">
+            <svg class="folha folha--traco espera-folha" aria-hidden="true" data-flutuar><use href="#ramo-traco"/></svg>
+            <h2 class="espera-cabecalho" id="esperaTitulo">
+                <span class="espera-pre">O que te espera na</span>
+                <img class="espera-logo" src="assets/imagens/marca/mp-horizontal-escuro.png" alt="Mulheres Plenas" width="1100" height="198" loading="lazy">
+                <span class="script espera-ano">2026</span>
+            </h2>
+            <!-- EDITAR: destaques da programação -->
+            <ul class="espera-lista">
+                <li class="espera-item">Preletoras <em>nacionais</em> e internacionais</li>
+                <li class="espera-item"><em>Momentos</em> de adoração</li>
+                <li class="espera-item">Stands <em>interativos</em></li>
+                <li class="espera-item"><em>Experiências</em> exclusivas</li>
+                <li class="espera-item espera-item--mais">
+                    <span>e muito</span>
+                    <span class="script espera-mais">mais...</span>
+                </li>
+            </ul>
+            <a href="#setores" class="btn-cta"><span class="btn-cta-text">Garanta seu ingresso</span></a>
+        </section>
+
+        <!-- LINE-UP -->
+        <section class="lineup rasgado" id="lineup" aria-labelledby="lineupTitulo">
+            <svg class="folha lineup-folha" aria-hidden="true" data-flutuar><use href="#ramo"/></svg>
+            <h2 class="lineup-titulo" id="lineupTitulo">
+                <span class="script lineup-kicker">quem vai ministrar</span>
+                <span class="faixa faixa--papel">line-up</span>
+            </h2>
+
+            <div class="lineup-carrossel">
+                <!-- EDITAR: fotos em assets/imagens/lineup/. A bio de cada pessoa fica no <template> logo abaixo do cartão. -->
+                <ul class="lineup-trilho">
+                    <li class="lineup-item">
+                        <button class="lineup-card" type="button" data-bio="bio-1">
+                            <span class="lineup-foto midia" data-rotulo="foto"><img src="assets/imagens/lineup/1.jpg" alt="" loading="lazy"></span>
+                            <span class="lineup-nome">Nome da Preletora</span>
+                            <span class="lineup-tag">preletora</span>
+                        </button>
+                        <template id="bio-1"><p>Breve biografia da preletora: quem é, o que lidera e qual mensagem carrega.</p><p>Um segundo parágrafo opcional com um <span class="highlight">destaque</span> importante.</p></template>
+                    </li>
+                    <li class="lineup-item">
+                        <button class="lineup-card" type="button" data-bio="bio-2">
+                            <span class="lineup-foto midia" data-rotulo="foto"><img src="assets/imagens/lineup/2.jpg" alt="" loading="lazy"></span>
+                            <span class="lineup-nome">Ministério de Louvor</span>
+                            <span class="lineup-tag">louvor</span>
+                        </button>
+                        <template id="bio-2"><p>Breve apresentação do ministério de louvor e da sua história.</p></template>
+                    </li>
+                    <li class="lineup-item">
+                        <button class="lineup-card" type="button" data-bio="bio-3">
+                            <span class="lineup-foto midia" data-rotulo="foto"><img src="assets/imagens/lineup/3.jpg" alt="" loading="lazy"></span>
+                            <span class="lineup-nome">Nome da Pastora</span>
+                            <span class="lineup-tag">pastora</span>
+                        </button>
+                        <template id="bio-3"><p>Breve biografia da pastora.</p></template>
+                    </li>
+                    <li class="lineup-item">
+                        <button class="lineup-card" type="button" data-bio="bio-4">
+                            <span class="lineup-foto midia" data-rotulo="foto"><img src="assets/imagens/lineup/4.jpg" alt="" loading="lazy"></span>
+                            <span class="lineup-nome">Nome da Cantora</span>
+                            <span class="lineup-tag">louvor</span>
+                        </button>
+                        <template id="bio-4"><p>Breve biografia da cantora.</p></template>
+                    </li>
+                    <li class="lineup-item">
+                        <button class="lineup-card" type="button" data-bio="bio-5">
+                            <span class="lineup-foto midia" data-rotulo="foto"><img src="assets/imagens/lineup/5.jpg" alt="" loading="lazy"></span>
+                            <span class="lineup-nome">Nome da Preletora</span>
+                            <span class="lineup-tag">preletora</span>
+                        </button>
+                        <template id="bio-5"><p>Breve biografia da preletora.</p></template>
+                    </li>
+                    <li class="lineup-item">
+                        <button class="lineup-card" type="button" data-bio="bio-6">
+                            <span class="lineup-foto midia" data-rotulo="foto"><img src="assets/imagens/lineup/6.jpg" alt="" loading="lazy"></span>
+                            <span class="lineup-nome">Nome da Banda</span>
+                            <span class="lineup-tag">louvor</span>
+                        </button>
+                        <template id="bio-6"><p>Breve apresentação da banda.</p></template>
+                    </li>
+                    <li class="lineup-item">
+                        <button class="lineup-card" type="button" data-bio="bio-7">
+                            <span class="lineup-foto midia" data-rotulo="foto"><img src="assets/imagens/lineup/7.jpg" alt="" loading="lazy"></span>
+                            <span class="lineup-nome">Nome da Preletora</span>
+                            <span class="lineup-tag">preletora</span>
+                        </button>
+                        <template id="bio-7"><p>Breve biografia da preletora.</p></template>
+                    </li>
+                    <li class="lineup-item">
+                        <button class="lineup-card" type="button" data-bio="bio-8">
+                            <span class="lineup-foto midia" data-rotulo="foto"><img src="assets/imagens/lineup/8.jpg" alt="" loading="lazy"></span>
+                            <span class="lineup-nome">Nome da Pastora</span>
+                            <span class="lineup-tag">pastora</span>
+                        </button>
+                        <template id="bio-8"><p>Breve biografia da pastora.</p></template>
+                    </li>
+                </ul>
+
+                <div class="lineup-nav">
+                    <button class="lineup-btn lineup-anterior" type="button" aria-label="Anterior">&#8592;</button>
+                    <button class="lineup-btn lineup-proximo" type="button" aria-label="Próximo">&#8594;</button>
+                </div>
+            </div>
+
+            <a href="#setores" class="btn-cta btn-cta--claro"><span class="btn-cta-text">Garanta seu ingresso</span></a>
+        </section>
+
+        <!-- NÃO PODE FICAR DE FORA + INGRESSOS -->
+        <section class="ingressos rasgado" aria-labelledby="ingressosTitulo">
+            <svg class="folha folha--traco ingressos-folha-1" aria-hidden="true" data-flutuar><use href="#ramo-traco"/></svg>
+            <svg class="folha ingressos-folha-2" aria-hidden="true" data-flutuar><use href="#ramo"/></svg>
+            <div class="ingressos-inner">
+                <p class="cant-pre script">Já entendeu que</p>
+                <h2 class="cant-titulo" id="ingressosTitulo">
+                    <span class="faixa faixa--nude cant-nao">não</span>
+                    <span class="faixa faixa--papel cant-pode">pode</span>
+                </h2>
+                <p class="cant-post titulo">ficar de fora.</p>
+                <p class="cant-sub">Escolha seu <span class="highlight-ingresso script">ingresso</span> abaixo:</p>
+
+                <!-- EDITAR: mapa ilustrativo. Troque por <img src="assets/imagens/mapa.png"> quando tiver o oficial. -->
+                <figure class="mapa">
+                    <svg viewBox="0 0 400 300" role="img" aria-label="Mapa dos setores: palco ao fundo, setor central à frente do palco e arquibancada ao redor">
+                        <rect class="mapa-palco" x="120" y="16" width="160" height="34" rx="6"/>
+                        <text class="mapa-rotulo" x="200" y="40">PALCO</text>
+                        <rect class="mapa-central" x="120" y="80" width="160" height="130" rx="6"/>
+                        <text class="mapa-rotulo" x="200" y="152">CENTRAL</text>
+                        <path class="mapa-arquibancada" d="M40 60 H100 V230 H300 V60 H360 V285 H40 Z"/>
+                        <text class="mapa-rotulo mapa-rotulo--claro" x="200" y="266">ARQUIBANCADA</text>
+                    </svg>
+                    <figcaption>Mapa ilustrativo</figcaption>
+                </figure>
+
+                <!-- EDITAR: lotes, tipos e valores. O link de compra é configurado uma vez só, em script.js. -->
+                <div class="setores" id="setores">
+                    <div class="setor">
+                        <div class="setor-cabecalho">
+                            <h3 class="setor-lote titulo">1º lote</h3>
+                            <p class="setor-nome">central</p>
+                        </div>
+                        <ul class="setor-cards">
+                            <li>
+                                <a class="ticket" href="#setores" data-link="ingressos">
+                                    <span class="ticket-tipo">Individual</span>
+                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
+                                    <span class="ticket-base"><span class="ticket-detalhe">1 ingresso</span><span class="ticket-acao">comprar</span></span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="ticket ticket--destaque" href="#setores" data-link="ingressos">
+                                    <span class="ticket-selo">mais vendido</span>
+                                    <span class="ticket-tipo">Combo dupla</span>
+                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
+                                    <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 2 ingressos</span><span class="ticket-acao">comprar</span></span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="ticket" href="#setores" data-link="ingressos">
+                                    <span class="ticket-tipo">Combo 3 amigas</span>
+                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
+                                    <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 3 ingressos</span><span class="ticket-acao">comprar</span></span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="ticket" href="#setores" data-link="ingressos">
+                                    <span class="ticket-tipo">Caravana</span>
+                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
+                                    <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 10+ ingressos</span><span class="ticket-acao">comprar</span></span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="setor">
+                        <div class="setor-cabecalho">
+                            <h3 class="setor-lote titulo">1º lote</h3>
+                            <p class="setor-nome">arquibancada</p>
+                        </div>
+                        <ul class="setor-cards">
+                            <li>
+                                <a class="ticket" href="#setores" data-link="ingressos">
+                                    <span class="ticket-tipo">Individual</span>
+                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
+                                    <span class="ticket-base"><span class="ticket-detalhe">1 ingresso</span><span class="ticket-acao">comprar</span></span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="ticket ticket--destaque" href="#setores" data-link="ingressos">
+                                    <span class="ticket-selo">mais vendido</span>
+                                    <span class="ticket-tipo">Combo dupla</span>
+                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
+                                    <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 2 ingressos</span><span class="ticket-acao">comprar</span></span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="ticket" href="#setores" data-link="ingressos">
+                                    <span class="ticket-tipo">Combo 3 amigas</span>
+                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
+                                    <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 3 ingressos</span><span class="ticket-acao">comprar</span></span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="ticket" href="#setores" data-link="ingressos">
+                                    <span class="ticket-tipo">Caravana</span>
+                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
+                                    <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 10+ ingressos</span><span class="ticket-acao">comprar</span></span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <a href="#setores" class="btn-cta btn-cta--claro" data-link="ingressos"><span class="btn-cta-text">Garanta seu ingresso</span></a>
+            </div>
+        </section>
+
+        <!-- CARAVANA -->
+        <section class="caravana rasgado" aria-labelledby="caravanaTitulo">
+            <svg class="folha folha--traco caravana-folha" aria-hidden="true" data-flutuar><use href="#ramo-traco"/></svg>
+            <h2 class="caravana-titulo" id="caravanaTitulo">
+                <span class="script caravana-kicker">ingresso</span>
+                <span class="faixa">caravana</span>
+            </h2>
+            <p class="caravana-sub">a opção ideal para você viver a Conferência Mulheres Plenas junto com as suas amigas!</p>
+
+            <div class="caravana-corpo">
+                <div class="caravana-foto">
+                    <div class="midia" data-rotulo="foto da caravana">
+                        <img src="assets/imagens/caravana.jpg" alt="Grupo de amigas em caravana para a conferência" loading="lazy">
+                    </div>
+                </div>
+                <div class="caravana-texto">
+                    <p data-revelar>Reúna <span class="sublinhado">10</span> ou mais pessoas e garanta os ingressos de uma só vez, com mais praticidade para organizar a sua caravana.</p>
+                    <p data-revelar><span class="highlight">Chame suas amigas,</span> monte o seu grupo e prepare-se para viver dias que podem <span class="sublinhado">marcar a sua história</span>.</p>
+                    <p data-revelar>Precisa de ajuda para montar sua caravana? Clique no botão abaixo e fale com a nossa equipe.</p>
+                </div>
+            </div>
+
+            <a href="#setores" class="btn-cta" data-link="caravana"><span class="btn-cta-text">Quero montar a minha caravana</span></a>
+        </section>
+
+        <!-- UPGRADE (adicional ao ingresso) -->
+        <section class="upgrade rasgado" aria-labelledby="upgradeTitulo">
+            <div class="upgrade-inner">
+                <h2 class="upgrade-titulo" id="upgradeTitulo">
+                    <span class="script upgrade-kicker">deixe ainda melhor com o</span>
+                    <span class="faixa faixa--papel">up+</span>
+                    <span class="faixa faixa--tijolo">grade</span>
+                </h2>
+
+                <div class="upgrade-conteudo">
+                    <p class="upgrade-desc" data-revelar>O UPGRADE é um adicional que pode ser aplicado em qualquer tipo de ingresso e garante <span class="highlight">benefícios exclusivos</span> para usar no dia da conferência, como:</p>
+
+                    <!-- EDITAR: itens e valores -->
+                    <ul class="upgrade-lista">
+                        <li class="upgrade-item"><span>Acesso antecipado</span><span>R$00</span></li>
+                        <li class="upgrade-item"><span>Caderno</span><span>R$00</span></li>
+                        <li class="upgrade-item"><span>Caneta</span><span>R$00</span></li>
+                        <li class="upgrade-item"><span>Pulseira</span><span>R$00</span></li>
+                        <li class="upgrade-item"><span>Kit exclusivo</span><span>R$00</span></li>
+                    </ul>
+
+                    <div class="upgrade-total">
+                        <div class="total-linha">
+                            <span>Todos os benefícios<br>sem o upgrade</span>
+                            <span class="preco-antigo">R$000</span>
+                        </div>
+                        <div class="total-linha">
+                            <span>Todos os benefícios<br><strong>no upgrade</strong></span>
+                            <span class="preco-novo">R$000</span>
+                        </div>
+                    </div>
+
+                    <a href="#setores" class="btn-cta" data-link="upgrade"><span class="btn-cta-text">Quero o upgrade</span></a>
+                </div>
+            </div>
+        </section>
+
+        <!-- MOMENTOS -->
+        <section class="momentos rasgado" aria-labelledby="momentosTitulo">
+            <h2 class="momentos-titulo" id="momentosTitulo">
+                <span class="titulo">momentos</span>
+                <span class="script momentos-kicker">da última edição</span>
+            </h2>
+            <!-- EDITAR: vídeos verticais curtos em assets/videos/momentos/ -->
+            <div class="momentos-grid">
+                <div class="momento">
+                    <div class="midia" data-rotulo="vídeo 01">
+                        <video src="assets/videos/momentos/01.mp4" muted loop playsinline preload="metadata"></video>
+                    </div>
+                    <button class="som-btn" type="button" aria-label="Ativar som" aria-pressed="false">
+                        <svg class="icone-mudo" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <svg class="icone-som" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16 8a5 5 0 010 8M18.5 5.5a9 9 0 010 13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+                <div class="momento">
+                    <div class="midia" data-rotulo="vídeo 02">
+                        <video src="assets/videos/momentos/02.mp4" muted loop playsinline preload="metadata"></video>
+                    </div>
+                    <button class="som-btn" type="button" aria-label="Ativar som" aria-pressed="false">
+                        <svg class="icone-mudo" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <svg class="icone-som" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16 8a5 5 0 010 8M18.5 5.5a9 9 0 010 13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+                <div class="momento">
+                    <div class="midia" data-rotulo="vídeo 03">
+                        <video src="assets/videos/momentos/03.mp4" muted loop playsinline preload="metadata"></video>
+                    </div>
+                    <button class="som-btn" type="button" aria-label="Ativar som" aria-pressed="false">
+                        <svg class="icone-mudo" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <svg class="icone-som" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16 8a5 5 0 010 8M18.5 5.5a9 9 0 010 13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="faq rasgado" id="faq" aria-labelledby="faqTitulo">
+            <svg class="folha folha--traco faq-folha" aria-hidden="true" data-flutuar><use href="#ramo-traco"/></svg>
+            <div class="faq-layout">
+                <h2 class="faq-titulo" id="faqTitulo">
+                    <span class="script faq-kicker">ficou com</span>
+                    <span class="titulo">dúvidas?</span>
+                </h2>
+
+                <!-- EDITAR: perguntas e respostas. Os trechos entre [colchetes] precisam de informação da conferência. -->
+                <div class="faq-lista">
+                    <div class="faq-item">
+                        <button class="faq-pergunta" type="button" aria-expanded="false">
+                            <span>Quando e onde acontecerá a conferência?</span>
+                            <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                        </button>
+                        <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                            <p>A Conferência Mulheres Plenas 2026 acontecerá nos dias [00 e 00 de mês de 2026], no [nome do local], em Paragominas – PA ([endereço completo]).</p>
+                        </div></div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-pergunta" type="button" aria-expanded="false">
+                            <span>Quem pode participar?</span>
+                            <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                        </button>
+                        <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                            <p>A conferência é para todas as mulheres que desejam viver dias de adoração, Palavra e comunhão, sejam membros da Igreja Evangelho Pleno ou de outras igrejas.</p>
+                        </div></div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-pergunta" type="button" aria-expanded="false">
+                            <span>O ingresso dá direito a todas as sessões?</span>
+                            <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                        </button>
+                        <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                            <p>Sim. O ingresso dá direito a todos os dias da conferência e acesso a todas as sessões.</p>
+                        </div></div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-pergunta" type="button" aria-expanded="false">
+                            <span>Posso comprar ingresso para apenas um dia?</span>
+                            <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                        </button>
+                        <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                            <p>Não. Não é possível adquirir ingressos para apenas um dia.</p>
+                            <p>Caso você só consiga participar de um dos dias, seu ingresso continuará válido normalmente.</p>
+                        </div></div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-pergunta" type="button" aria-expanded="false">
+                            <span>O ingresso inclui hospedagem e alimentação?</span>
+                            <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                        </button>
+                        <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                            <p>Não. Hospedagem e alimentação não estão inclusas e são de responsabilidade de cada participante.</p>
+                            <p>[Informe se haverá praça de alimentação no local.]</p>
+                        </div></div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-pergunta" type="button" aria-expanded="false">
+                            <span>Como funcionam os setores?</span>
+                            <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                        </button>
+                        <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                            <p>A conferência contará com dois setores:</p>
+                            <ul>
+                                <li>Setor Central</li>
+                                <li>Setor Arquibancada</li>
+                            </ul>
+                            <p>Ambos possuem assentos e estão sujeitos à disponibilidade. Após a compra não é possível trocar de setor.</p>
+                        </div></div>
+                    </div>
+
+                    <div class="faq-mais" id="faqMais">
+                        <div class="faq-mais-conteudo">
+                            <div class="faq-item">
+                                <button class="faq-pergunta" type="button" aria-expanded="false">
+                                    <span>Posso sair e retornar durante o dia?</span>
+                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                                </button>
+                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                                    <p>Sim. Você pode sair e retornar quantas vezes precisar, utilizando o mesmo ingresso.</p>
+                                </div></div>
+                            </div>
+
+                            <div class="faq-item">
+                                <button class="faq-pergunta" type="button" aria-expanded="false">
+                                    <span>Quais documentos devo apresentar no check-in?</span>
+                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                                </button>
+                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                                    <p>Apresente seu ingresso impresso ou o QR Code no celular para acessar a conferência.</p>
+                                </div></div>
+                            </div>
+
+                            <div class="faq-item">
+                                <button class="faq-pergunta" type="button" aria-expanded="false">
+                                    <span>Quais são as formas de pagamento?</span>
+                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                                </button>
+                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                                    <p>O pagamento pode ser feito por:</p>
+                                    <ul>
+                                        <li>Cartão de crédito (parcelamento conforme a plataforma de venda)</li>
+                                        <li>PIX</li>
+                                    </ul>
+                                </div></div>
+                            </div>
+
+                            <div class="faq-item">
+                                <button class="faq-pergunta" type="button" aria-expanded="false">
+                                    <span>Meu ingresso é transferível?</span>
+                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                                </button>
+                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                                    <p>Sim. Acesse o link recebido após a compra, entre com o e-mail usado na compra e atualize os dados da participante. [Informe quantas vezes a alteração pode ser feita.]</p>
+                                </div></div>
+                            </div>
+
+                            <div class="faq-item">
+                                <button class="faq-pergunta" type="button" aria-expanded="false">
+                                    <span>Qual é a política de reembolso?</span>
+                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                                </button>
+                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                                    <p>Os ingressos comprados pela internet podem ser cancelados em até 7 (sete) dias a partir da data da compra, conforme o Código de Defesa do Consumidor.</p>
+                                    <p>Após esse período não há reembolso, mas você pode transferir o ingresso para outra pessoa.</p>
+                                </div></div>
+                            </div>
+
+                            <div class="faq-item">
+                                <button class="faq-pergunta" type="button" aria-expanded="false">
+                                    <span>Posso levar crianças?</span>
+                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                                </button>
+                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                                    <p>[Informe a idade mínima, se haverá espaço kids e a partir de que idade se paga ingresso.]</p>
+                                </div></div>
+                            </div>
+
+                            <div class="faq-item">
+                                <button class="faq-pergunta" type="button" aria-expanded="false">
+                                    <span>Existe meia-entrada?</span>
+                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                                </button>
+                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                                    <p>[Informe as regras de meia-entrada da conferência. Confirme com a organização se ela se enquadra na Lei nº 12.933/2013.]</p>
+                                </div></div>
+                            </div>
+
+                            <div class="faq-item">
+                                <button class="faq-pergunta" type="button" aria-expanded="false">
+                                    <span>Como chegar e onde estacionar?</span>
+                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                                </button>
+                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                                    <p>[Descreva como chegar ao local em Paragominas e se há estacionamento.]</p>
+                                </div></div>
+                            </div>
+
+                            <div class="faq-item">
+                                <button class="faq-pergunta" type="button" aria-expanded="false">
+                                    <span>Tenho outra dúvida. Com quem falo?</span>
+                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                                </button>
+                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
+                                    <!-- EDITAR: contato -->
+                                    <p>Fale com a nossa equipe pelo e-mail <a href="mailto:contato@seuevento.com.br">contato@seuevento.com.br</a>.</p>
+                                </div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="faq-mais-btn" id="faqMaisBtn" type="button" aria-expanded="false" aria-controls="faqMais">
+                        <span class="faq-mais-rotulo faq-mais-rotulo--abrir">Clique aqui e <strong>saiba mais</strong></span>
+                        <span class="faq-mais-rotulo faq-mais-rotulo--fechar">Clique aqui e <strong>ver menos</strong></span>
+                        <svg class="faq-mais-icone" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 7.5l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- RODAPÉ -->
+    <footer class="rodape">
+        <!-- borda pontilhada: pixels desenhados pelo script, na cor da seção anterior -->
+        <canvas class="dither" aria-hidden="true"></canvas>
+        <svg class="folha folha--traco rodape-folha-1" aria-hidden="true"><use href="#ramo-traco"/></svg>
+        <svg class="folha folha--traco rodape-folha-2" aria-hidden="true"><use href="#ramo-traco"/></svg>
+
+        <img class="rodape-logo" src="assets/imagens/marca/mp-horizontal-claro.png" alt="Mulheres Plenas" width="1100" height="198" loading="lazy">
+
+        <div class="rodape-grid">
+            <p class="rodape-frase">A Conferência Mulheres Plenas 2026 é mais do que um evento, é uma <span class="highlight">convocação</span> para mulheres que nasceram para um tempo como este.</p>
+
+            <nav class="rodape-nav" aria-label="Rodapé">
+                <a href="#sobre" class="rodape-link">sobre</a>
+                <a href="#lineup" class="rodape-link">line-up</a>
+                <a href="#setores" class="rodape-link">ingressos</a>
+                <a href="#faq" class="rodape-link">faq</a>
+            </nav>
+
+            <!-- EDITAR: perfis nas redes sociais -->
+            <div class="rodape-social">
+                <a href="https://instagram.com/" target="_blank" rel="noopener" aria-label="Instagram">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.31.975.975 1.247 2.242 1.31 3.608.058 1.265.069 1.645.069 4.849s-.012 3.584-.07 4.85c-.062 1.366-.334 2.633-1.31 3.608-.975.975-2.242 1.247-3.608 1.31-1.265.058-1.645.069-4.849.069s-3.584-.012-4.85-.07c-1.366-.062-2.633-.334-3.608-1.31-.975-.975-1.247-2.242-1.31-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.334-2.633 1.31-3.608.975-.975 2.242-1.247 3.608-1.31C8.416 2.175 8.796 2.163 12 2.163zm0-2.163C8.741 0 8.332.014 7.052.072 5.197.157 3.355.673 2.014 2.014.673 3.355.157 5.197.072 7.052.014 8.332 0 8.741 0 12c0 3.259.014 3.668.072 4.948.085 1.855.601 3.697 1.942 5.038 1.341 1.341 3.183 1.857 5.038 1.942C8.332 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 1.855-.085 3.697-.601 5.038-1.942 1.341-1.341 1.857-3.183 1.942-5.038.058-1.28.072-1.689.072-4.948 0-3.259-.014-3.668-.072-4.948-.085-1.855-.601-3.697-1.942-5.038C20.645.673 18.803.157 16.948.072 15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+                </a>
+                <a href="https://youtube.com/" target="_blank" rel="noopener" aria-label="YouTube">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                </a>
+                <a href="https://facebook.com/" target="_blank" rel="noopener" aria-label="Facebook">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.026 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.971H15.83c-1.491 0-1.956.931-1.956 1.887v2.264h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+                </a>
+            </div>
+        </div>
+
+        <div class="rodape-realizacao">
+            <span class="rodape-realizacao-rotulo">realização</span>
+            <img src="assets/imagens/logo-igreja-branco.png" alt="Igreja Evangelho Pleno — Uma igreja completa" width="720" height="207" loading="lazy">
+        </div>
+
+        <small class="rodape-copy">&copy; 2026 Igreja Evangelho Pleno Paragominas. Todos os direitos reservados.</small>
+    </footer>
+
+    <!-- MODAL: BIO DO LINE-UP -->
+    <div class="modal" id="bioModal" role="dialog" aria-modal="true" aria-labelledby="bioNome" aria-hidden="true">
+        <div class="modal-fundo" data-fechar-modal></div>
+        <div class="bio-card" data-lenis-prevent>
+            <button class="modal-fechar" type="button" aria-label="Fechar" data-fechar-modal>&#x2715;</button>
+            <h3 class="bio-nome" id="bioNome"></h3>
+            <div class="bio-texto"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: VÍDEO -->
+    <div class="modal" id="videoModal" role="dialog" aria-modal="true" aria-label="Vídeo da última edição" aria-hidden="true">
+        <div class="modal-fundo" data-fechar-modal></div>
+        <div class="video-modal-conteudo">
+            <button class="modal-fechar modal-fechar--claro" type="button" aria-label="Fechar vídeo" data-fechar-modal>&#x2715;</button>
+            <div class="video-modal-frame"></div>
+        </div>
+    </div>
+
+</body>
+</html>
