@@ -35,15 +35,6 @@
     --lateral: clamp(16px, 5vw, 72px);
     --nav-altura: 72px;
     --ease-saida: cubic-bezier(0.22, 1, 0.36, 1);
-
-    /* enfeites que continuam rodando mesmo com "menos movimento" no sistema */
-    --giro-anel: 48s;
-    --giro-faixa: 34s;
-    --revelar-texto: 1.1s;
-    --revelar-barra: 1.1s;
-    --rolar-linha: 1.8s;
-    --revelar-menu: 0.55s;
-    --revelar-menu-barra: 0.75s;
     --sombra-papel: 0 14px 30px rgba(62, 26, 16, 0.16);
 
     /* granulado de papel e borda rasgada, em SVG embutido */
@@ -749,11 +740,11 @@ html.entrada-ativa .entrada.is-dissolvendo {
 }
 
 .menu-overlay.is-open .menu-overlay-link span {
-    animation: textReveal var(--revelar-menu) cubic-bezier(0.95, 0, 0.95, 1) forwards;
+    animation: textReveal 0.55s cubic-bezier(0.95, 0, 0.95, 1) forwards;
 }
 
 .menu-overlay.is-open .menu-overlay-link::after {
-    animation: barSweep var(--revelar-menu-barra) cubic-bezier(0.25, 0, 0.25, 0.8) forwards;
+    animation: barSweep 0.75s cubic-bezier(0.25, 0, 0.25, 0.8) forwards;
 }
 
 .menu-overlay.is-open .menu-overlay-link:nth-child(1) span,
@@ -862,16 +853,14 @@ html.entrada-ativa .entrada.is-dissolvendo {
     background: radial-gradient(circle, rgba(223, 185, 166, 0.75) 0%, rgba(223, 185, 166, 0) 62%);
 }
 
-/* 150%: folga suficiente para as pétalas abrirem ao rolar sem encostar
-   nas letras. O anel fica concêntrico com o quadro das pétalas. */
 .hero-anel {
     position: absolute;
-    left: -25%;
-    top: -25%;
-    width: 150%;
-    height: 150%;
+    left: -22%;
+    top: -22%;
+    width: 144%;
+    height: 144%;
     max-width: none;
-    animation: girar var(--giro-anel) linear infinite;
+    animation: girar 48s linear infinite;
 }
 
 .hero-anel text {
@@ -983,7 +972,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
 .faixa-rolante-trilho {
     display: flex;
     width: max-content;
-    animation: rolar var(--giro-faixa) linear infinite;
+    animation: rolar 34s linear infinite;
 }
 
 .faixa-rolante-grupo {
@@ -1253,7 +1242,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
 }
 
 .reveal-ready.is-revealed .reveal-word {
-    animation: textReveal var(--revelar-texto) cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    animation: textReveal 1.1s cubic-bezier(0.65, 0, 0.35, 1) forwards;
     animation-delay: var(--atraso, 0s);
 }
 
@@ -1267,7 +1256,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
 }
 
 .is-revealed .reveal-barra {
-    animation: barSweep var(--revelar-barra) cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    animation: barSweep 1.1s cubic-bezier(0.65, 0, 0.35, 1) forwards;
     animation-delay: var(--atraso, 0s);
 }
 
@@ -2728,7 +2717,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
         height: 40px;
         background: linear-gradient(var(--tijolo), transparent);
         transform-origin: top;
-        animation: rolarLinha var(--rolar-linha) ease-in-out infinite;
+        animation: rolarLinha 1.8s ease-in-out infinite;
     }
 
     /* galeria à esquerda (sticky), texto rolando à direita */
@@ -2737,14 +2726,8 @@ html.entrada-ativa .entrada.is-dissolvendo {
         grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     }
 
-    /* No desktop a coluna divide a linha do grid com o texto, então ela não
-       pode ter altura fixa — mas continua sendo o trilho da animação. Sem o
-       min-height a linha ficava do tamanho do .about (~200vh) e as 8 fotos
-       entravam em ~1 tela de rolagem, contra 1,4 no celular: o mesmo gesto de
-       scroll queimava a sequência inteira e as fotos pareciam só aparecer. */
     .galeria-col {
         height: auto;
-        min-height: 240vh;
     }
 
     .galeria-titulo .script {
@@ -2859,82 +2842,49 @@ html.entrada-ativa .entrada.is-dissolvendo {
 /* =============================================
    MOVIMENTO REDUZIDO
    ============================================= */
-/* Quem pediu menos movimento no sistema não recebe as animações fortes
-   (rolagem suave, paralaxe do mouse, vídeo tocando sozinho — ver script.js).
-   Os enfeites lentos e contínuos continuam: o anel do hero, a faixa rolante,
-   a linha do "rolar", a revelação dos textos e a barra que varre cada linha,
-   para o site ficar igual ao que se vê no celular.
-   ?animacoes=1 (classe .animar-mesmo-assim) libera tudo.
-
-   ATENÇÃO: a regra ampla abaixo (`*`) zera TODA animação declarada em CSS.
-   Toda animação nova de enfeite precisa ser devolvida aqui, senão ela nasce
-   morta nesta máquina — e, se estiver dentro de uma media query de desktop
-   (como .hero-rolar::after), o defeito só aparece na tela grande. */
 @media (prefers-reduced-motion: reduce) {
-    html:not(.animar-mesmo-assim) *,
-    html:not(.animar-mesmo-assim) *::before,
-    html:not(.animar-mesmo-assim) *::after {
+    *,
+    *::before,
+    *::after {
         animation-duration: 0.01ms !important;
         animation-delay: 0s !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
 
-    html:not(.animar-mesmo-assim) .hero-anel {
-        animation-duration: var(--giro-anel) !important;
+    /* Enfeites lentos e contínuos continuam mesmo com "menos movimento" no
+       sistema, para a página não ficar totalmente parada no computador.
+       São só animações de CSS: nenhuma delas esconde conteúdo, então não há
+       risco de um elemento ficar invisível se algo não rodar. */
+    .hero-anel {
+        animation-duration: 48s !important;
         animation-iteration-count: infinite !important;
     }
 
-    html:not(.animar-mesmo-assim) .faixa-rolante-trilho {
-        animation-duration: var(--giro-faixa) !important;
+    .faixa-rolante-trilho {
+        animation-duration: 34s !important;
         animation-iteration-count: infinite !important;
     }
 
-    html:not(.animar-mesmo-assim) .reveal-ready.is-revealed .reveal-word {
-        animation-duration: var(--revelar-texto) !important;
-        animation-delay: var(--atraso, 0s) !important;
-    }
-
-    /* a barra que varre cada linha faz parte da revelação do texto */
-    html:not(.animar-mesmo-assim) .is-revealed .reveal-barra {
-        animation-duration: var(--revelar-barra) !important;
-        animation-delay: var(--atraso, 0s) !important;
-    }
-
-    /* linha do "rolar" no hero: só existe a partir de 1024px */
-    html:not(.animar-mesmo-assim) .hero-rolar::after {
-        animation-duration: var(--rolar-linha) !important;
+    /* linha do "rolar" no hero (só existe a partir de 1024px) */
+    .hero-rolar::after {
+        animation-duration: 1.8s !important;
         animation-iteration-count: infinite !important;
     }
 
-    /* mesma revelação de texto, no menu do celular */
-    html:not(.animar-mesmo-assim) .menu-overlay.is-open .menu-overlay-link span {
-        animation-duration: var(--revelar-menu) !important;
+    /* revelação dos links do menu do celular */
+    .menu-overlay.is-open .menu-overlay-link span {
+        animation-duration: 0.55s !important;
     }
 
-    html:not(.animar-mesmo-assim) .menu-overlay.is-open .menu-overlay-link::after {
-        animation-duration: var(--revelar-menu-barra) !important;
+    .menu-overlay.is-open .menu-overlay-link::after {
+        animation-duration: 0.75s !important;
     }
 
-    html:not(.animar-mesmo-assim) .menu-overlay.is-open .menu-overlay-link:nth-child(1) span,
-    html:not(.animar-mesmo-assim) .menu-overlay.is-open .menu-overlay-link:nth-child(1)::after { animation-delay: 0.3s !important; }
-    html:not(.animar-mesmo-assim) .menu-overlay.is-open .menu-overlay-link:nth-child(2) span,
-    html:not(.animar-mesmo-assim) .menu-overlay.is-open .menu-overlay-link:nth-child(2)::after { animation-delay: 0.42s !important; }
-    html:not(.animar-mesmo-assim) .menu-overlay.is-open .menu-overlay-link:nth-child(3) span,
-    html:not(.animar-mesmo-assim) .menu-overlay.is-open .menu-overlay-link:nth-child(3)::after { animation-delay: 0.54s !important; }
-
-    /* Rodinha de "carregando" do checkout/pagamento/confirmação (pedido.css).
-       Essas páginas também carregam este arquivo, então a regra ampla acima
-       congelava a rodinha: durante o pagamento parecia que a página travou.
-       Indicador de progresso continua girando mesmo com menos movimento. */
-    html:not(.animar-mesmo-assim) .carregando::before {
-        animation-duration: 0.9s !important;
-        animation-iteration-count: infinite !important;
-    }
-}
-
-/* ingresso sem produto ativo no backend */
-.ticket.is-esgotado {
-    opacity: 0.55;
-    pointer-events: none;
+    .menu-overlay.is-open .menu-overlay-link:nth-child(1) span,
+    .menu-overlay.is-open .menu-overlay-link:nth-child(1)::after { animation-delay: 0.3s !important; }
+    .menu-overlay.is-open .menu-overlay-link:nth-child(2) span,
+    .menu-overlay.is-open .menu-overlay-link:nth-child(2)::after { animation-delay: 0.42s !important; }
+    .menu-overlay.is-open .menu-overlay-link:nth-child(3) span,
+    .menu-overlay.is-open .menu-overlay-link:nth-child(3)::after { animation-delay: 0.54s !important; }
 }

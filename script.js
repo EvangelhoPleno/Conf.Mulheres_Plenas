@@ -19,14 +19,7 @@
         videoRecapYoutubeId: ''  // só o ID: em youtube.com/watch?v=AbC123, é 'AbC123'
     };
 
-    /* "Menos movimento" no sistema (Windows: Acessibilidade > Efeitos visuais)
-       desliga só o movimento forte: rolagem suave, paralaxe do mouse e vídeo
-       que toca sozinho. Os enfeites — anel girando, faixa rolante, revelação
-       dos textos e as fotos que entram ao rolar — rodam sempre, para a
-       visualização no computador ficar igual à do celular.
-       ?animacoes=1 na URL libera também o movimento forte. */
-    var reduzirMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        && !document.documentElement.classList.contains('animar-mesmo-assim');
+    var reduzirMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var temGsap = typeof window.gsap !== 'undefined' && typeof window.ScrollTrigger !== 'undefined';
     var lenis = null;
     var BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
@@ -54,46 +47,6 @@
             a.target = '_blank';
             a.rel = 'noopener';
         });
-    }
-
-    /* ---------------------------------------------------------
-       PREÇOS DOS INGRESSOS — vêm do backend (config.js), que é quem
-       cobra. Sem API, os valores escritos no HTML continuam na tela.
-       --------------------------------------------------------- */
-    function preencherPrecos() {
-        var api = window.MP_CONFIG && window.MP_CONFIG.apiUrl;
-        if (!api || !window.fetch) return;
-
-        fetch(api.replace(/\/+$/, '') + '/api/produtos')
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (dados) {
-                if (!dados) return;
-                var porId = {};
-                dados.produtos.forEach(function (p) { porId[p.id] = p; });
-
-                document.querySelectorAll('.ticket[data-produto]').forEach(function (ticket) {
-                    var id = new URL(ticket.href, location.href).searchParams.get('produto');
-                    var produto = porId[id];
-                    var preco = ticket.querySelector('.ticket-preco');
-                    if (!produto) {
-                        ticket.classList.add('is-esgotado');
-                        ticket.removeAttribute('href');
-                        ticket.setAttribute('aria-disabled', 'true');
-                        var acao = ticket.querySelector('.ticket-acao');
-                        if (acao) acao.textContent = 'indisponível';
-                        return;
-                    }
-                    if (!preco) return;
-                    var reais = Math.floor(produto.precoUnitario / 100);
-                    var centavos = String(produto.precoUnitario % 100).padStart(2, '0');
-                    preco.innerHTML = '<small>R$</small>' + reais.toLocaleString('pt-BR') + '<small>,' + centavos + '</small>';
-                });
-
-                document.querySelectorAll('.setor-lote').forEach(function (el) {
-                    if (dados.produtos[0]) el.textContent = dados.produtos[0].lote;
-                });
-            })
-            .catch(function () { /* sem API: fica o HTML */ });
     }
 
     /* ---------------------------------------------------------
@@ -776,7 +729,7 @@
             espera = setTimeout(medir, 150);
         });
 
-        if (temGsap) {
+        if (temGsap && !reduzirMovimento) {
             progresso = 0;
             desenhado = -1;
             desenhar();
@@ -861,7 +814,7 @@
 
     function configurarRevelacao() {
         var alvos = Array.prototype.slice.call(document.querySelectorAll('[data-revelar]'));
-        if (!alvos.length || !('IntersectionObserver' in window)) return;
+        if (!alvos.length || reduzirMovimento || !('IntersectionObserver' in window)) return;
 
         alvos.forEach(function (el) {
             dividirPalavras(el);
@@ -927,13 +880,11 @@
         var camadas = gsap.utils.toArray('.hero-coracao .petala');
         if (camadas.length !== 3) return;
 
-        // Ao rolar, as pétalas se abrem devagar. As duas de cima sobem e a de
-        // baixo desce a mesma medida, e os lados se anulam, então o coração
-        // continua no meio do anel enquanto abre.
+        // ao rolar, as pétalas se abrem devagar
         var abertura = [
-            { x: -10, y: -12, r: -12 },
-            { x: 10, y: -12, r: 12 },
-            { x: 0, y: 12, r: 8 }
+            { x: -12, y: -6, r: -12 },
+            { x: 12, y: -12, r: 12 },
+            { x: 8, y: 12, r: 8 }
         ];
         camadas.forEach(function (camada, i) {
             gsap.to(camada, {
@@ -946,8 +897,7 @@
         });
 
         // com mouse, cada pétala acompanha o cursor numa profundidade diferente
-        // (movimento forte: sai quando o sistema pede menos movimento)
-        if (reduzirMovimento || !window.matchMedia('(pointer: fine)').matches) return;
+        if (!window.matchMedia('(pointer: fine)').matches) return;
         var hero = document.querySelector('.hero');
         var profundidade = [14, 24, 34];
         var movedores = camadas.map(function (camada) {
@@ -1097,7 +1047,7 @@
 
     // devolve a animação do hero, pausada, para tocar depois da abertura
     function iniciarAnimacoes() {
-        if (!temGsap) return null;
+        if (!temGsap || reduzirMovimento) return null;
 
         configurarPetalas();
         var heroTl = prepararEntradaHero();
@@ -1310,7 +1260,6 @@
        INÍCIO — o script é carregado com defer, então o DOM já existe
        --------------------------------------------------------- */
     configurarLinks();
-    preencherPrecos();
     iniciarRolagem();
     configurarAncoras();
     configurarNavbar();
