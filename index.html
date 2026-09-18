@@ -22,12 +22,21 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js" defer></script>
+    <script src="config.js"></script>
     <script src="script.js" defer></script>
     <script>
         /* Abertura: liga antes da página pintar, para a landing não piscar por trás.
            Se o script.js não começar a abertura em 6s (sem internet, erro), ela sai
            sozinha. Depois que começou, quem encerra é o próprio script.js. */
         document.documentElement.classList.add('entrada-ativa');
+        /* ?animacoes=1 liga as animações mesmo quando o sistema pede menos
+           movimento (Windows: Acessibilidade > Efeitos visuais). Fica
+           guardado no navegador; ?animacoes=0 volta ao normal. */
+        try {
+            if (/[?&]animacoes=1/.test(location.search)) localStorage.setItem('mp-animacoes', '1');
+            if (/[?&]animacoes=0/.test(location.search)) localStorage.removeItem('mp-animacoes');
+            if (localStorage.getItem('mp-animacoes') === '1') document.documentElement.classList.add('animar-mesmo-assim');
+        } catch (e) { /* navegador sem storage: segue o sistema */ }
         if (!location.hash && 'scrollRestoration' in history) history.scrollRestoration = 'manual';
         setTimeout(function () {
             var raiz = document.documentElement;
@@ -394,7 +403,8 @@
                     <figcaption>Mapa ilustrativo</figcaption>
                 </figure>
 
-                <!-- EDITAR: lotes, tipos e valores. O link de compra é configurado uma vez só, em script.js. -->
+                <!-- Cada ticket abre checkout.html?produto=<setor>-<tipo>. Preços e lote vêm do backend
+                     (backend/src/catalogo.js) e substituem os valores abaixo quando a API responde. -->
                 <div class="setores" id="setores">
                     <div class="setor">
                         <div class="setor-cabecalho">
@@ -403,14 +413,14 @@
                         </div>
                         <ul class="setor-cards">
                             <li>
-                                <a class="ticket" href="#setores" data-link="ingressos">
+                                <a class="ticket" href="checkout.html?produto=central-individual" data-produto>
                                     <span class="ticket-tipo">Individual</span>
                                     <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
                                     <span class="ticket-base"><span class="ticket-detalhe">1 ingresso</span><span class="ticket-acao">comprar</span></span>
                                 </a>
                             </li>
                             <li>
-                                <a class="ticket ticket--destaque" href="#setores" data-link="ingressos">
+                                <a class="ticket ticket--destaque" href="checkout.html?produto=central-dupla" data-produto>
                                     <span class="ticket-selo">mais vendido</span>
                                     <span class="ticket-tipo">Combo dupla</span>
                                     <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
@@ -418,14 +428,14 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="ticket" href="#setores" data-link="ingressos">
+                                <a class="ticket" href="checkout.html?produto=central-trio" data-produto>
                                     <span class="ticket-tipo">Combo 3 amigas</span>
                                     <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
                                     <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 3 ingressos</span><span class="ticket-acao">comprar</span></span>
                                 </a>
                             </li>
                             <li>
-                                <a class="ticket" href="#setores" data-link="ingressos">
+                                <a class="ticket" href="checkout.html?produto=central-caravana" data-produto>
                                     <span class="ticket-tipo">Caravana</span>
                                     <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
                                     <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 10+ ingressos</span><span class="ticket-acao">comprar</span></span>
@@ -441,14 +451,14 @@
                         </div>
                         <ul class="setor-cards">
                             <li>
-                                <a class="ticket" href="#setores" data-link="ingressos">
+                                <a class="ticket" href="checkout.html?produto=arquibancada-individual" data-produto>
                                     <span class="ticket-tipo">Individual</span>
                                     <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
                                     <span class="ticket-base"><span class="ticket-detalhe">1 ingresso</span><span class="ticket-acao">comprar</span></span>
                                 </a>
                             </li>
                             <li>
-                                <a class="ticket ticket--destaque" href="#setores" data-link="ingressos">
+                                <a class="ticket ticket--destaque" href="checkout.html?produto=arquibancada-dupla" data-produto>
                                     <span class="ticket-selo">mais vendido</span>
                                     <span class="ticket-tipo">Combo dupla</span>
                                     <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
@@ -456,14 +466,14 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="ticket" href="#setores" data-link="ingressos">
+                                <a class="ticket" href="checkout.html?produto=arquibancada-trio" data-produto>
                                     <span class="ticket-tipo">Combo 3 amigas</span>
                                     <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
                                     <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 3 ingressos</span><span class="ticket-acao">comprar</span></span>
                                 </a>
                             </li>
                             <li>
-                                <a class="ticket" href="#setores" data-link="ingressos">
+                                <a class="ticket" href="checkout.html?produto=arquibancada-caravana" data-produto>
                                     <span class="ticket-tipo">Caravana</span>
                                     <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
                                     <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 10+ ingressos</span><span class="ticket-acao">comprar</span></span>
