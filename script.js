@@ -675,12 +675,13 @@
        "escuridão" daquela linha — que cresce de cima para baixo e, com a
        rolagem, avança: os pixels se desmancham enquanto o rodapé entra.
        --------------------------------------------------------- */
-    function configurarDither() {
-        var canvas = document.querySelector('.dither');
+    function configurarDither(canvas, semente) {
         if (!canvas || !canvas.getContext) return;
         var ctx = canvas.getContext('2d');
+        // a cor vem do próprio canvas: herda do rodapé ou vem de .dither--topo/base
+        var cor = getComputedStyle(canvas).getPropertyValue('--dither-cor').trim() || '#F5E8E2';
+        // só o rodapé "revela" a borda ao ser alcançado; as outras já nascem prontas
         var rodape = canvas.closest('footer');
-        var cor = getComputedStyle(rodape).getPropertyValue('--dither-cor').trim() || '#F5E8E2';
 
         var colunas = 0;
         var linhas = 0;
@@ -698,7 +699,7 @@
             linhas = novasLinhas;
             canvas.width = colunas;
             canvas.height = linhas;
-            limiares = gerarLimiares(colunas, linhas, 20260, 0.55);
+            limiares = gerarLimiares(colunas, linhas, semente, 0.55);
 
             desenhado = -1;
             desenhar();
@@ -729,7 +730,7 @@
             espera = setTimeout(medir, 150);
         });
 
-        if (temGsap && !reduzirMovimento) {
+        if (rodape && temGsap && !reduzirMovimento) {
             progresso = 0;
             desenhado = -1;
             desenhar();
@@ -747,6 +748,15 @@
                 }
             });
         }
+    }
+
+    function configurarDithers() {
+        // semente diferente por borda, senão as três repetem o mesmo desenho.
+        // O rodapé fica com a semente original, para o desenho dele não mudar.
+        Array.prototype.forEach.call(document.querySelectorAll('.dither'), function (canvas, i) {
+            var semente = canvas.closest('footer') ? 20260 : 20260 + (i + 1) * 977;
+            configurarDither(canvas, semente);
+        });
     }
 
     /* ---------------------------------------------------------
@@ -1005,7 +1015,7 @@
         });
 
         // faixas de título "coladas" ao entrar na tela
-        gsap.utils.toArray('.lineup-titulo .faixa, .cant-titulo .faixa, .caravana-titulo .faixa, .upgrade-titulo .faixa').forEach(function (faixa, i) {
+        gsap.utils.toArray('.lineup-titulo .faixa, .upgrade-titulo .faixa').forEach(function (faixa, i) {
             gsap.from(faixa, {
                 scale: 1.3,
                 opacity: 0,
@@ -1171,47 +1181,87 @@
     }
 
     /* ---------------------------------------------------------
-       VÍDEOS "MOMENTOS": tocam só quando visíveis, um com som por vez
+       VAGAS VENDIDAS (seção de ingressos)
+       O painel começa com hidden e SÓ é revelado quando chega um número
+       real. Sem dado, fica só a frase das 700 vagas — o site nunca mostra
+       contador inventado. A origem, nesta ordem:
+         1) window.MP_CONFIG.vagas = { total: 700, vendidos: 128 }
+         2) campo "vagas" da resposta de GET /api/produtos:
+            { "vagas": { "total": 700, "vendidos": 128 } }
        --------------------------------------------------------- */
-    function configurarMomentos() {
-        var videos = Array.prototype.slice.call(document.querySelectorAll('.momento video'));
-        var botoes = Array.prototype.slice.call(document.querySelectorAll('.som-btn'));
-        if (!videos.length) return;
+    function configurarVagas() {
+        var painel = document.getElementById('vagasPainel');
+        if (!painel) return;
 
-        function marcarBotao(btn, comSom) {
-            btn.classList.toggle('is-unmuted', comSom);
-            btn.setAttribute('aria-pressed', String(comSom));
-            btn.setAttribute('aria-label', comSom ? 'Desativar som' : 'Ativar som');
+        var barra = document.getElementById('vagasBarra');
+        var cheio = document.getElementById('vagasBarraCheio');
+        var elVendidos = document.getElementById('vagasVendidos');
+        var elTotal = document.getElementById('vagasTotal');
+        var elPct = document.getElementById('vagasPct');
+        if (!barra || !cheio || !elVendidos || !elTotal || !elPct) return;
+
+        function numero(v) {
+            return typeof v === 'number' && isFinite(v) && v >= 0;
         }
 
-        botoes.forEach(function (btn) {
-            var video = btn.closest('.momento').querySelector('video');
-            btn.addEventListener('click', function () {
-                var ligar = video.muted;
-                videos.forEach(function (v) { v.muted = true; });
-                botoes.forEach(function (b) { marcarBotao(b, false); });
-                if (ligar) {
-                    video.muted = false;
-                    video.play().catch(function () {});
-                    marcarBotao(btn, true);
-                }
-            });
-        });
+        function mostrar(vendidos, total) {
+            if (!numero(vendidos)) return;
+            if (!numero(total) || total <= 0) total = parseInt(painel.dataset.total, 10) || 700;
 
-        if (reduzirMovimento || !('IntersectionObserver' in window)) return;
+            var v = Math.min(Math.round(vendidos), total);
+            var pct = Math.round((v / total) * 100);
+
+            elVendidos.textContent = v.toLocaleString('pt-BR');
+            elTotal.textContent = total.toLocaleString('pt-BR');
+            elPct.textContent = pct + '%';
+            barra.setAttribute('aria-valuenow', String(pct));
+            barra.setAttribute('aria-valuetext', v + ' de ' + total + ' ingressos vendidos');
+            painel.hidden = false;
+
+            // dois quadros depois do reveal, para a transição sair do zero
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () { cheio.style.width = pct + '%'; });
+            });
+        }
+
+        var cfg = window.MP_CONFIG && window.MP_CONFIG.vagas;
+        if (cfg && numero(cfg.vendidos)) {
+            mostrar(cfg.vendidos, cfg.total);
+            return;
+        }
+
+        var api = window.MP_CONFIG && window.MP_CONFIG.apiUrl;
+        if (!api || !window.fetch) return;
+
+        fetch(api.replace(/\/+$/, '') + '/api/produtos')
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (dados) {
+                if (dados && dados.vagas) mostrar(dados.vagas.vendidos, dados.vagas.total);
+            })
+            .catch(function () { /* sem API: fica só a frase das 700 vagas */ });
+    }
+
+    /* ---------------------------------------------------------
+       ENTRADAS AO ROLAR (fotos da galeria, frase e ingressos)
+       As animações são de CSS e TERMINAM no estado natural do elemento.
+       Aqui só marcamos com .is-dentro quando o bloco entra na tela: se o
+       observador não rodar, o conteúdo simplesmente já está visível.
+       Quando o GSAP está cuidando das seções (movimento normal), saímos
+       e deixamos ele trabalhar, para as duas animações não brigarem.
+       --------------------------------------------------------- */
+    function configurarEntradas(ligar) {
+        var alvos = Array.prototype.slice.call(document.querySelectorAll('[data-entrada]'));
+        if (!ligar || !alvos.length || !('IntersectionObserver' in window)) return;
 
         var observador = new IntersectionObserver(function (entradas) {
             entradas.forEach(function (entrada) {
-                var video = entrada.target;
-                if (entrada.isIntersecting) {
-                    video.play().catch(function () {});
-                } else {
-                    video.pause();
-                }
+                if (!entrada.isIntersecting) return;
+                entrada.target.classList.add('is-dentro');
+                observador.unobserve(entrada.target);
             });
-        }, { threshold: 0.25 });
+        }, { rootMargin: '0px 0px -10% 0px' });
 
-        videos.forEach(function (v) { observador.observe(v); });
+        alvos.forEach(function (el) { observador.observe(el); });
     }
 
     /* ---------------------------------------------------------
@@ -1232,18 +1282,6 @@
                 resposta.classList.toggle('is-open', abrir);
                 resposta.inert = !abrir;
             });
-        });
-
-        var maisBtn = document.getElementById('faqMaisBtn');
-        var mais = document.getElementById('faqMais');
-        if (!maisBtn || !mais) return;
-
-        mais.inert = true;
-        maisBtn.addEventListener('click', function () {
-            var abrir = !mais.classList.contains('is-open');
-            mais.classList.toggle('is-open', abrir);
-            mais.inert = !abrir;
-            maisBtn.setAttribute('aria-expanded', String(abrir));
         });
     }
 
@@ -1267,10 +1305,12 @@
     configurarMidias();
     configurarRevelacao();
     var heroTl = iniciarAnimacoes();
-    configurarDither();
+    // sem GSAP (ou com menos movimento) as entradas ficam por conta do CSS
+    configurarEntradas(!heroTl);
+    configurarVagas();
+    configurarDithers();
     configurarCarrossel();
     configurarModais();
-    configurarMomentos();
     configurarFaq();
 
     executarEntrada(function (coracaoPousou) {

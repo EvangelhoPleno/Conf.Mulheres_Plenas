@@ -1198,6 +1198,48 @@ html.entrada-ativa .entrada.is-dissolvendo {
 .galeria-card:nth-child(7) { left: 6%;  top: 70%; }
 .galeria-card:nth-child(8) { left: 54%; top: 68%; }
 
+/* Entrada das fotos + flutuação leve.
+   São animações de CSS que TERMINAM no estado natural da foto: se o
+   observador não rodar, se o JS falhar ou se o sistema zerar a duração,
+   a foto simplesmente aparece no lugar. Nunca fica invisível. */
+.galeria-card:nth-child(1) { --i: 0; --giro:  -6deg; --flut: 7.4s; }
+.galeria-card:nth-child(2) { --i: 1; --giro:   5deg; --flut: 8.6s; }
+.galeria-card:nth-child(3) { --i: 2; --giro:  -3deg; --flut: 6.8s; }
+.galeria-card:nth-child(4) { --i: 3; --giro:   7deg; --flut: 9.2s; }
+.galeria-card:nth-child(5) { --i: 4; --giro:  -5deg; --flut: 7.9s; }
+.galeria-card:nth-child(6) { --i: 5; --giro:   4deg; --flut: 8.2s; }
+.galeria-card:nth-child(7) { --i: 6; --giro:  -7deg; --flut: 6.4s; }
+.galeria-card:nth-child(8) { --i: 7; --giro:   6deg; --flut: 8.9s; }
+
+.galeria-stage.is-dentro .galeria-card {
+    animation:
+        fotoEntra 0.9s var(--ease-saida) backwards,
+        fotoFlutua var(--flut, 8s) ease-in-out infinite;
+    animation-delay:
+        calc(var(--i, 0) * 0.09s),
+        calc(0.9s + var(--i, 0) * 0.09s);
+}
+
+@keyframes fotoEntra {
+    from {
+        opacity: 0;
+        transform: translateY(46px) scale(0.9) rotate(var(--giro, -4deg));
+    }
+}
+
+@keyframes fotoFlutua {
+    50% { transform: translateY(-9px); }
+}
+
+/* o título atrás das fotos respira junto */
+.galeria-sticky:has(.is-dentro) .galeria-titulo {
+    animation: tituloRespira 11s ease-in-out infinite;
+}
+
+@keyframes tituloRespira {
+    50% { transform: scale(1.04); }
+}
+
 .about {
     display: flex;
     flex-direction: column;
@@ -1525,11 +1567,29 @@ html.entrada-ativa .entrada.is-dissolvendo {
    NÃO PODE FICAR DE FORA + INGRESSOS
    ============================================= */
 .ingressos {
-    --anterior: var(--terracota);
-    padding: 104px var(--lateral) 112px;
+    /* cores das duas bordas quadriculadas: a de cima puxa o terracota do
+       line-up, a de baixo puxa o nude do upgrade */
+    --dither-topo: var(--terracota);
+    --dither-base: var(--nude);
+    position: relative;
+    padding: 132px var(--lateral) 140px;
     overflow: hidden;
     background: var(--tijolo);
     color: var(--rosado);
+}
+
+/* brilho quente atrás dos ingressos, para a área de compra "acender" */
+.ingressos::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: min(1100px, 130%);
+    aspect-ratio: 1;
+    translate: -50% 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(223, 185, 166, 0.16), transparent 62%);
+    pointer-events: none;
 }
 
 .ingressos-folha-1 {
@@ -1558,43 +1618,27 @@ html.entrada-ativa .entrada.is-dissolvendo {
     margin-inline: auto;
 }
 
-.cant-pre {
-    font-size: clamp(2rem, 8vw, 3.6rem);
-    color: var(--nude);
-    rotate: -3deg;
-}
-
-.cant-titulo {
-    display: flex;
-    flex-direction: column;
-    margin: 12px 0 8px;
-    font-size: clamp(4.2rem, 26vw, 13rem);
-    filter: drop-shadow(4px 6px 0 rgba(0, 0, 0, 0.2));
-}
-
-.cant-nao {
-    align-self: flex-start;
-    rotate: -3deg;
-}
-
-.cant-pode {
-    align-self: flex-end;
-    margin-top: -0.05em;
-    rotate: 2deg;
-}
-
-.cant-post {
-    align-self: flex-end;
-    font-style: italic;
-    font-size: clamp(2rem, 9vw, 4.4rem);
-    color: var(--rosado);
-}
-
+/* ---------- ponte para os ingressos ---------- */
 .cant-sub {
-    margin-top: clamp(40px, 7vw, 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: clamp(30px, 5vw, 48px);
     font-weight: 500;
     font-size: clamp(1.05rem, 2.6vw, 1.35rem);
+    line-height: 1.3;
     text-align: center;
+}
+
+/* fiozinhos dos dois lados da frase */
+.cant-sub::before,
+.cant-sub::after {
+    content: '';
+    flex: 1;
+    max-width: 120px;
+    height: 1.5px;
+    background: linear-gradient(to right, transparent, rgba(223, 185, 166, 0.55), transparent);
 }
 
 .highlight-ingresso {
@@ -1602,45 +1646,169 @@ html.entrada-ativa .entrada.is-dissolvendo {
     color: var(--nude);
 }
 
-.mapa {
-    width: 100%;
-    max-width: 520px;
-    margin: 36px auto 72px;
+/* ---------- bordas quadriculadas da seção ---------- */
+/* Mesmo canvas do rodapé. A de cima cai da cor da seção anterior para o
+   tijolo; a de baixo é espelhada e sobe para a cor da seção seguinte. */
+.ingressos .dither {
+    --dither-altura: 88px;
 }
 
-.mapa svg {
-    width: 100%;
-    height: auto;
+/* escopado em .ingressos de propósito: a regra .dither do rodapé aparece
+   depois no arquivo e, com a mesma especificidade, venceria o top/bottom */
+.ingressos .dither--topo {
+    top: 0;
+    bottom: auto;
+    --dither-cor: var(--dither-topo, var(--papel));
 }
 
-.mapa-palco        { fill: var(--rosado); }
-.mapa-central      { fill: var(--nude); }
-.mapa-arquibancada { fill: var(--terracota); }
+.ingressos .dither--base {
+    top: auto;
+    bottom: 0;
+    transform: scaleY(-1);
+    --dither-cor: var(--dither-base, var(--papel));
+}
 
-.mapa-rotulo {
-    fill: var(--tijolo);
+/* o conteúdo passa por cima das duas bordas */
+.ingressos-inner {
+    z-index: 2;
+}
+
+/* ---------- capacidade e andamento das vendas ---------- */
+.vagas {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 26px;
+    margin-bottom: clamp(44px, 6vw, 68px);
+}
+
+/* a escassez dita a seção: 700 em corpo grande, o resto discreto */
+.vagas-limite {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0 12px;
     font-family: var(--fonte-faixa);
-    font-size: 20px;
-    letter-spacing: 1px;
-    text-anchor: middle;
-}
-
-.mapa-rotulo--claro {
-    fill: var(--rosado);
-}
-
-.mapa figcaption {
-    margin-top: 10px;
-    font-size: 0.75rem;
+    font-size: clamp(1rem, 3vw, 1.35rem);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--nude);
     text-align: center;
-    opacity: 0.65;
 }
 
+.vagas-limite-num {
+    font-family: var(--fonte-titulo);
+    font-weight: 800;
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    font-size: clamp(3.4rem, 13vw, 5.6rem);
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    color: var(--papel);
+    text-shadow: 3px 4px 0 rgba(0, 0, 0, 0.18);
+}
+
+/* painel: só entra no ar quando existe número real de vendidos */
+.vagas-painel {
+    width: min(560px, 100%);
+    padding: 24px 26px 22px;
+    border: 1.5px solid rgba(223, 185, 166, 0.28);
+    border-radius: 20px;
+    background: rgba(62, 26, 16, 0.26);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    text-align: center;
+}
+
+.vagas-painel[hidden] { display: none; }
+
+.vagas-rotulo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--nude);
+}
+
+.vagas-chama {
+    width: 18px;
+    height: 18px;
+    fill: var(--terracota);
+    transform-origin: 50% 90%;
+}
+
+.vagas-chama-nucleo { fill: var(--nude); }
+
+.vagas-painel:not([hidden]) .vagas-chama {
+    animation: chamaBate 2.6s ease-in-out infinite;
+}
+
+@keyframes chamaBate {
+    50% { transform: scale(1.14); }
+}
+
+.vagas-numero {
+    margin-top: 6px;
+    font-family: var(--fonte-titulo);
+    font-weight: 800;
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    font-size: clamp(2.4rem, 9vw, 3.4rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--papel);
+}
+
+.vagas-de {
+    font-size: 0.42em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--nude);
+}
+
+.vagas-barra {
+    margin-top: 16px;
+}
+
+.vagas-barra-trilho {
+    display: block;
+    height: 12px;
+    padding: 3px;
+    border-radius: 999px;
+    background: rgba(245, 232, 226, 0.16);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.vagas-barra-cheio {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--terracota), var(--nude) 70%, var(--papel));
+    box-shadow: 0 0 10px rgba(223, 185, 166, 0.45);
+    /* o JS escreve a largura real; a transição faz ela subir do zero */
+    transition: width 1.1s var(--ease-saida);
+}
+
+.vagas-pct {
+    margin-top: 12px;
+    font-size: 0.86rem;
+    color: var(--nude);
+}
+
+.vagas-pct strong {
+    color: var(--papel);
+}
+
+/* ---------- setores ---------- */
 .setores {
     display: flex;
     flex-direction: column;
-    gap: 72px;
-    margin-bottom: 72px;
+    gap: clamp(48px, 7vw, 76px);
+    margin-bottom: 56px;
     scroll-margin-top: calc(var(--nav-altura) + 24px);
 }
 
@@ -1650,7 +1818,9 @@ html.entrada-ativa .entrada.is-dissolvendo {
     align-items: baseline;
     justify-content: space-between;
     gap: 4px 16px;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1.5px dashed rgba(223, 185, 166, 0.4);
 }
 
 .setor-lote {
@@ -1660,7 +1830,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
 
 .setor-nome {
     font-family: var(--fonte-faixa);
-    font-size: clamp(1.8rem, 7vw, 3.2rem);
+    font-size: clamp(1.4rem, 5vw, 2.2rem);
     line-height: 1;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -1670,38 +1840,60 @@ html.entrada-ativa .entrada.is-dissolvendo {
 .setor-cards {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
 }
 
+/* ---------- o ingresso ---------- */
 .ticket {
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     height: 100%;
-    padding: 18px 16px 16px;
-    border-radius: 6px;
+    padding: 20px 18px 18px;
+    border-radius: 12px;
     background: var(--papel);
     color: var(--texto);
     text-decoration: none;
-    transition: transform 0.3s var(--ease-saida), background-color 0.3s;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+    transition: transform 0.35s var(--ease-saida), box-shadow 0.35s var(--ease-saida);
 }
 
 .ticket:hover {
-    transform: translateY(-6px) rotate(-1deg);
+    transform: translateY(-8px) rotate(-1deg);
+    box-shadow: 0 20px 38px rgba(0, 0, 0, 0.26);
 }
 
+/* o mais vendido é o centro da decisão: fundo nude, anel de luz e,
+   no desktop, um degrau a mais de altura e de sombra */
 .ticket--destaque {
-    background: var(--nude);
+    background: linear-gradient(170deg, #EBC7B3, var(--nude));
+    /* o selo fica sobreposto, então o conteúdo alinha com os outros cards */
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.26), 0 0 0 2px rgba(245, 232, 226, 0.55);
+}
+
+.ticket--destaque:hover {
+    box-shadow: 0 26px 48px rgba(0, 0, 0, 0.34), 0 0 0 2px rgba(245, 232, 226, 0.85);
+}
+
+.ticket--destaque .ticket-preco {
+    font-size: clamp(2.1rem, 7.6vw, 3rem);
+}
+
+.ticket--destaque .ticket-acao {
+    color: var(--tijolo);
+    font-size: 0.82rem;
 }
 
 .ticket-selo {
-    align-self: flex-start;
-    padding: 2px 10px;
+    position: absolute;
+    top: -11px;
+    right: 14px;
+    padding: 3px 11px;
     border-radius: 999px;
-    background: var(--tijolo);
-    color: var(--rosado);
+    background: var(--terracota);
+    color: var(--papel);
     font-size: 0.62rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -1712,15 +1904,16 @@ html.entrada-ativa .entrada.is-dissolvendo {
     font-weight: 700;
     font-size: clamp(0.8rem, 2.6vw, 0.95rem);
     line-height: 1.2;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
+    color: var(--terracota);
 }
 
 .ticket-preco {
     font-family: var(--fonte-titulo);
     font-weight: 800;
     font-variation-settings: "SOFT" 100, "WONK" 1;
-    font-size: clamp(1.8rem, 7vw, 2.6rem);
+    font-size: clamp(1.9rem, 7vw, 2.7rem);
     line-height: 1;
     letter-spacing: -0.03em;
     color: var(--tijolo);
@@ -1738,17 +1931,58 @@ html.entrada-ativa .entrada.is-dissolvendo {
     flex-direction: column;
     gap: 8px;
     margin-top: auto;
-    padding-top: 12px;
+    padding-top: 14px;
     border-top: 2px dashed rgba(133, 53, 30, 0.3);
 }
 
+/* ---------- personalização do ingresso ---------- */
+/* marca do evento no topo, como num ingresso de verdade */
+.ticket-marca {
+    width: 100%;
+    max-width: 132px;
+    height: auto;
+    margin-bottom: 2px;
+}
+
+.ticket--destaque .ticket-marca {
+    /* sobre o nude o logo escuro já tem contraste; só tira um pouco do peso */
+    opacity: 0.92;
+}
+
+/* crédito da igreja no canhoto, discreto */
+.ticket-realizacao {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px dotted rgba(133, 53, 30, 0.28);
+}
+
+.ticket-realizacao-rotulo {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.55;
+}
+
+.ticket-realizacao img {
+    width: 100%;
+    max-width: 120px;
+    height: auto;
+    opacity: 0.68;
+}
+
+/* o círculo fica centrado na BORDA do card: como .ticket-base está 18px
+   para dentro (padding do .ticket), o recuo é 18px + metade do círculo */
 .ticket-base::before,
 .ticket-base::after {
     content: '';
     position: absolute;
-    top: -11px;
-    width: 20px;
-    height: 20px;
+    top: -8px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     background: var(--tijolo);
 }
@@ -1782,113 +2016,44 @@ html.entrada-ativa .entrada.is-dissolvendo {
     transform: translateX(4px);
 }
 
+/* ---------- entrada ao rolar (termina no estado natural) ---------- */
+.setor-cards li:nth-child(1) { --t: 0; }
+.setor-cards li:nth-child(2) { --t: 1; }
+.setor-cards li:nth-child(3) { --t: 2; }
+.setor-cards li:nth-child(4) { --t: 3; }
+
+.setor.is-dentro .setor-cabecalho {
+    animation: sobeSuave 0.6s var(--ease-saida) backwards;
+}
+
+.setor.is-dentro .ticket {
+    animation: sobeSuave 0.6s var(--ease-saida) backwards;
+    animation-delay: calc(0.12s + var(--t, 0) * 0.08s);
+}
+
+@keyframes sobeSuave {
+    from { opacity: 0; transform: translateY(26px); }
+}
+
 .ingressos-inner > .btn-cta {
     align-self: center;
+    padding-inline: clamp(34px, 6vw, 58px);
+    font-size: clamp(0.95rem, 2.4vw, 1.08rem);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s var(--ease-saida), box-shadow 0.3s var(--ease-saida);
 }
 
-/* =============================================
-   CARAVANA
-   ============================================= */
-.caravana {
-    --anterior: var(--tijolo);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 104px var(--lateral) 112px;
-    overflow: hidden;
-    background: var(--papel);
-    text-align: center;
-}
-
-.caravana-folha {
-    left: -36px;
-    bottom: 80px;
-    width: 120px;
-    height: 260px;
-    rotate: 18deg;
-}
-
-.caravana-titulo {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    filter: drop-shadow(3px 5px 0 rgba(62, 26, 16, 0.14));
-}
-
-.caravana-kicker {
-    font-size: clamp(2rem, 8vw, 3.2rem);
-    rotate: -4deg;
-    margin-bottom: 2px;
-}
-
-.caravana-titulo .faixa {
-    font-size: clamp(3.4rem, 18vw, 8rem);
-    rotate: 1.5deg;
-}
-
-.caravana-sub {
-    position: relative;
-    max-width: 680px;
-    margin: 24px auto 56px;
-    font-family: var(--fonte-titulo);
-    font-style: italic;
-    font-weight: 600;
-    font-variation-settings: "SOFT" 100, "WONK" 1;
-    font-size: clamp(1.25rem, 3.6vw, 1.9rem);
-    line-height: 1.2;
-    color: var(--tijolo);
-}
-
-.caravana-corpo {
-    position: relative;
-    display: grid;
-    gap: 48px;
-    align-items: center;
-    width: 100%;
-    max-width: 1100px;
-    margin-bottom: 48px;
-}
-
-.caravana-foto {
-    position: relative;
-    padding: 10px 10px 40px;
-    background: #FFFBF9;
-    box-shadow: var(--sombra-papel);
-    rotate: -2deg;
-}
-
-.caravana-foto::after {
-    content: '';
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    width: 120px;
-    height: 28px;
-    background: rgba(184, 104, 79, 0.55);
-    transform: translateX(-50%) rotate(-3deg);
-}
-
-.caravana-foto .midia {
-    aspect-ratio: 4 / 3;
-}
-
-.caravana-texto {
-    display: grid;
-    gap: 22px;
-}
-
-.caravana-texto p {
-    font-weight: 500;
-    font-size: clamp(1.02rem, 2.4vw, 1.2rem);
-    line-height: 1.5;
+.ingressos-inner > .btn-cta:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.38);
 }
 
 /* =============================================
    UPGRADE
    ============================================= */
 .upgrade {
-    --anterior: var(--papel);
+    /* a seção anterior agora é .ingressos (tijolo) */
+    --anterior: var(--tijolo);
     padding: 104px var(--lateral) 104px;
     background: var(--nude);
 }
@@ -2009,102 +2174,11 @@ html.entrada-ativa .entrada.is-dissolvendo {
 }
 
 /* =============================================
-   MOMENTOS
-   ============================================= */
-.momentos {
-    --anterior: var(--nude);
-    padding: 96px var(--lateral) 104px;
-    background: var(--papel);
-}
-
-.momentos-titulo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 48px;
-    text-align: center;
-}
-
-.momentos-titulo .titulo {
-    font-size: clamp(3rem, 15vw, 7rem);
-}
-
-.momentos-kicker {
-    font-size: clamp(1.7rem, 6.5vw, 2.8rem);
-    rotate: -3deg;
-}
-
-.momentos-grid {
-    display: grid;
-    gap: 32px;
-    max-width: 1200px;
-    margin-inline: auto;
-}
-
-/* vídeos em arco */
-.momento {
-    position: relative;
-    width: 100%;
-    max-width: 380px;
-    margin-inline: auto;
-    aspect-ratio: 9 / 14;
-    padding: 8px;
-    border-radius: 999px 999px 18px 18px;
-    background: var(--nude);
-    box-shadow: var(--sombra-papel);
-}
-
-.momento .midia {
-    position: absolute;
-    inset: 8px;
-    border-radius: 999px 999px 12px 12px;
-}
-
-.som-btn {
-    position: absolute;
-    right: 20px;
-    bottom: 20px;
-    z-index: 2;
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    border: none;
-    border-radius: 50%;
-    background: rgba(133, 53, 30, 0.8);
-    color: var(--rosado);
-    cursor: pointer;
-    transition: transform 0.2s, background-color 0.2s;
-}
-
-.som-btn:hover {
-    background: var(--tijolo);
-    transform: scale(1.08);
-}
-
-.som-btn svg {
-    width: 20px;
-    height: 20px;
-}
-
-.som-btn .icone-som,
-.som-btn.is-unmuted .icone-mudo {
-    display: none;
-}
-
-.som-btn.is-unmuted .icone-som {
-    display: block;
-}
-
-.momento:has(.is-missing) .som-btn {
-    display: none;
-}
-
-/* =============================================
    FAQ
    ============================================= */
 .faq {
-    --anterior: var(--papel);
+    /* a seção anterior agora é .upgrade (nude) */
+    --anterior: var(--nude);
     padding: 96px var(--lateral) 120px;
     overflow: hidden;
     background: var(--rosado);
@@ -2144,139 +2218,137 @@ html.entrada-ativa .entrada.is-dissolvendo {
 }
 
 .faq-lista {
-    border-bottom: 1.5px solid var(--tijolo);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
+/* Cada pergunta é um cartãozinho de papel, com cantos bem arredondados e
+   uma leve inclinação no hover — o mesmo jeito das polaroids e da faixa. */
 .faq-item {
-    border-top: 1.5px solid var(--tijolo);
+    --faq-num-col: 1.7rem;
+    position: relative;
+    border-radius: 26px;
+    background: var(--papel);
+    box-shadow: 0 2px 0 rgba(184, 104, 79, 0.14);
+    transition: box-shadow 0.35s var(--ease-saida), transform 0.35s var(--ease-saida), background-color 0.35s;
+}
+
+.faq-item:hover {
+    transform: translateY(-2px) rotate(-0.35deg);
+    box-shadow: 0 10px 24px rgba(184, 104, 79, 0.20);
+}
+
+.faq-item:has(.faq-pergunta[aria-expanded="true"]) {
+    background: #FFFBF9;
+    box-shadow: 0 12px 30px rgba(184, 104, 79, 0.22);
 }
 
 .faq-pergunta {
-    display: flex;
+    display: grid;
+    grid-template-columns: var(--faq-num-col) minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    gap: 18px;
     width: 100%;
-    padding: 20px 2px;
+    padding: 22px 24px;
     border: none;
+    border-radius: 26px;
     background: none;
     cursor: pointer;
     text-align: left;
-    font-weight: 700;
-    font-size: clamp(1rem, 2.4vw, 1.15rem);
-    line-height: 1.3;
-    transition: color 0.2s;
+    /* serifa macia da marca no lugar do sans grosso: bem mais delicado */
+    font-family: var(--fonte-titulo);
+    font-weight: 600;
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    font-size: clamp(1.05rem, 2.4vw, 1.24rem);
+    line-height: 1.32;
+    color: var(--tijolo);
+    transition: color 0.25s;
 }
 
 .faq-pergunta:hover {
-    color: var(--tijolo);
+    color: var(--terracota);
+}
+
+/* numeração escrita à mão, como as outras marcações da página */
+.faq-num {
+    font-family: var(--fonte-mao);
+    font-weight: 700;
+    font-size: 1.55rem;
+    line-height: 1;
+    color: var(--nude);
+    rotate: -8deg;
+    transition: color 0.35s, rotate 0.35s var(--ease-saida);
+}
+
+.faq-pergunta[aria-expanded="true"] .faq-num {
+    color: var(--terracota);
+    rotate: 4deg;
 }
 
 .faq-icone {
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    padding: 6px;
+    width: 30px;
+    height: 30px;
+    padding: 5px;
     border-radius: 50%;
-    background: var(--papel);
-    color: var(--tijolo);
-    transition: transform 0.35s var(--ease-saida), background-color 0.3s, color 0.3s;
+    background: var(--rosado);
+    color: var(--terracota);
+    transition: transform 0.4s var(--ease-saida), background-color 0.35s, color 0.35s;
 }
 
 .faq-pergunta[aria-expanded="true"] .faq-icone {
-    transform: rotate(45deg);
-    background: var(--tijolo);
-    color: var(--rosado);
+    transform: rotate(135deg);
+    background: var(--terracota);
+    color: var(--papel);
 }
 
 /* abre e fecha animando a altura real do conteúdo, sem max-height chutado */
-.faq-resposta,
-.faq-mais {
+.faq-resposta {
     display: grid;
     grid-template-rows: 0fr;
     transition: grid-template-rows 0.45s var(--ease-saida);
 }
 
-.faq-resposta.is-open,
-.faq-mais.is-open {
+.faq-resposta.is-open {
     grid-template-rows: 1fr;
 }
 
-.faq-mais {
-    transition-duration: 0.7s;
-}
-
-.faq-resposta-conteudo,
-.faq-mais-conteudo {
+.faq-resposta-conteudo {
     min-height: 0;
     overflow: hidden;
+    font-size: 0.97rem;
+    line-height: 1.7;
 }
 
-.faq-resposta-conteudo {
-    padding-inline: 2px;
-    font-size: 0.97rem;
-    line-height: 1.6;
+/* alinha a resposta com o texto da pergunta, depois do número */
+.faq-resposta-conteudo > * {
+    padding-left: calc(24px + var(--faq-num-col) + 18px);
+    padding-right: 24px;
+}
+
+/* fiozinho pontilhado separando pergunta e resposta, como o fim da página */
+.faq-resposta-conteudo > :first-child {
+    padding-top: 16px;
+    border-top: 1.5px dotted var(--nude);
+    margin-left: calc(24px + var(--faq-num-col) + 18px);
+    margin-right: 24px;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .faq-resposta-conteudo > :last-child {
-    margin-bottom: 22px;
+    padding-bottom: 24px;
 }
 
-.faq-resposta-conteudo p + p,
-.faq-resposta-conteudo p + ul,
-.faq-resposta-conteudo ul + p {
-    margin-top: 8px;
-}
-
-.faq-resposta-conteudo ul {
-    padding-left: 1.3em;
+.faq-resposta-conteudo p + p {
+    margin-top: 10px;
 }
 
 .faq-resposta-conteudo a {
-    color: var(--tijolo);
+    color: var(--terracota);
     font-weight: 700;
     text-underline-offset: 3px;
-}
-
-.faq-mais-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    width: 100%;
-    padding: 22px 0;
-    border: none;
-    border-top: 1.5px solid var(--tijolo);
-    background: none;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 1rem;
-}
-
-.faq-mais-btn strong {
-    font-family: var(--fonte-mao);
-    font-size: 1.8em;
-    font-weight: 700;
-    color: var(--terracota);
-}
-
-.faq-mais-rotulo--fechar,
-.faq-mais-btn[aria-expanded="true"] .faq-mais-rotulo--abrir {
-    display: none;
-}
-
-.faq-mais-btn[aria-expanded="true"] .faq-mais-rotulo--fechar {
-    display: block;
-}
-
-.faq-mais-icone {
-    width: 26px;
-    height: 26px;
-    transition: transform 0.3s var(--ease-saida);
-}
-
-.faq-mais-btn[aria-expanded="true"] .faq-mais-icone {
-    transform: rotate(180deg);
 }
 
 /* =============================================
@@ -2571,17 +2643,19 @@ html.entrada-ativa .entrada.is-dissolvendo {
     }
 
     .setor-cards {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 16px;
-    }
-
-    .momentos-grid {
+        /* 3 ingressos, 3 colunas: nenhuma sobra depois da remoção da caravana */
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        align-items: start;
+        gap: 20px;
+        align-items: stretch;
     }
 
-    .momento:nth-child(2) {
-        margin-top: 64px;
+    /* o do meio sobe um degrau e fica maior que os vizinhos */
+    .setor-card--dupla .ticket--destaque {
+        transform: scale(1.055);
+    }
+
+    .setor-card--dupla .ticket--destaque:hover {
+        transform: scale(1.055) translateY(-8px) rotate(-1deg);
     }
 
     .rodape {
@@ -2778,15 +2852,6 @@ html.entrada-ativa .entrada.is-dissolvendo {
         margin-bottom: 28px;
     }
 
-    .caravana-corpo {
-        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-        gap: 80px;
-    }
-
-    .caravana-texto {
-        text-align: left;
-    }
-
     .upgrade {
         padding: 128px var(--lateral) 120px;
     }
@@ -2864,6 +2929,41 @@ html.entrada-ativa .entrada.is-dissolvendo {
     .faixa-rolante-trilho {
         animation-duration: 34s !important;
         animation-iteration-count: infinite !important;
+    }
+
+    /* fotos da galeria: entrada + flutuação.
+       Precisa devolver também os atrasos, senão as 8 entram de uma vez. */
+    .galeria-stage.is-dentro .galeria-card {
+        animation-duration: 0.9s, var(--flut, 8s) !important;
+        animation-iteration-count: 1, infinite !important;
+        animation-delay:
+            calc(var(--i, 0) * 0.09s),
+            calc(0.9s + var(--i, 0) * 0.09s) !important;
+    }
+
+    .galeria-sticky:has(.is-dentro) .galeria-titulo {
+        animation-duration: 11s !important;
+        animation-iteration-count: infinite !important;
+    }
+
+    /* a barra de vagas cresce do zero: é o movimento que mostra o andamento */
+    .vagas-barra-cheio {
+        transition-duration: 1.1s !important;
+    }
+
+    .vagas-painel:not([hidden]) .vagas-chama {
+        animation-duration: 2.6s !important;
+        animation-iteration-count: infinite !important;
+    }
+
+    /* ingressos: entrada ao rolar */
+    .setor.is-dentro .setor-cabecalho {
+        animation-duration: 0.6s !important;
+    }
+
+    .setor.is-dentro .ticket {
+        animation-duration: 0.6s !important;
+        animation-delay: calc(0.12s + var(--t, 0) * 0.08s) !important;
     }
 
     /* linha do "rolar" no hero (só existe a partir de 1024px) */

@@ -236,7 +236,7 @@
                         <span class="titulo">incrível</span>
                     </p>
                     <!-- EDITAR: 8 fotos da edição anterior em assets/imagens/galeria/ -->
-                    <div class="galeria-stage">
+                    <div class="galeria-stage" data-entrada>
                         <div class="galeria-card"><div class="midia" data-rotulo="foto 1"><img src="assets/imagens/galeria/1.jpg" alt=""></div></div>
                         <div class="galeria-card"><div class="midia" data-rotulo="foto 2"><img src="assets/imagens/galeria/2.jpg" alt=""></div></div>
                         <div class="galeria-card"><div class="midia" data-rotulo="foto 3"><img src="assets/imagens/galeria/3.jpg" alt=""></div></div>
@@ -369,106 +369,100 @@
         </section>
 
         <!-- NÃO PODE FICAR DE FORA + INGRESSOS -->
-        <section class="ingressos rasgado" aria-labelledby="ingressosTitulo">
+        <section class="ingressos" aria-labelledby="ingressosTitulo">
+            <!-- bordas quadriculadas, iguais à do rodapé: em cima na cor da
+                 seção anterior, embaixo na cor da seguinte -->
+            <canvas class="dither dither--topo" aria-hidden="true"></canvas>
+            <canvas class="dither dither--base" aria-hidden="true"></canvas>
             <svg class="folha folha--traco ingressos-folha-1" aria-hidden="true" data-flutuar><use href="#ramo-traco"/></svg>
             <svg class="folha ingressos-folha-2" aria-hidden="true" data-flutuar><use href="#ramo"/></svg>
             <div class="ingressos-inner">
-                <p class="cant-pre script">Já entendeu que</p>
-                <h2 class="cant-titulo" id="ingressosTitulo">
-                    <span class="faixa faixa--nude cant-nao">não</span>
-                    <span class="faixa faixa--papel cant-pode">pode</span>
-                </h2>
-                <p class="cant-post titulo">ficar de fora.</p>
-                <p class="cant-sub">Escolha seu <span class="highlight-ingresso script">ingresso</span> abaixo:</p>
+                <h2 class="cant-sub" id="ingressosTitulo">Escolha seu <span class="highlight-ingresso script">ingresso</span> abaixo:</h2>
 
-                <!-- EDITAR: mapa ilustrativo. Troque por <img src="assets/imagens/mapa.png"> quando tiver o oficial. -->
-                <figure class="mapa">
-                    <svg viewBox="0 0 400 300" role="img" aria-label="Mapa dos setores: palco ao fundo, setor central à frente do palco e arquibancada ao redor">
-                        <rect class="mapa-palco" x="120" y="16" width="160" height="34" rx="6"/>
-                        <text class="mapa-rotulo" x="200" y="40">PALCO</text>
-                        <rect class="mapa-central" x="120" y="80" width="160" height="130" rx="6"/>
-                        <text class="mapa-rotulo" x="200" y="152">CENTRAL</text>
-                        <path class="mapa-arquibancada" d="M40 60 H100 V230 H300 V60 H360 V285 H40 Z"/>
-                        <text class="mapa-rotulo mapa-rotulo--claro" x="200" y="266">ARQUIBANCADA</text>
-                    </svg>
-                    <figcaption>Mapa ilustrativo</figcaption>
-                </figure>
+                <!-- CAPACIDADE + ANDAMENTO DAS VENDAS
+                     O painel de vendidos só aparece quando existe número REAL.
+                     A origem é, nesta ordem:
+                       1) window.MP_CONFIG.vagas = { total: 700, vendidos: 128 }  (config.js)
+                       2) o campo "vagas" da resposta de GET /api/produtos
+                     Sem nenhuma das duas, fica só a frase das 700 vagas: o site
+                     nunca mostra um número inventado. Ver configurarVagas() no script.js. -->
+                <div class="vagas">
+                    <p class="vagas-limite">
+                        <span class="vagas-limite-pre">são apenas</span>
+                        <strong class="vagas-limite-num">700</strong>
+                        <span class="vagas-limite-pos">vagas</span>
+                    </p>
 
-                <!-- EDITAR: lotes, tipos e valores. O link de compra é configurado uma vez só, em script.js. -->
-                <div class="setores" id="setores">
-                    <div class="setor">
-                        <div class="setor-cabecalho">
-                            <h3 class="setor-lote titulo">1º lote</h3>
-                            <p class="setor-nome">central</p>
+                    <div class="vagas-painel" id="vagasPainel" data-total="700" hidden>
+                        <p class="vagas-rotulo">
+                            <svg class="vagas-chama" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c.6 3 2.2 4.2 3.6 5.7 1.5 1.6 2.4 3.2 2.4 5.3a6 6 0 0 1-12 0c0-1.5.5-2.7 1.3-3.7.2 1 .8 1.8 1.7 2 .5-3 1.9-4.9 3-9.3Z"/><path class="vagas-chama-nucleo" d="M12 21a3 3 0 0 1-3-3c0-1.6 1.2-2.5 1.9-3.9.5 1 1 1.4 1.8 2 .8.7 1.3 1.3 1.3 1.9a3 3 0 0 1-2 3Z"/></svg>
+                            Ingressos vendidos
+                        </p>
+                        <p class="vagas-numero">
+                            <strong id="vagasVendidos">0</strong><span class="vagas-de">/ <span id="vagasTotal">700</span></span>
+                        </p>
+                        <div class="vagas-barra" role="progressbar" id="vagasBarra" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Vagas preenchidas">
+                            <span class="vagas-barra-trilho"><span class="vagas-barra-cheio" id="vagasBarraCheio"></span></span>
                         </div>
-                        <ul class="setor-cards">
-                            <li>
-                                <a class="ticket" href="#setores" data-link="ingressos">
-                                    <span class="ticket-tipo">Individual</span>
-                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
-                                    <span class="ticket-base"><span class="ticket-detalhe">1 ingresso</span><span class="ticket-acao">comprar</span></span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="ticket ticket--destaque" href="#setores" data-link="ingressos">
-                                    <span class="ticket-selo">mais vendido</span>
-                                    <span class="ticket-tipo">Combo dupla</span>
-                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
-                                    <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 2 ingressos</span><span class="ticket-acao">comprar</span></span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="ticket" href="#setores" data-link="ingressos">
-                                    <span class="ticket-tipo">Combo 3 amigas</span>
-                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
-                                    <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 3 ingressos</span><span class="ticket-acao">comprar</span></span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="ticket" href="#setores" data-link="ingressos">
-                                    <span class="ticket-tipo">Caravana</span>
-                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
-                                    <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 10+ ingressos</span><span class="ticket-acao">comprar</span></span>
-                                </a>
-                            </li>
-                        </ul>
+                        <p class="vagas-pct"><strong id="vagasPct">0%</strong> das vagas preenchidas</p>
                     </div>
+                </div>
 
-                    <div class="setor">
+                <!-- EDITAR: lote, tipos e valores. Uma linha só de ingressos:
+                     o evento é na igreja, não há divisão por setor. -->
+                <div class="setores" id="setores">
+                    <div class="setor" data-entrada>
                         <div class="setor-cabecalho">
                             <h3 class="setor-lote titulo">1º lote</h3>
-                            <p class="setor-nome">arquibancada</p>
+                            <p class="setor-nome">vagas limitadas</p>
                         </div>
                         <ul class="setor-cards">
-                            <li>
-                                <a class="ticket" href="#setores" data-link="ingressos">
-                                    <span class="ticket-tipo">Individual</span>
-                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
-                                    <span class="ticket-base"><span class="ticket-detalhe">1 ingresso</span><span class="ticket-acao">comprar</span></span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="ticket ticket--destaque" href="#setores" data-link="ingressos">
-                                    <span class="ticket-selo">mais vendido</span>
-                                    <span class="ticket-tipo">Combo dupla</span>
-                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
-                                    <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 2 ingressos</span><span class="ticket-acao">comprar</span></span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="ticket" href="#setores" data-link="ingressos">
-                                    <span class="ticket-tipo">Combo 3 amigas</span>
-                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
-                                    <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 3 ingressos</span><span class="ticket-acao">comprar</span></span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="ticket" href="#setores" data-link="ingressos">
-                                    <span class="ticket-tipo">Caravana</span>
-                                    <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
-                                    <span class="ticket-base"><span class="ticket-detalhe">por pessoa · 10+ ingressos</span><span class="ticket-acao">comprar</span></span>
-                                </a>
-                            </li>
+                        <li class="setor-card setor-card--individual">
+                            <a class="ticket" href="#setores" data-link="ingressos">
+                                <img class="ticket-marca" src="assets/imagens/marca/mp-horizontal-escuro.png" alt="" width="1100" height="198" loading="lazy">
+                                <span class="ticket-tipo">Individual</span>
+                                <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
+                                <span class="ticket-base">
+                                    <span class="ticket-detalhe">1 ingresso</span>
+                                    <span class="ticket-acao">comprar</span>
+                                    <span class="ticket-realizacao">
+                                    <span class="ticket-realizacao-rotulo">realização</span>
+                                    <img src="assets/imagens/logo-igreja-preto.png" alt="Igreja Evangelho Pleno" width="720" height="237" loading="lazy">
+                                </span>
+                                </span>
+                            </a>
+                        </li>
+                        <li class="setor-card setor-card--dupla">
+                            <a class="ticket ticket--destaque" href="#setores" data-link="ingressos">
+                                <span class="ticket-selo">mais vendido</span>
+                                <img class="ticket-marca" src="assets/imagens/marca/mp-horizontal-escuro.png" alt="" width="1100" height="198" loading="lazy">
+                                <span class="ticket-tipo">Combo dupla</span>
+                                <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
+                                <span class="ticket-base">
+                                    <span class="ticket-detalhe">por pessoa · 2 ingressos</span>
+                                    <span class="ticket-acao">comprar</span>
+                                    <span class="ticket-realizacao">
+                                    <span class="ticket-realizacao-rotulo">realização</span>
+                                    <img src="assets/imagens/logo-igreja-preto.png" alt="Igreja Evangelho Pleno" width="720" height="237" loading="lazy">
+                                </span>
+                                </span>
+                            </a>
+                        </li>
+                        <li class="setor-card setor-card--trio">
+                            <a class="ticket" href="#setores" data-link="ingressos">
+                                <img class="ticket-marca" src="assets/imagens/marca/mp-horizontal-escuro.png" alt="" width="1100" height="198" loading="lazy">
+                                <span class="ticket-tipo">Combo 3 amigas</span>
+                                <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
+                                <span class="ticket-base">
+                                    <span class="ticket-detalhe">por pessoa · 3 ingressos</span>
+                                    <span class="ticket-acao">comprar</span>
+                                    <span class="ticket-realizacao">
+                                    <span class="ticket-realizacao-rotulo">realização</span>
+                                    <img src="assets/imagens/logo-igreja-preto.png" alt="Igreja Evangelho Pleno" width="720" height="237" loading="lazy">
+                                </span>
+                                </span>
+                            </a>
+                        </li>
                         </ul>
                     </div>
                 </div>
@@ -477,33 +471,8 @@
             </div>
         </section>
 
-        <!-- CARAVANA -->
-        <section class="caravana rasgado" aria-labelledby="caravanaTitulo">
-            <svg class="folha folha--traco caravana-folha" aria-hidden="true" data-flutuar><use href="#ramo-traco"/></svg>
-            <h2 class="caravana-titulo" id="caravanaTitulo">
-                <span class="script caravana-kicker">ingresso</span>
-                <span class="faixa">caravana</span>
-            </h2>
-            <p class="caravana-sub">a opção ideal para você viver a Conferência Mulheres Plenas junto com as suas amigas!</p>
-
-            <div class="caravana-corpo">
-                <div class="caravana-foto">
-                    <div class="midia" data-rotulo="foto da caravana">
-                        <img src="assets/imagens/caravana.jpg" alt="Grupo de amigas em caravana para a conferência" loading="lazy">
-                    </div>
-                </div>
-                <div class="caravana-texto">
-                    <p data-revelar>Reúna <span class="sublinhado">10</span> ou mais pessoas e garanta os ingressos de uma só vez, com mais praticidade para organizar a sua caravana.</p>
-                    <p data-revelar><span class="highlight">Chame suas amigas,</span> monte o seu grupo e prepare-se para viver dias que podem <span class="sublinhado">marcar a sua história</span>.</p>
-                    <p data-revelar>Precisa de ajuda para montar sua caravana? Clique no botão abaixo e fale com a nossa equipe.</p>
-                </div>
-            </div>
-
-            <a href="#setores" class="btn-cta" data-link="caravana"><span class="btn-cta-text">Quero montar a minha caravana</span></a>
-        </section>
-
         <!-- UPGRADE (adicional ao ingresso) -->
-        <section class="upgrade rasgado" aria-labelledby="upgradeTitulo">
+        <section class="upgrade" aria-labelledby="upgradeTitulo">
             <div class="upgrade-inner">
                 <h2 class="upgrade-titulo" id="upgradeTitulo">
                     <span class="script upgrade-kicker">deixe ainda melhor com o</span>
@@ -540,43 +509,6 @@
         </section>
 
         <!-- MOMENTOS -->
-        <section class="momentos rasgado" aria-labelledby="momentosTitulo">
-            <h2 class="momentos-titulo" id="momentosTitulo">
-                <span class="titulo">momentos</span>
-                <span class="script momentos-kicker">da última edição</span>
-            </h2>
-            <!-- EDITAR: vídeos verticais curtos em assets/videos/momentos/ -->
-            <div class="momentos-grid">
-                <div class="momento">
-                    <div class="midia" data-rotulo="vídeo 01">
-                        <video src="assets/videos/momentos/01.mp4" muted loop playsinline preload="metadata"></video>
-                    </div>
-                    <button class="som-btn" type="button" aria-label="Ativar som" aria-pressed="false">
-                        <svg class="icone-mudo" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <svg class="icone-som" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16 8a5 5 0 010 8M18.5 5.5a9 9 0 010 13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-                    </button>
-                </div>
-                <div class="momento">
-                    <div class="midia" data-rotulo="vídeo 02">
-                        <video src="assets/videos/momentos/02.mp4" muted loop playsinline preload="metadata"></video>
-                    </div>
-                    <button class="som-btn" type="button" aria-label="Ativar som" aria-pressed="false">
-                        <svg class="icone-mudo" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <svg class="icone-som" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16 8a5 5 0 010 8M18.5 5.5a9 9 0 010 13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-                    </button>
-                </div>
-                <div class="momento">
-                    <div class="midia" data-rotulo="vídeo 03">
-                        <video src="assets/videos/momentos/03.mp4" muted loop playsinline preload="metadata"></video>
-                    </div>
-                    <button class="som-btn" type="button" aria-label="Ativar som" aria-pressed="false">
-                        <svg class="icone-mudo" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <svg class="icone-som" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/><path d="M16 8a5 5 0 010 8M18.5 5.5a9 9 0 010 13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-                    </button>
-                </div>
-            </div>
-        </section>
-
         <!-- FAQ -->
         <section class="faq rasgado" id="faq" aria-labelledby="faqTitulo">
             <svg class="folha folha--traco faq-folha" aria-hidden="true" data-flutuar><use href="#ramo-traco"/></svg>
@@ -586,180 +518,64 @@
                     <span class="titulo">dúvidas?</span>
                 </h2>
 
-                <!-- EDITAR: perguntas e respostas. Os trechos entre [colchetes] precisam de informação da conferência. -->
+                <!-- EDITAR: perguntas e respostas. -->
                 <div class="faq-lista">
                     <div class="faq-item">
                         <button class="faq-pergunta" type="button" aria-expanded="false">
-                            <span>Quando e onde acontecerá a conferência?</span>
+                            <span class="faq-num" aria-hidden="true">01</span>
+                            <span class="faq-texto">Quem pode participar?</span>
                             <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
                         </button>
                         <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                            <p>A Conferência Mulheres Plenas 2026 acontecerá nos dias [00 e 00 de mês de 2026], no [nome do local], em Paragominas – PA ([endereço completo]).</p>
+                            <p>Toda mulher que quiser viver esses dias com a gente. Você não precisa ser membro da Igreja Evangelho Pleno — participantes de outras igrejas são bem-vindas.</p>
                         </div></div>
                     </div>
 
                     <div class="faq-item">
                         <button class="faq-pergunta" type="button" aria-expanded="false">
-                            <span>Quem pode participar?</span>
+                            <span class="faq-num" aria-hidden="true">02</span>
+                            <span class="faq-texto">O ingresso vale para todos os dias?</span>
                             <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
                         </button>
                         <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                            <p>A conferência é para todas as mulheres que desejam viver dias de adoração, Palavra e comunhão, sejam membros da Igreja Evangelho Pleno ou de outras igrejas.</p>
+                            <p>Sim. Um único ingresso dá acesso a todos os dias da conferência e a todas as sessões.</p>
+                            <p>Não vendemos ingresso avulso por dia. Se você não conseguir ir a um dos dias, o seu ingresso continua valendo nos outros.</p>
                         </div></div>
                     </div>
 
                     <div class="faq-item">
                         <button class="faq-pergunta" type="button" aria-expanded="false">
-                            <span>O ingresso dá direito a todas as sessões?</span>
+                            <span class="faq-num" aria-hidden="true">03</span>
+                            <span class="faq-texto">Como recebo o meu ingresso?</span>
                             <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
                         </button>
                         <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                            <p>Sim. O ingresso dá direito a todos os dias da conferência e acesso a todas as sessões.</p>
+                            <p>Assim que o pagamento é confirmado, o ingresso chega no e-mail que você cadastrou na compra.</p>
+                            <p>Na entrada basta apresentá-lo impresso ou pela tela do celular.</p>
                         </div></div>
                     </div>
 
                     <div class="faq-item">
                         <button class="faq-pergunta" type="button" aria-expanded="false">
-                            <span>Posso comprar ingresso para apenas um dia?</span>
+                            <span class="faq-num" aria-hidden="true">04</span>
+                            <span class="faq-texto">Quais são as formas de pagamento?</span>
                             <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
                         </button>
                         <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                            <p>Não. Não é possível adquirir ingressos para apenas um dia.</p>
-                            <p>Caso você só consiga participar de um dos dias, seu ingresso continuará válido normalmente.</p>
+                            <p>Cartão de crédito, com parcelamento, ou PIX à vista. A confirmação chega no seu e-mail junto com o ingresso.</p>
                         </div></div>
                     </div>
 
                     <div class="faq-item">
                         <button class="faq-pergunta" type="button" aria-expanded="false">
-                            <span>O ingresso inclui hospedagem e alimentação?</span>
+                            <span class="faq-num" aria-hidden="true">05</span>
+                            <span class="faq-texto">Hospedagem e alimentação estão inclusas?</span>
                             <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
                         </button>
                         <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                            <p>Não. Hospedagem e alimentação não estão inclusas e são de responsabilidade de cada participante.</p>
-                            <p>[Informe se haverá praça de alimentação no local.]</p>
+                            <p>Não. O ingresso dá direito apenas à participação na conferência. Hospedagem, transporte e alimentação ficam por conta de cada participante.</p>
                         </div></div>
                     </div>
-
-                    <div class="faq-item">
-                        <button class="faq-pergunta" type="button" aria-expanded="false">
-                            <span>Como funcionam os setores?</span>
-                            <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                        </button>
-                        <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                            <p>A conferência contará com dois setores:</p>
-                            <ul>
-                                <li>Setor Central</li>
-                                <li>Setor Arquibancada</li>
-                            </ul>
-                            <p>Ambos possuem assentos e estão sujeitos à disponibilidade. Após a compra não é possível trocar de setor.</p>
-                        </div></div>
-                    </div>
-
-                    <div class="faq-mais" id="faqMais">
-                        <div class="faq-mais-conteudo">
-                            <div class="faq-item">
-                                <button class="faq-pergunta" type="button" aria-expanded="false">
-                                    <span>Posso sair e retornar durante o dia?</span>
-                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                                </button>
-                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                                    <p>Sim. Você pode sair e retornar quantas vezes precisar, utilizando o mesmo ingresso.</p>
-                                </div></div>
-                            </div>
-
-                            <div class="faq-item">
-                                <button class="faq-pergunta" type="button" aria-expanded="false">
-                                    <span>Quais documentos devo apresentar no check-in?</span>
-                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                                </button>
-                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                                    <p>Apresente seu ingresso impresso ou o QR Code no celular para acessar a conferência.</p>
-                                </div></div>
-                            </div>
-
-                            <div class="faq-item">
-                                <button class="faq-pergunta" type="button" aria-expanded="false">
-                                    <span>Quais são as formas de pagamento?</span>
-                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                                </button>
-                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                                    <p>O pagamento pode ser feito por:</p>
-                                    <ul>
-                                        <li>Cartão de crédito (parcelamento conforme a plataforma de venda)</li>
-                                        <li>PIX</li>
-                                    </ul>
-                                </div></div>
-                            </div>
-
-                            <div class="faq-item">
-                                <button class="faq-pergunta" type="button" aria-expanded="false">
-                                    <span>Meu ingresso é transferível?</span>
-                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                                </button>
-                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                                    <p>Sim. Acesse o link recebido após a compra, entre com o e-mail usado na compra e atualize os dados da participante. [Informe quantas vezes a alteração pode ser feita.]</p>
-                                </div></div>
-                            </div>
-
-                            <div class="faq-item">
-                                <button class="faq-pergunta" type="button" aria-expanded="false">
-                                    <span>Qual é a política de reembolso?</span>
-                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                                </button>
-                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                                    <p>Os ingressos comprados pela internet podem ser cancelados em até 7 (sete) dias a partir da data da compra, conforme o Código de Defesa do Consumidor.</p>
-                                    <p>Após esse período não há reembolso, mas você pode transferir o ingresso para outra pessoa.</p>
-                                </div></div>
-                            </div>
-
-                            <div class="faq-item">
-                                <button class="faq-pergunta" type="button" aria-expanded="false">
-                                    <span>Posso levar crianças?</span>
-                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                                </button>
-                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                                    <p>[Informe a idade mínima, se haverá espaço kids e a partir de que idade se paga ingresso.]</p>
-                                </div></div>
-                            </div>
-
-                            <div class="faq-item">
-                                <button class="faq-pergunta" type="button" aria-expanded="false">
-                                    <span>Existe meia-entrada?</span>
-                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                                </button>
-                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                                    <p>[Informe as regras de meia-entrada da conferência. Confirme com a organização se ela se enquadra na Lei nº 12.933/2013.]</p>
-                                </div></div>
-                            </div>
-
-                            <div class="faq-item">
-                                <button class="faq-pergunta" type="button" aria-expanded="false">
-                                    <span>Como chegar e onde estacionar?</span>
-                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                                </button>
-                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                                    <p>[Descreva como chegar ao local em Paragominas e se há estacionamento.]</p>
-                                </div></div>
-                            </div>
-
-                            <div class="faq-item">
-                                <button class="faq-pergunta" type="button" aria-expanded="false">
-                                    <span>Tenho outra dúvida. Com quem falo?</span>
-                                    <svg class="faq-icone" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-                                </button>
-                                <div class="faq-resposta"><div class="faq-resposta-conteudo">
-                                    <!-- EDITAR: contato -->
-                                    <p>Fale com a nossa equipe pelo e-mail <a href="mailto:contato@seuevento.com.br">contato@seuevento.com.br</a>.</p>
-                                </div></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button class="faq-mais-btn" id="faqMaisBtn" type="button" aria-expanded="false" aria-controls="faqMais">
-                        <span class="faq-mais-rotulo faq-mais-rotulo--abrir">Clique aqui e <strong>saiba mais</strong></span>
-                        <span class="faq-mais-rotulo faq-mais-rotulo--fechar">Clique aqui e <strong>ver menos</strong></span>
-                        <svg class="faq-mais-icone" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 7.5l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
                 </div>
             </div>
         </section>
