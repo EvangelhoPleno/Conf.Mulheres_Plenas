@@ -67,12 +67,6 @@
         <canvas class="entrada-particulas" aria-hidden="true"></canvas>
         <div class="entrada-conteudo" aria-hidden="true">
             <div class="entrada-coracao">
-                <svg class="entrada-anel" viewBox="0 0 200 200">
-                    <defs><path id="entradaAnelTexto" d="M100,100 m-86,0 a86,86 0 1,1 172,0 a86,86 0 1,1 -172,0"/></defs>
-                    <g class="entrada-anel-giro">
-                        <text><textPath href="#entradaAnelTexto" textLength="538" lengthAdjust="spacing">MULHERES PLENAS • CONFERÊNCIA 2026 • PARAGOMINAS •</textPath></text>
-                    </g>
-                </svg>
                 <span class="entrada-onda"></span>
                 <span class="entrada-onda"></span>
                 <div class="entrada-flutua">
@@ -176,15 +170,15 @@
                 <div class="hero-texto">
                     <p class="hero-topo">
                         <span class="faixa faixa--tijolo">conferência</span>
-                        <span class="script hero-ano">2026</span>
+                        <!-- EDITAR: datas. A data é uma segunda faixa, colada na
+                             frente do nome "conferência". -->
+                        <time class="faixa faixa--nude hero-data" datetime="2026-10-16">16, 17 out 2026</time>
                     </p>
                     <h1 class="hero-titulo">
                         <img src="assets/imagens/marca/mp-nome-escuro.png" alt="Conferência Mulheres Plenas 2026" width="1000" height="358">
                     </h1>
                     <p class="hero-frase">um encontro para mulheres que desejam viver algo novo</p>
-                    <!-- EDITAR: datas -->
                     <p class="hero-info">
-                        <span class="script hero-data">00 e 00 de mês</span>
                         <span class="hero-local">Paragominas – PA</span>
                     </p>
                     <a href="#setores" class="btn-cta"><span class="btn-cta-text">Garanta seu ingresso</span></a>
@@ -220,7 +214,9 @@
             </h2>
             <button class="recap-thumb" id="recapBtn" type="button" aria-label="Assistir ao vídeo da conferência">
                 <span class="recap-foto midia" data-rotulo="thumb do vídeo">
-                    <img src="assets/imagens/recap-thumb.jpg" alt="" loading="lazy">
+                    <!-- EDITAR: capa do vídeo. Hoje e a capa do proprio YouTube; para
+                         usar uma arte propria, troque por assets/imagens/recap-thumb.jpg -->
+                    <img src="https://i.ytimg.com/vi/otVnNDNmVEk/maxresdefault.jpg" alt="" loading="lazy">
                     <span class="recap-play" aria-hidden="true"></span>
                 </span>
                 <span class="recap-legenda script">Mulheres Plenas 2026</span>
@@ -424,6 +420,7 @@
                             <a class="ticket" href="#setores" data-link="ingressos">
                                 <img class="ticket-marca" src="assets/imagens/marca/mp-horizontal-escuro.png" alt="" width="1100" height="198" loading="lazy">
                                 <span class="ticket-tipo">Individual</span>
+                                <time class="ticket-data" datetime="2026-10-16">16 e 17 de outubro de 2026</time>
                                 <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
                                 <span class="ticket-base">
                                     <span class="ticket-detalhe">1 ingresso</span>
@@ -440,6 +437,7 @@
                                 <span class="ticket-selo">mais vendido</span>
                                 <img class="ticket-marca" src="assets/imagens/marca/mp-horizontal-escuro.png" alt="" width="1100" height="198" loading="lazy">
                                 <span class="ticket-tipo">Combo dupla</span>
+                                <time class="ticket-data" datetime="2026-10-16">16 e 17 de outubro de 2026</time>
                                 <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
                                 <span class="ticket-base">
                                     <span class="ticket-detalhe">por pessoa · 2 ingressos</span>
@@ -455,6 +453,7 @@
                             <a class="ticket" href="#setores" data-link="ingressos">
                                 <img class="ticket-marca" src="assets/imagens/marca/mp-horizontal-escuro.png" alt="" width="1100" height="198" loading="lazy">
                                 <span class="ticket-tipo">Combo 3 amigas</span>
+                                <time class="ticket-data" datetime="2026-10-16">16 e 17 de outubro de 2026</time>
                                 <span class="ticket-preco"><small>R$</small>000<small>,00</small></span>
                                 <span class="ticket-base">
                                     <span class="ticket-detalhe">por pessoa · 3 ingressos</span>
@@ -474,40 +473,118 @@
             </div>
         </section>
 
-        <!-- UPGRADE (adicional ao ingresso) -->
-        <section class="upgrade" aria-labelledby="upgradeTitulo">
-            <div class="upgrade-inner">
-                <h2 class="upgrade-titulo" id="upgradeTitulo">
-                    <span class="script upgrade-kicker">deixe ainda melhor com o</span>
-                    <span class="faixa faixa--papel">up+</span>
-                    <span class="faixa faixa--tijolo">grade</span>
-                </h2>
-
-                <div class="upgrade-conteudo">
-                    <p class="upgrade-desc" data-revelar>O UPGRADE é um adicional que pode ser aplicado em qualquer tipo de ingresso e garante <span class="highlight">benefícios exclusivos</span> para usar no dia da conferência, como:</p>
-
-                    <!-- EDITAR: itens e valores -->
-                    <ul class="upgrade-lista">
-                        <li class="upgrade-item"><span>Acesso antecipado</span><span>R$00</span></li>
-                        <li class="upgrade-item"><span>Caderno</span><span>R$00</span></li>
-                        <li class="upgrade-item"><span>Caneta</span><span>R$00</span></li>
-                        <li class="upgrade-item"><span>Pulseira</span><span>R$00</span></li>
-                        <li class="upgrade-item"><span>Kit exclusivo</span><span>R$00</span></li>
-                    </ul>
-
-                    <div class="upgrade-total">
-                        <div class="total-linha">
-                            <span>Todos os benefícios<br>sem o upgrade</span>
-                            <span class="preco-antigo">R$000</span>
+        <!-- CONTAGEM REGRESSIVA
+             EDITAR: datas. O comeco e o fim do evento moram no data-alvo e no
+             data-fim aqui embaixo; o script.js le dali, entao nenhuma data fica
+             escrita no JS. Sem JS os numeros ficam em "--" e o calendario
+             continua de pe. -->
+        <section class="regressiva" id="regressiva" aria-labelledby="regressivaTitulo">
+            <div class="regressiva-inner">
+                <div class="regressiva-palco">
+                    <!-- EDITAR: datas. A grade abaixo e outubro/2026 com 16 e 17
+                         marcados. Se a data do evento mudar, mude a grade aqui e o
+                         data-alvo/data-fim do relogio ali embaixo. -->
+                    <figure class="calendario" aria-label="Calendário de outubro de 2026 com os dias 16 e 17 marcados">
+                        <span class="cal-percevejo" aria-hidden="true"></span>
+                        <div class="cal-topo">
+                            <span class="cal-mes">outubro</span>
+                            <span class="cal-ano">2026</span>
                         </div>
-                        <div class="total-linha">
-                            <span>Todos os benefícios<br><strong>no upgrade</strong></span>
-                            <span class="preco-novo">R$000</span>
+                        <div class="cal-grade">
+                            <span class="cal-semana" aria-hidden="true">d</span>
+                            <span class="cal-semana" aria-hidden="true">s</span>
+                            <span class="cal-semana" aria-hidden="true">t</span>
+                            <span class="cal-semana" aria-hidden="true">q</span>
+                            <span class="cal-semana" aria-hidden="true">q</span>
+                            <span class="cal-semana" aria-hidden="true">s</span>
+                            <span class="cal-semana" aria-hidden="true">s</span>
+                            <span class="cal-dia cal-dia--vazio"></span>
+                            <span class="cal-dia cal-dia--vazio"></span>
+                            <span class="cal-dia cal-dia--vazio"></span>
+                            <span class="cal-dia cal-dia--vazio"></span>
+                            <span class="cal-dia">1</span>
+                            <span class="cal-dia">2</span>
+                            <span class="cal-dia">3</span>
+                            <span class="cal-dia">4</span>
+                            <span class="cal-dia">5</span>
+                            <span class="cal-dia">6</span>
+                            <span class="cal-dia">7</span>
+                            <span class="cal-dia">8</span>
+                            <span class="cal-dia">9</span>
+                            <span class="cal-dia">10</span>
+                            <span class="cal-dia">11</span>
+                            <span class="cal-dia">12</span>
+                            <span class="cal-dia">13</span>
+                            <span class="cal-dia">14</span>
+                            <span class="cal-dia">15</span>
+                            <span class="cal-dia is-evento">16</span>
+                            <span class="cal-dia is-evento">17</span>
+                            <span class="cal-dia">18</span>
+                            <span class="cal-dia">19</span>
+                            <span class="cal-dia">20</span>
+                            <span class="cal-dia">21</span>
+                            <span class="cal-dia">22</span>
+                            <span class="cal-dia">23</span>
+                            <span class="cal-dia">24</span>
+                            <span class="cal-dia">25</span>
+                            <span class="cal-dia">26</span>
+                            <span class="cal-dia">27</span>
+                            <span class="cal-dia">28</span>
+                            <span class="cal-dia">29</span>
+                            <span class="cal-dia">30</span>
+                            <span class="cal-dia">31</span>
                         </div>
+                        <figcaption class="cal-nota">
+                            <span class="script">é aqui</span>
+                            <span class="cal-local">Paragominas – PA</span>
+                        </figcaption>
+                    </figure>
+
+                    <div class="regressiva-lado">
+                        <h2 class="regressiva-titulo" id="regressivaTitulo">
+                            <span class="script regressiva-kicker">prepare o coração</span>
+                            <span class="faixa faixa--tijolo">falta pouco</span>
+                        </h2>
+
+                        <ul class="regressiva-relogio" aria-label="Contagem regressiva para a conferência"
+                            data-regressiva data-alvo="2026-10-16T00:00" data-fim="2026-10-17T23:59">
+                            <li class="regressiva-bolha regressiva-bolha--dias">
+                                <svg class="regressiva-arco" viewBox="0 0 120 120" aria-hidden="true">
+                                    <circle class="arco-trilho" cx="60" cy="60" r="54"/>
+                                    <circle class="arco-ativo" cx="60" cy="60" r="54" data-regressiva-arco="dias"/>
+                                </svg>
+                                <span class="regressiva-num" data-regressiva-num="dias">--</span>
+                                <span class="regressiva-rotulo">dias</span>
+                            </li>
+                            <li class="regressiva-bolha">
+                                <svg class="regressiva-arco" viewBox="0 0 120 120" aria-hidden="true">
+                                    <circle class="arco-trilho" cx="60" cy="60" r="54"/>
+                                    <circle class="arco-ativo" cx="60" cy="60" r="54" data-regressiva-arco="horas"/>
+                                </svg>
+                                <span class="regressiva-num" data-regressiva-num="horas">--</span>
+                                <span class="regressiva-rotulo">horas</span>
+                            </li>
+                            <li class="regressiva-bolha">
+                                <svg class="regressiva-arco" viewBox="0 0 120 120" aria-hidden="true">
+                                    <circle class="arco-trilho" cx="60" cy="60" r="54"/>
+                                    <circle class="arco-ativo" cx="60" cy="60" r="54" data-regressiva-arco="minutos"/>
+                                </svg>
+                                <span class="regressiva-num" data-regressiva-num="minutos">--</span>
+                                <span class="regressiva-rotulo">minutos</span>
+                            </li>
+                            <li class="regressiva-bolha regressiva-bolha--segundos">
+                                <svg class="regressiva-arco" viewBox="0 0 120 120" aria-hidden="true">
+                                    <circle class="arco-trilho" cx="60" cy="60" r="54"/>
+                                    <circle class="arco-ativo" cx="60" cy="60" r="54" data-regressiva-arco="segundos"/>
+                                </svg>
+                                <span class="regressiva-num" data-regressiva-num="segundos">--</span>
+                                <span class="regressiva-rotulo">segundos</span>
+                            </li>
+                        </ul>
                     </div>
-
-                    <a href="#setores" class="btn-cta" data-link="upgrade"><span class="btn-cta-text">Quero o upgrade</span></a>
                 </div>
+
+                <p class="regressiva-hoje" data-regressiva-hoje hidden>é hoje — te esperamos em Paragominas</p>
             </div>
         </section>
 

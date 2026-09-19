@@ -13,10 +13,9 @@
     var CONFIG = {
         links: {
             ingressos: '',  // ex.: 'https://www.sympla.com.br/evento/...'
-            caravana: '',   // ex.: 'https://wa.me/5591999999999?text=Quero%20montar%20uma%20caravana'
-            upgrade: ''
+            caravana: ''    // ex.: 'https://wa.me/5591999999999?text=Quero%20montar%20uma%20caravana'
         },
-        videoRecapYoutubeId: ''  // só o ID: em youtube.com/watch?v=AbC123, é 'AbC123'
+        videoRecapYoutubeId: 'otVnNDNmVEk'  // só o ID: em youtube.com/watch?v=AbC123, é 'AbC123'
     };
 
     var reduzirMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -432,8 +431,6 @@
         var camadas = pegarTodos('.entrada-camada');
         var petalaClara = pegar('.entrada-petala-clara');
         var ondas = pegarTodos('.entrada-onda');
-        var anel = pegar('.entrada-anel');
-        var anelGiro = pegar('.entrada-anel-giro');
         var luzes = pegarTodos('.entrada-luz');
         var clarao = pegar('.entrada-clarao');
         var ramos = pegarTodos('.entrada-ramo');
@@ -453,11 +450,10 @@
             particulas.explosao(r.left + r.width / 2, r.top + r.height / 2, quantidade, forca);
         }
 
-        // movimentos contínuos: luzes passeando, ramos balançando, anel girando
+        // movimentos contínuos: luzes passeando e ramos balançando
         var continuos = [
             gsap.to(luzes[0], { xPercent: 22, yPercent: 18, duration: 3.2, ease: 'sine.inOut', yoyo: true, repeat: -1 }),
-            gsap.to(luzes[1], { xPercent: -20, yPercent: -16, duration: 2.8, ease: 'sine.inOut', yoyo: true, repeat: -1 }),
-            gsap.to(anelGiro, { rotation: 360, svgOrigin: '100 100', duration: 16, ease: 'none', repeat: -1 })
+            gsap.to(luzes[1], { xPercent: -20, yPercent: -16, duration: 2.8, ease: 'sine.inOut', yoyo: true, repeat: -1 })
         ];
         ramos.forEach(function (ramo, i) {
             continuos.push(gsap.to(ramo, { rotation: i ? -5 : 5, duration: 2.2 + i * 0.4, ease: 'sine.inOut', yoyo: true, repeat: -1 }));
@@ -538,9 +534,8 @@
         });
         tl.call(function () { flutuacao.play(); }, null, 2.1);
 
-        // 4. anel de texto entra girando e os ramos se desenham nos cantos
-        tl.fromTo(anel, { opacity: 0, scale: 0.6, rotation: -90 }, { opacity: 1, scale: 1, rotation: 0, duration: 1.5, ease: 'expo.out' }, 1.2)
-          .fromTo(tracosRamos, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.5, ease: 'power2.inOut', stagger: 0.06 }, 0.7);
+        // 4. os ramos se desenham nos cantos
+        tl.fromTo(tracosRamos, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.5, ease: 'power2.inOut', stagger: 0.06 }, 0.7);
 
         // 5. "CONFERÊNCIA" salta letra por letra, do centro para as pontas
         tl.fromTo(letras,
@@ -589,7 +584,6 @@
 
             var saida = gsap.timeline({ onComplete: function () { finalizar(pousar); } });
             saida.to([conferencia, nome, ano], { y: -30, opacity: 0, filter: 'blur(6px)', duration: 0.45, ease: 'power2.in', stagger: 0.05 }, 0)
-                 .to(anel, { opacity: 0, scale: 1.35, duration: 0.5, ease: 'power2.in' }, 0)
                  .to(luzes.concat(ramos, [clarao]), { opacity: 0, duration: 0.35 }, 0)
                  .to(flutua, { y: 0, rotation: 0, duration: 0.35, ease: 'power2.out' }, 0)
                  .add(dissolver(), 0.05)
@@ -943,8 +937,7 @@
 
         tl.from('.hero-anel', { opacity: 0, duration: 1.4, ease: 'power2.out' }, 0)
           .from('.hero-halo', { opacity: 0, scale: 0.6, duration: 1.4, ease: 'power3.out' }, 0)
-          .from('.hero-topo .faixa', { yPercent: 80, rotation: -12, opacity: 0, duration: 0.7, ease: 'back.out(1.8)' }, 0.1)
-          .from('.hero-ano', { scale: 0.4, opacity: 0, duration: 0.6, ease: 'back.out(2)' }, 0.35)
+          .from('.hero-topo .faixa', { yPercent: 80, rotation: -12, opacity: 0, duration: 0.7, ease: 'back.out(1.8)', stagger: 0.12 }, 0.1)
           .fromTo('.hero-titulo img', { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 1.3, ease: 'power3.inOut' }, 0.2)
           .from(['.hero-frase', '.hero-info', '.hero .btn-cta'], { y: 20, opacity: 0, duration: 0.7, ease: 'power3.out', stagger: 0.1 }, 0.95);
 
@@ -1035,7 +1028,7 @@
         });
 
         // faixas de título "coladas" ao entrar na tela
-        gsap.utils.toArray('.lineup-titulo .faixa, .upgrade-titulo .faixa').forEach(function (faixa, i) {
+        gsap.utils.toArray('.lineup-titulo .faixa').forEach(function (faixa, i) {
             gsap.from(faixa, {
                 scale: 1.3,
                 opacity: 0,
@@ -1292,6 +1285,85 @@
     }
 
     /* ---------------------------------------------------------
+       RELOGIO DA CONTAGEM REGRESSIVA (secao .regressiva)
+       Dias, horas, minutos e segundos ate o data-alvo do HTML. Os numeros
+       comecam em "--" no HTML: se algo aqui falhar, a secao continua de pe
+       com a faixa da data.
+       --------------------------------------------------------- */
+    function configurarRegressiva() {
+        var bloco = document.querySelector('[data-regressiva]');
+        if (!bloco) return;
+
+        var inicio = lerMomento(bloco.getAttribute('data-alvo'));
+        var fim = lerMomento(bloco.getAttribute('data-fim')) || inicio;
+        if (!inicio) return;
+
+        var hoje = document.querySelector('[data-regressiva-hoje]');
+        var campos = {};
+        var arcos = {};
+        ['dias', 'horas', 'minutos', 'segundos'].forEach(function (nome) {
+            campos[nome] = bloco.querySelector('[data-regressiva-num="' + nome + '"]');
+            arcos[nome] = bloco.querySelector('[data-regressiva-arco="' + nome + '"]');
+        });
+        if (!campos.dias) return;
+
+        // volta inteira do arco: 2 * pi * 54, o mesmo raio do SVG
+        var VOLTA = 339.29;
+        // cada arco mostra o quanto falta da propria unidade; o dos dias usa um
+        // mes como volta completa, entao acima de 30 dias ele fica cheio
+        var CHEIO = { dias: 30, horas: 24, minutos: 60, segundos: 60 };
+        var relogio = null;
+
+        function lerMomento(texto) {
+            var p = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?$/.exec(texto || '');
+            // horario local: a contagem e a do fuso de quem esta vendo
+            return p ? new Date(+p[1], +p[2] - 1, +p[3], +(p[4] || 0), +(p[5] || 0)) : null;
+        }
+
+        function escrever(nome, valor) {
+            var campo = campos[nome];
+            if (campo && campo.textContent !== String(valor)) campo.textContent = valor;
+            var arco = arcos[nome];
+            if (arco) {
+                var fracao = Math.max(0, Math.min(1, valor / CHEIO[nome]));
+                arco.style.strokeDashoffset = VOLTA * (1 - fracao);
+            }
+        }
+
+        function atualizar() {
+            var restante = inicio - Date.now();
+
+            if (restante <= 0) {
+                bloco.hidden = true;
+                if (hoje) hoje.hidden = Date.now() > fim;
+                if (relogio) { clearInterval(relogio); relogio = null; }
+                return;
+            }
+
+            var segundos = Math.floor(restante / 1000);
+            bloco.hidden = false;
+            if (hoje) hoje.hidden = true;
+            escrever('dias', Math.floor(segundos / 86400));
+            escrever('horas', Math.floor(segundos / 3600) % 24);
+            escrever('minutos', Math.floor(segundos / 60) % 60);
+            escrever('segundos', segundos % 60);
+        }
+
+        atualizar();
+        relogio = setInterval(atualizar, 1000);
+
+        // aba em segundo plano nao precisa de relogio andando
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                if (relogio) { clearInterval(relogio); relogio = null; }
+            } else if (!relogio) {
+                atualizar();
+                relogio = setInterval(atualizar, 1000);
+            }
+        });
+    }
+
+    /* ---------------------------------------------------------
        FAQ
        --------------------------------------------------------- */
     function configurarFaq() {
@@ -1339,6 +1411,7 @@
     configurarCarrossel();
     configurarModais();
     configurarFaq();
+    configurarRegressiva();
 
     executarEntrada(function (coracaoPousou) {
         if (!heroTl) return;
