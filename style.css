@@ -133,12 +133,13 @@ html.lenis body {
 /* faixa de papel recortado com o texto em caixa-alta */
 .faixa {
     display: inline-block;
-    padding: 0.08em 0.24em 0.02em;
+    /* folga no topo para caber o acento das maiusculas (CONFERENCIA) sem cortar */
+    padding: 0.2em 0.24em 0.08em;
     background: var(--terracota);
     color: var(--papel);
     font-family: var(--fonte-faixa);
     font-weight: 400;
-    line-height: 0.95;
+    line-height: 1;
     letter-spacing: 0.01em;
     text-transform: uppercase;
     white-space: nowrap;
@@ -878,6 +879,13 @@ html.entrada-ativa .entrada.is-dissolvendo {
     display: block;
 }
 
+/* ajuste optico: a ponta fina do coracao puxa a massa visual para cima,
+   entao ele desce e vai um pouco para a direita dentro do anel de palavras.
+   Feito por inset (layout) porque o transform das petalas e do GSAP. */
+.hero-coracao .petala {
+    inset: 3% -1.5% -3% 1.5%;
+}
+
 .petala img {
     width: 100%;
     height: 100%;
@@ -893,18 +901,19 @@ html.entrada-ativa .entrada.is-dissolvendo {
 .hero-topo {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
-    filter: drop-shadow(3px 4px 0 rgba(62, 26, 16, 0.14));
+    gap: 14px;
+    margin-bottom: 10px;
+    filter: drop-shadow(4px 6px 0 rgba(62, 26, 16, 0.18));
 }
 
 .hero-topo .faixa {
-    font-size: clamp(1.5rem, 7.5vw, 2.8rem);
+    font-size: clamp(1.9rem, 9.4vw, 3.9rem);
+    letter-spacing: 0.03em;
     rotate: -3deg;
 }
 
 .hero-ano {
-    font-size: clamp(2rem, 9vw, 3.4rem);
+    font-size: clamp(2.1rem, 9.4vw, 3.6rem);
     rotate: -8deg;
 }
 
@@ -2177,16 +2186,26 @@ html.entrada-ativa .entrada.is-dissolvendo {
    FAQ
    ============================================= */
 .faq {
-    /* a seção anterior agora é .upgrade (nude) */
-    --anterior: var(--nude);
-    padding: 96px var(--lateral) 120px;
+    /* borda quadriculada no topo, na cor da seção anterior (.upgrade, nude),
+       igual à que fecha a seção na entrada do rodapé */
+    --dither-altura: 96px;
+    position: relative;
+    padding: calc(var(--dither-altura) + 56px) var(--lateral) 120px;
     overflow: hidden;
     background: var(--rosado);
 }
 
+/* escopado em .faq porque a regra .dither do rodapé vem depois no arquivo */
+.faq .dither--topo {
+    top: 0;
+    bottom: auto;
+    --dither-cor: var(--nude);
+}
+
 .faq-folha {
     right: -30px;
-    top: 90px;
+    /* logo abaixo da borda quadriculada, acompanhando a altura dela */
+    top: calc(var(--dither-altura) - 6px);
     width: 110px;
     height: 238px;
     rotate: -22deg;
@@ -2196,6 +2215,8 @@ html.entrada-ativa .entrada.is-dissolvendo {
 
 .faq-layout {
     position: relative;
+    /* passa por cima da borda quadriculada */
+    z-index: 2;
     max-width: 1100px;
     margin-inline: auto;
 }
@@ -2658,6 +2679,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
         transform: scale(1.055) translateY(-8px) rotate(-1deg);
     }
 
+    .faq,
     .rodape {
         --dither-altura: 128px;
     }
@@ -2800,8 +2822,13 @@ html.entrada-ativa .entrada.is-dissolvendo {
         grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     }
 
+    /* No desktop a coluna deixa de ter altura fixa e passa a acompanhar a
+       linha do grid. Sem um minimo, a pista de rolagem virava o tamanho do
+       texto ao lado (~0,7 tela) e as 8 fotos entravam quase juntas. O
+       min-height devolve o trilho longo que o mobile ja tinha. */
     .galeria-col {
         height: auto;
+        min-height: 220vh;
     }
 
     .galeria-titulo .script {
@@ -2824,10 +2851,12 @@ html.entrada-ativa .entrada.is-dissolvendo {
     .about {
         align-items: flex-start;
         justify-content: center;
-        gap: 30px;
+        /* respiro entre os paragrafos: espalha o texto pelo trilho para cada
+           um entrar na tela no seu tempo, sem revelarem todos de uma vez */
+        gap: clamp(40px, 10vh, 120px);
         max-width: 600px;
         margin: 0;
-        padding: 55vh var(--lateral) 55vh 48px;
+        padding: 30vh var(--lateral) 30vh 48px;
         text-align: left;
     }
 
@@ -2893,6 +2922,9 @@ html.entrada-ativa .entrada.is-dissolvendo {
         font-size: clamp(3.6rem, 5.6vw, 5.6rem);
     }
 
+    /* as duas bordas do FAQ crescem juntas: a de cima aqui, a de baixo é
+       a do rodapé */
+    .faq,
     .rodape {
         --dither-altura: 152px;
     }

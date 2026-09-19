@@ -951,10 +951,18 @@
         return tl;
     }
 
+    /* Roda também com movimento reduzido, numa versão sem voo 3D: só o
+       fade preso à rolagem. A entrada por CSS mostrava as 8 fotos de uma
+       vez assim que a seção encostava na tela, e o nome do fundo nunca
+       chegava a aparecer. O fade continua sendo movimento aceitável. */
     function animarGaleria() {
         var coluna = document.querySelector('.galeria-col');
         var cartoes = gsap.utils.toArray('.galeria-card');
-        if (!coluna || !cartoes.length) return;
+        if (!coluna || !cartoes.length) return false;
+
+        // o GSAP assume as fotos: a entrada por CSS sairia por cima dele
+        var palco = document.querySelector('.galeria-stage');
+        if (palco) palco.removeAttribute('data-entrada');
 
         var tl = gsap.timeline({
             scrollTrigger: {
@@ -966,21 +974,30 @@
         });
 
         var passo = 0.45;
-        tl.fromTo('.galeria-titulo', { scale: 0.85 }, {
-            scale: 1.05,
-            ease: 'none',
-            duration: cartoes.length * passo + 1
-        }, 0);
+        var fim = cartoes.length * passo + 1;
+
+        if (!reduzirMovimento) {
+            tl.fromTo('.galeria-titulo', { scale: 0.85 }, {
+                scale: 1.05,
+                ease: 'none',
+                duration: fim
+            }, 0);
+        }
 
         cartoes.forEach(function (cartao, i) {
-            tl.fromTo(cartao, {
+            var de = reduzirMovimento ? { opacity: 0 } : {
                 z: -1400,
                 yPercent: 40,
                 rotationX: gsap.utils.random(-25, 25),
                 rotationY: gsap.utils.random(-30, 30),
                 rotationZ: gsap.utils.random(-12, 12),
                 opacity: 0
-            }, {
+            };
+            var para = reduzirMovimento ? {
+                opacity: 1,
+                duration: 1,
+                ease: 'none'
+            } : {
                 z: 0,
                 yPercent: 0,
                 rotationX: 0,
@@ -989,8 +1006,11 @@
                 opacity: 1,
                 duration: 1,
                 ease: 'power2.out'
-            }, i * passo);
+            };
+            tl.fromTo(cartao, de, para, i * passo);
         });
+
+        return true;
     }
 
     function animarSecoes() {
@@ -1057,17 +1077,24 @@
 
     // devolve a animação do hero, pausada, para tocar depois da abertura
     function iniciarAnimacoes() {
-        if (!temGsap || reduzirMovimento) return null;
+        if (!temGsap) return null;
+
+        // a galeria entra nos dois modos; o resto continua parado quando o
+        // sistema pede menos movimento
+        var temGaleria = animarGaleria();
+
+        if (temGaleria || !reduzirMovimento) {
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(function () { ScrollTrigger.refresh(); });
+            }
+            window.addEventListener('load', function () { ScrollTrigger.refresh(); });
+        }
+
+        if (reduzirMovimento) return null;
 
         configurarPetalas();
         var heroTl = prepararEntradaHero();
-        animarGaleria();
         animarSecoes();
-
-        if (document.fonts && document.fonts.ready) {
-            document.fonts.ready.then(function () { ScrollTrigger.refresh(); });
-        }
-        window.addEventListener('load', function () { ScrollTrigger.refresh(); });
 
         return heroTl;
     }

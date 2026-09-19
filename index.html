@@ -212,18 +212,18 @@
             </div>
         </div>
 
-        <!-- VÍDEO DA ÚLTIMA EDIÇÃO -->
+        <!-- VÍDEO DE CHAMADA DA EDIÇÃO -->
         <section class="recap" aria-labelledby="recapTitulo">
             <h2 class="recap-titulo" id="recapTitulo">
-                <span class="script recap-kicker">reviva</span>
-                <span class="titulo">a última edição</span>
+                <span class="script recap-kicker">o que iremos viver</span>
+                <span class="titulo">nesta edição</span>
             </h2>
-            <button class="recap-thumb" id="recapBtn" type="button" aria-label="Assistir ao vídeo da última edição">
+            <button class="recap-thumb" id="recapBtn" type="button" aria-label="Assistir ao vídeo da conferência">
                 <span class="recap-foto midia" data-rotulo="thumb do vídeo">
                     <img src="assets/imagens/recap-thumb.jpg" alt="" loading="lazy">
                     <span class="recap-play" aria-hidden="true"></span>
                 </span>
-                <span class="recap-legenda script">Mulheres Plenas 2025</span>
+                <span class="recap-legenda script">Mulheres Plenas 2026</span>
             </button>
         </section>
 
@@ -232,19 +232,22 @@
             <div class="galeria-col">
                 <div class="galeria-sticky">
                     <p class="galeria-titulo" aria-hidden="true">
-                        <span class="script">foi</span>
+                        <span class="script">será</span>
                         <span class="titulo">incrível</span>
                     </p>
-                    <!-- EDITAR: 8 fotos da edição anterior em assets/imagens/galeria/ -->
+                    <!-- EDITAR: 8 fotos em assets/imagens/. O card e 4:5 (retrato) e a foto
+                         preenche com object-fit: cover, entao sobra e cortada. O object-position
+                         de cada img marca o ponto que precisa ficar no enquadramento: a 1a
+                         porcentagem e horizontal, a 2a vertical. Ao trocar uma foto, reveja o par. -->
                     <div class="galeria-stage" data-entrada>
-                        <div class="galeria-card"><div class="midia" data-rotulo="foto 1"><img src="assets/imagens/galeria/1.jpg" alt=""></div></div>
-                        <div class="galeria-card"><div class="midia" data-rotulo="foto 2"><img src="assets/imagens/galeria/2.jpg" alt=""></div></div>
-                        <div class="galeria-card"><div class="midia" data-rotulo="foto 3"><img src="assets/imagens/galeria/3.jpg" alt=""></div></div>
-                        <div class="galeria-card"><div class="midia" data-rotulo="foto 4"><img src="assets/imagens/galeria/4.jpg" alt=""></div></div>
-                        <div class="galeria-card"><div class="midia" data-rotulo="foto 5"><img src="assets/imagens/galeria/5.jpg" alt=""></div></div>
-                        <div class="galeria-card"><div class="midia" data-rotulo="foto 6"><img src="assets/imagens/galeria/6.jpg" alt=""></div></div>
-                        <div class="galeria-card"><div class="midia" data-rotulo="foto 7"><img src="assets/imagens/galeria/7.jpg" alt=""></div></div>
-                        <div class="galeria-card"><div class="midia" data-rotulo="foto 8"><img src="assets/imagens/galeria/8.jpg" alt=""></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 1"><img src="assets/imagens/1.jpeg" alt="" width="854" height="1280" loading="lazy" style="object-position: 50% 25%"></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 2"><img src="assets/imagens/2.jpeg" alt="" width="1280" height="854" loading="lazy" style="object-position: 48% 50%"></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 3"><img src="assets/imagens/3.jpeg" alt="" width="1600" height="1066" loading="lazy" style="object-position: 50% 50%"></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 4"><img src="assets/imagens/4.jpeg" alt="" width="1280" height="854" loading="lazy" style="object-position: 62% 50%"></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 5"><img src="assets/imagens/5.jpeg" alt="" width="1280" height="854" loading="lazy" style="object-position: 40% 50%"></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 6"><img src="assets/imagens/6.jpeg" alt="" width="1280" height="854" loading="lazy" style="object-position: 38% 50%"></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 7"><img src="assets/imagens/7.jpeg" alt="" width="854" height="1280" loading="lazy" style="object-position: 50% 35%"></div></div>
+                        <div class="galeria-card"><div class="midia" data-rotulo="foto 8"><img src="assets/imagens/8.jpeg" alt="" width="1280" height="854" loading="lazy" style="object-position: 52% 50%"></div></div>
                     </div>
                 </div>
             </div>
@@ -510,7 +513,10 @@
 
         <!-- MOMENTOS -->
         <!-- FAQ -->
-        <section class="faq rasgado" id="faq" aria-labelledby="faqTitulo">
+        <section class="faq" id="faq" aria-labelledby="faqTitulo">
+            <!-- mesma borda quadriculada da base da seção (entrada do rodapé),
+                 para as duas pontas do FAQ ficarem iguais -->
+            <canvas class="dither dither--topo" aria-hidden="true"></canvas>
             <svg class="folha folha--traco faq-folha" aria-hidden="true" data-flutuar><use href="#ramo-traco"/></svg>
             <div class="faq-layout">
                 <h2 class="faq-titulo" id="faqTitulo">
