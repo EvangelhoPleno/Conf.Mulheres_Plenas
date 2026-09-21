@@ -182,14 +182,6 @@ html.lenis body {
     color: var(--tijolo);
 }
 
-.sublinhado {
-    text-decoration: underline;
-    text-decoration-color: var(--nude);
-    text-decoration-thickness: 0.38em;
-    text-underline-offset: -0.14em;
-    text-decoration-skip-ink: none;
-}
-
 /* ramos de folhas decorativos */
 .folha {
     position: absolute;
