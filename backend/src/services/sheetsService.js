@@ -179,4 +179,4 @@ function pedidos() {
     return repositorio;
 }
 
-module.exports = { pedidos, CABECALHO, criarRepositorioMemoria };
+module.exports = { pedidos, CABECALHO };

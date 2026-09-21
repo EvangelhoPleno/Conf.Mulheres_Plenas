@@ -51,4 +51,4 @@ function mascararEmail(email) {
     return visivel + '***@' + dominio;
 }
 
-module.exports = { somenteDigitos, cpfValido, emailValido, validarComprador, mascararEmail };
+module.exports = { cpfValido, validarComprador, mascararEmail };

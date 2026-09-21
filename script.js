@@ -12,8 +12,7 @@
        --------------------------------------------------------- */
     var CONFIG = {
         links: {
-            ingressos: '',  // ex.: 'https://www.sympla.com.br/evento/...'
-            caravana: ''    // ex.: 'https://wa.me/5591999999999?text=Quero%20montar%20uma%20caravana'
+            ingressos: ''   // ex.: 'https://www.sympla.com.br/evento/...'
         },
         videoRecapYoutubeId: 'otVnNDNmVEk'  // só o ID: em youtube.com/watch?v=AbC123, é 'AbC123'
     };
