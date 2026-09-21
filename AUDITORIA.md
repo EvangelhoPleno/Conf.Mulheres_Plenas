@@ -17,9 +17,15 @@ nesse ponto.
 A sujeira estava toda em **arquivos**, não em código: 946 KB de exportações de
 logo que nenhuma página referencia, incluindo uma duplicata exata.
 
-Foram corrigidos dois defeitos reais: o `index.html` nunca carregava o
-`config.js` (deixando o painel de ingressos vendidos morto na landing) e
-faltavam as metatags que fazem o cartão de compartilhamento funcionar no X.
+Foram corrigidos três defeitos reais, sendo um deles grave:
+
+1. **O backend cobrava R$ 150,00 num ingresso que a landing anuncia por R$ 55.**
+   Quem comprasse veria um preço no site e outro no checkout. O catálogo foi
+   alinhado com a landing.
+2. O `index.html` nunca carregava o `config.js`, deixando o painel de ingressos
+   vendidos morto na landing.
+3. Faltavam as metatags do cartão de compartilhamento — e a própria imagem de
+   compartilhamento, que foi criada.
 
 **A página está visual e funcionalmente idêntica à original** — verificado com
 diff de pixels (detalhes em *Como isso foi verificado*).
@@ -34,17 +40,19 @@ abaixo. Os ganhos de performance que valem a pena estão todos em
 
 | Medida | Antes | Depois | Δ |
 |---|---:|---:|---:|
-| Pasta `assets/` | 2.683.799 B (2,56 MB) | 1.737.158 B (1,66 MB) | **−946.641 B (−35,3%)** |
-| Arquivos em `assets/` | 28 | 21 | −7 |
+| Pasta `assets/` | 2.683.799 B (2,56 MB) | 1.815.107 B (1,73 MB) | **−868.692 B (−32,4%)** |
+| Arquivos em `assets/` | 28 | 23 | −5 (−7 apagados, +2 da arte de compartilhamento) |
 | Arquivos versionados (sem `node_modules`) | 70 | 63 | −7 |
 | Código front (9 arquivos) | 244.848 B | 245.029 B | +181 B |
 | └ `style.css` | 84.720 B | 84.512 B | −208 B |
 | └ `script.js` | 62.375 B | 62.271 B | −104 B |
 | └ `index.html` | 45.910 B | 46.403 B | +493 B |
+| Produtos no catálogo do backend | 8 (2 setores × 4 tipos) | 2 (os 2 lotes) | −6 |
+| Preço no backend × na landing | R$ 150 × R$ 55/65 (**divergente**) | R$ 55/65 × R$ 55/65 | **alinhado** |
 | Dependências backend | 8 | 8 | 0 |
 | `npm audit` | 0 vulnerabilidades | 0 vulnerabilidades | 0 |
-| `npm test` | 9/9 passando | 9/9 passando | 0 |
-| Referências quebradas (404) | 5 | 5 | 0 — ver *Itens incertos* |
+| `npm test` | 9/9 passando | 9/9 passando (asserções reescritas) | 0 |
+| Referências quebradas (404) | 5 | 4 | **−1** (og:image resolvido; as 4 do line-up são placeholder proposital) |
 | **Peso da 1ª visita (desktop)** | 1.668,2 KB / 26 req | 1.669,2 KB / 27 req | **+1,0 KB / +1 req** |
 | **Peso da 1ª visita (mobile)** | 2.472,0 KB / 31 req | 2.473,0 KB / 32 req | **+1,0 KB / +1 req** |
 
@@ -58,6 +66,12 @@ nada**.
 
 O +1 KB é o `config.js` passando a ser carregado no `index.html` (a correção de
 um bug real, descrita abaixo). É um custo consciente.
+
+Uma ressalva de medição: rodando em `localhost`, o `config.js` aponta sozinho
+para `http://localhost:3000` e a página faz uma requisição a mais
+(`GET /api/produtos`, ~0,9 KB), o que dá 1.670,4 KB / 28 req. **Em produção isso
+não acontece**: com `apiUrl` vazio o `configurarVagas()` sai antes de buscar
+qualquer coisa. Os números da tabela são os de produção.
 
 Quem quiser página mais rápida precisa mexer nas **imagens**: elas são 1.040 KB
 dos 1.669 KB no desktop e 1.844 KB dos 2.473 KB no mobile. Está tudo detalhado
@@ -131,6 +145,9 @@ morto de verdade.**
 | **`config.js` não era carregado na landing** | `index.html` | O comentário do próprio HTML documenta `window.MP_CONFIG.vagas (config.js)` como origem nº 1 do painel de ingressos vendidos, e o `configurarVagas()` lê `window.MP_CONFIG` — mas o `index.html` nunca carregava o arquivo. As outras três páginas carregavam. **O painel de vendidos e o fallback para `GET /api/produtos` estavam mortos no index.** Com `apiUrl` vazio (o padrão) nada muda na tela: a função sai cedo e o painel continua `hidden`. |
 | **Cartão de compartilhamento incompleto** | `index.html` | Faltavam `og:site_name`, `og:locale` e `twitter:card`. Sem `twitter:card`, as tags `og:` já existentes não geram prévia no X/Twitter. |
 | **Aviso sobre `og:image` relativo** | `index.html` | Anotado no comentário que a URL precisa ser absoluta — WhatsApp, Facebook e X não resolvem caminho relativo. O arquivo em si continua faltando (ver *Itens incertos*). |
+| **Backend vendia produto e preço diferentes da landing** | `backend/src/catalogo.js` (+4 arquivos) | O catálogo tinha 8 produtos (setores `central`/`arquibancada` × tipos `individual`/`dupla`/`trio`/`caravana`) a **R$ 150,00**, enquanto a landing anuncia **um ingresso individual em 2 lotes, a R$ 55 e R$ 65**. Agora são só `lote-1` (R$ 55) e `lote-2` (R$ 65), quantidade 1 a 5 por pedido. Como `produto.setor` deixou de existir, os 4 lugares que montavam o nome do produto concatenando `setor + tipo + lote` passaram a usar um `descreverProduto()` único — inclusive o `pedido.js`, que mostrava **"undefined · Ingresso individual"** no resumo do checkout. |
+| **`evento.data` estava "Data a confirmar"** | `backend/src/catalogo.js` | Ia assim no e-mail do ingresso. As datas já estão firmes na landing: agora é "16 e 17 de outubro de 2026". |
+| **Imagem de compartilhamento criada** | `assets/imagens/compartilhamento.jpg` | 1200×630, 71,9 KB, com a identidade do site. Fonte versionada em `assets/compartilhamento-fonte.html`. |
 | Limpeza de código morto | vários | Ver tabela *Removido*. |
 
 ---
@@ -139,28 +156,34 @@ morto de verdade.**
 
 Nada aqui foi apagado. São decisões que dependem de você.
 
-### 1. As 4 fotos do line-up dão 404 — isso é de propósito?
+### 1. As 4 fotos do line-up dão 404 — RESPONDIDO
 
-`assets/imagens/lineup/1.jpg` … `4.jpg` são referenciados no `index.html` mas a
-pasta `lineup/` não existe. Confirmado por HTTP: **404** nos quatro.
+`assets/imagens/lineup/1.jpg` … `4.jpg` continuam dando 404 e **isso é
+proposital**: você confirmou que insere as fotos quando as tiver. O mecanismo
+`configurarMidias()` + `.midia.is-missing` + `data-rotulo` já mostra um rótulo de
+marcação no lugar, então a seção não quebra enquanto isso.
 
-Tudo indica que é **intencional**: o HTML traz `<!-- EDITAR: fotos em
-assets/imagens/lineup/ -->`, os nomes são "Nome da Preletora", "Nome da Pastora",
-e o site tem um mecanismo próprio (`configurarMidias()` + `.midia.is-missing` +
-`data-rotulo`) que troca a imagem quebrada por um rótulo de marcação. Ou seja, o
-404 é o placeholder funcionando.
+Para ligar, basta criar a pasta `assets/imagens/lineup/` com `1.jpg` … `4.jpg`
+(proporção 4:5 — o `.lineup-foto` já tem `aspect-ratio`, então não há salto de
+layout) e trocar os nomes e as bios nos `<template>` do `index.html`.
 
-**Não removi nada.** *Pergunta: confirma que as fotos entram depois? Se o line-up
-for cancelado, a seção inteira sai.*
+### 2. `og:image` — RESOLVIDO
 
-### 2. `og:image` aponta para um arquivo que não existe
+A arte foi gerada e está em `assets/imagens/compartilhamento.jpg`:
+**1200×630, 71,9 KB**, montada com a identidade do próprio site (fundo rosado
+com a mesma textura granulada, faixa tijolo + faixa nude da data, o nome da
+marca, a frase do hero em Fraunces itálico, o local em Bebas, o coração de três
+pétalas com halo e o ramo de folhas). Só usa assets que já existiam em
+`assets/imagens/marca/`.
 
-`assets/imagens/compartilhamento.jpg` → **404**. Enquanto isso, nenhum link
-compartilhado do site mostra prévia.
+O HTML que gera a arte ficou versionado em `assets/compartilhamento-fonte.html`:
+abra no navegador e capture 1200×630 para regerar quando a data mudar.
 
-Não inventei uma imagem no lugar porque a arte de compartilhamento é 1200×630 e é
-decisão de design. *Pergunta: quer que eu gere essa imagem a partir da marca, ou
-você prefere mandar a arte?* Além do arquivo, a URL precisa virar absoluta.
+Foram acrescentados também `og:image:width`, `og:image:height` e `og:image:alt`.
+
+**Falta um passo, e ele depende de você:** trocar o caminho por **URL absoluta**
+quando o domínio estiver definido. WhatsApp, Facebook e X não resolvem caminho
+relativo em `og:image`. Está anotado no comentário do `index.html`.
 
 ### 3. As 6 exportações de logo apagadas eram a arte-fonte da marca?
 
@@ -172,30 +195,18 @@ originais de onde saíram os arquivos otimizados de `assets/imagens/marca/`.
 repositório for a única cópia, eu recomendo trazer de volta para uma pasta
 `arte-fonte/` fora do site, em vez de deixar só no histórico.
 
-### 4. O catálogo do backend não bate com o que a landing vende
+### 4. Catálogo do backend divergente — RESOLVIDO
 
-Não é sujeira, é uma divergência de regra de negócio que descobri de passagem e
-que me parece séria:
+Você confirmou que **o preço real é R$ 55 e R$ 65** e que o catálogo deve
+espelhar a landing. Feito: ver a seção *Corrigido*.
 
-| | Landing (`index.html`) | Backend (`backend/src/catalogo.js`) |
-|---|---|---|
-| Produto | "Ingresso individual", sem setor | setores `central` / `arquibancada` |
-| Tipos | um só | `individual`, `dupla`, `trio`, `caravana` |
-| Preço | R$ 55 (1º lote) / R$ 65 (2º lote) | R$ 150,00 (15000) para tudo |
+### 5. A landing não leva ao checkout — RESPONDIDO, mantido de propósito
 
-**Não toquei em nada disso** — é decisão sua, não limpeza. Mas se as vendas
-on-line forem ligadas hoje, o cliente vê R$ 55 na landing e cai num checkout de
-R$ 150.
-
-### 5. A landing não leva ao checkout
-
-`CONFIG.links.ingressos` está vazio e os cartões de ingresso apontam para
-`#setores` (a própria seção). O fluxo `checkout.html → pagamento.html →
-confirmacao.html` existe, está pronto e **nenhuma página aponta para ele**.
-
-Mantive como está porque não sei se a venda vai ser pelo backend próprio ou por
-uma plataforma externa (o comentário do código cita Sympla como exemplo).
-*Pergunta: qual dos dois?*
+`CONFIG.links.ingressos` continua vazio e os cartões apontam para `#setores`.
+**Isso fica assim por ora**: você está integrando o backend. Quando a venda
+estiver pronta, o caminho é um só — preencher `CONFIG.links.ingressos` no
+`script.js`, ou apontar os cartões para `checkout.html?produto=lote-1` e
+`checkout.html?produto=lote-2`.
 
 ### 6. O PDF da especificação fica público no site
 
@@ -351,6 +362,9 @@ git reset --hard 81b1746
 | `e8ff9b1` | remove código morto de JS (front + backend) |
 | `d732fa4` | remove CSS morto |
 | `e0e9d89` | carrega `config.js` no index + metatags sociais |
+| `f50029e` | primeira versão deste relatório |
+| `00a5ab0` | alinha o catálogo do backend com a landing (R$ 55/65) |
+| `bf9639a` | arte de compartilhamento 1200×630 |
 
 ```bash
 git revert 66c3706   # por exemplo, só trazer as imagens de volta
@@ -372,8 +386,8 @@ de começar; ele não foi tocado em momento nenhum.
 
 | Critério | Situação |
 |---|---|
-| Build de produção sem erros nem warnings novos | **N/A** — não há build. `npm test` do backend: 9/9. `npm audit`: 0 vulnerabilidades. |
-| Nenhuma referência quebrada nova | **OK** — as 5 que existem são anteriores à auditoria e estão em *Itens incertos* 1 e 2. Nenhuma foi criada. |
+| Build de produção sem erros nem warnings novos | **N/A** — não há build. `npm test` do backend: 9/9. `npm audit`: 0 vulnerabilidades. Fluxo de compra testado de ponta a ponta com o backend no ar. |
+| Nenhuma referência quebrada nova | **OK** — nenhuma foi criada, e uma das 5 anteriores (`og:image`) foi resolvida. As 4 restantes são as fotos do line-up, placeholder proposital confirmado por você. |
 | Página visual e funcionalmente idêntica | **OK** — verificado por faixas de pixels, altura de seções e altura do documento. |
 | Nenhum código morto, arquivo órfão ou dependência sem uso | **OK** — exceto o listado em *Itens incertos*. |
 | `AUDITORIA.md` entregue | **OK** |
