@@ -21,14 +21,28 @@ const evento = {
 const QTD_MIN = 1;
 const QTD_MAX = 5;
 
-// EDITAR: os dois lotes. As datas aqui são só documentação da janela de
-// venda — quem decide se o lote aparece é o campo "ativo". A landing mostra
-// o selo de "abre dia…/vendas abertas/encerrado" a partir dos data-inicio e
-// data-fim do próprio HTML, em configurarLotes().
+// EDITAR: os dois lotes e a janela de venda de cada um.
+// As datas PRECISAM bater com os data-inicio / data-fim dos <li class="lote">
+// do index.html: a landing usa as de lá para o selo ("abre dia…/vendas
+// abertas/encerrado") e o servidor usa as daqui para recusar de verdade uma
+// compra fora do período. O último dia vende até 23:59.
 const lotes = [
-    { id: 'lote-1', lote: '1º lote', preco: 5500, venda: '27/09 a 06/10' },
-    { id: 'lote-2', lote: '2º lote', preco: 6500, venda: '07/10 a 15/10' }
+    { id: 'lote-1', lote: '1º lote', preco: 5500, de: '2026-09-27', ate: '2026-10-06' },
+    { id: 'lote-2', lote: '2º lote', preco: 6500, de: '2026-10-07', ate: '2026-10-15' }
 ];
+
+function diaBR(iso, fimDoDia) {
+    const p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+    if (!p) return null;
+    return fimDoDia
+        ? new Date(+p[1], +p[2] - 1, +p[3], 23, 59, 59, 999)
+        : new Date(+p[1], +p[2] - 1, +p[3]);
+}
+
+function formatarJanela(de, ate) {
+    const curto = function (iso) { return iso.slice(8, 10) + '/' + iso.slice(5, 7); };
+    return curto(de) + ' a ' + curto(ate);
+}
 
 const produtos = {};
 lotes.forEach(function (l) {
@@ -36,7 +50,9 @@ lotes.forEach(function (l) {
         id: l.id,
         tipo: 'Ingresso individual',
         lote: l.lote,
-        janelaVenda: l.venda,
+        vendaDe: l.de,
+        vendaAte: l.ate,
+        janelaVenda: formatarJanela(l.de, l.ate),
         precoUnitario: l.preco,
         quantidadeMin: QTD_MIN,
         quantidadeMax: QTD_MAX,
@@ -55,6 +71,21 @@ function buscarProduto(id) {
     return produto && produto.ativo ? produto : null;
 }
 
+/* O lote está dentro da janela de venda agora? Devolve:
+     'aberto'    dá para comprar
+     'espera'    ainda não abriu
+     'encerrado' já passou
+   Mesmos três estados que o configurarLotes() mostra no selo da landing. */
+function situacaoDoLote(produto, agora) {
+    const inicio = diaBR(produto.vendaDe, false);
+    const fim = diaBR(produto.vendaAte, true);
+    if (!inicio || !fim) return 'aberto';   // sem data configurada, não bloqueia
+    const momento = agora || new Date();
+    if (momento < inicio) return 'espera';
+    if (momento > fim) return 'encerrado';
+    return 'aberto';
+}
+
 function listarProdutos() {
     return Object.values(produtos).filter(function (p) { return p.ativo; });
 }
@@ -63,4 +94,4 @@ function formatarReais(centavos) {
     return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-module.exports = { evento, buscarProduto, listarProdutos, descreverProduto, formatarReais };
+module.exports = { evento, buscarProduto, listarProdutos, descreverProduto, situacaoDoLote, formatarReais };

@@ -1307,16 +1307,19 @@
             selo.textContent = texto;
             selo.hidden = false;
 
-            if (estado !== 'encerrado') return;
+            // só o lote ABERTO leva ao checkout. O que ainda vai abrir e o que
+            // já passou perdem o href, então não dá para comprar fora da janela
+            // nem clicando nem pelo teclado. (O backend também recusa: ver
+            // criarPedido() em backend/src/services/pedidoService.js.)
+            if (estado === 'aberto') return;
 
-            // lote vencido não leva a lugar nenhum: sai do caminho do teclado
             var ticket = lote.querySelector('.ticket');
             if (!ticket) return;
             ticket.setAttribute('aria-disabled', 'true');
             ticket.setAttribute('tabindex', '-1');
             ticket.removeAttribute('href');
             var acao = ticket.querySelector('.ticket-acao');
-            if (acao) acao.textContent = 'vendas encerradas';
+            if (acao) acao.textContent = estado === 'espera' ? 'em breve' : 'vendas encerradas';
         });
 
         function lerDia(texto) {

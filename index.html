@@ -398,7 +398,17 @@
              Um tipo de ingresso por lote, sem combo: o que muda de um lote
              para o outro é só o preço e a janela de venda. As datas moram nos
              data-inicio / data-fim de cada lote — o script.js lê dali e não
-             guarda nenhuma data no JS. -->
+             guarda nenhuma data no JS.
+
+             O href de cada cartão aponta para o checkout com o id do lote:
+             checkout.html?produto=lote-1. Esse id é o mesmo do catálogo do
+             backend (backend/src/catalogo.js) — se mudar lá, mude aqui.
+             Só o lote ABERTO leva ao checkout: configurarLotes() tira o href
+             dos que ainda vão abrir e dos encerrados.
+
+             Se um dia a venda for por plataforma externa (Sympla etc.), basta
+             preencher CONFIG.links.ingressos no script.js: o data-link faz
+             todos estes botões apontarem para lá. -->
         <section class="ingressos" aria-labelledby="ingressosTitulo">
             <!-- bordas quadriculadas, iguais à do rodapé: em cima na cor da
                  seção anterior, embaixo na cor da seguinte -->
@@ -446,7 +456,7 @@
                 <div class="setores" id="setores" data-entrada>
                     <ul class="setor-cards lotes">
                         <li class="lote" data-lote data-inicio="2026-09-27" data-fim="2026-10-06">
-                            <a class="ticket ticket--destaque" href="#setores" data-link="ingressos">
+                            <a class="ticket ticket--destaque" href="checkout.html?produto=lote-1" data-link="ingressos">
                                 <span class="ticket-topo">
                                     <span class="ticket-lote">1º lote</span>
                                     <span class="ticket-status" data-lote-status hidden></span>
@@ -470,7 +480,7 @@
                             </a>
                         </li>
                         <li class="lote" data-lote data-inicio="2026-10-07" data-fim="2026-10-15">
-                            <a class="ticket" href="#setores" data-link="ingressos">
+                            <a class="ticket" href="checkout.html?produto=lote-2" data-link="ingressos">
                                 <span class="ticket-topo">
                                     <span class="ticket-lote">2º lote</span>
                                     <span class="ticket-status" data-lote-status hidden></span>

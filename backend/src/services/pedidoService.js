@@ -6,7 +6,7 @@
                    \-> RECUSADO / EXPIRADO / CANCELADO
    ============================================================= */
 const config = require('../config');
-const { buscarProduto, descreverProduto } = require('../catalogo');
+const { buscarProduto, descreverProduto, situacaoDoLote } = require('../catalogo');
 const { pedidos } = require('./sheetsService');
 const { pagamento } = require('./pagamento');
 const { enviarIngresso } = require('./emailService');
@@ -36,6 +36,20 @@ async function criarPedido(entrada) {
     }
 
     const provedor = pagamento();
+
+    /* A landing já tira o link do lote fora da janela, mas isso é só a
+       vitrine: quem abrir checkout.html?produto=... na mão chega aqui. No modo
+       simulado a janela NÃO é aplicada, senão não daria para testar o fluxo
+       fora do período de vendas. Com gateway de verdade, ela vale sempre. */
+    if (!provedor.simulado) {
+        const situacao = situacaoDoLote(produto);
+        if (situacao === 'espera') {
+            throw erroPublico(409, 'As vendas deste lote ainda não começaram. Ele abre em ' + produto.janelaVenda.split(' a ')[0] + '.');
+        }
+        if (situacao === 'encerrado') {
+            throw erroPublico(409, 'As vendas deste lote já encerraram. Confira os outros lotes no site.');
+        }
+    }
     const metodo = provedor.metodos.includes(entrada.metodo) ? entrada.metodo : provedor.metodos[0];
 
     const validacao = validarComprador(entrada);

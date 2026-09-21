@@ -11,6 +11,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { criarApp } = require('../src/app');
 const { cpfValido } = require('../src/utils/validacao');
+const { buscarProduto, situacaoDoLote } = require('../src/catalogo');
 const sipag = require('../src/services/pagamento/sipagProvider');
 
 let servidor;
@@ -50,6 +51,26 @@ test('lista produtos com preço vindo do servidor', async function () {
     assert.equal(primeiro.precoUnitario, 5500, '1o lote: R$ 55,00');
     assert.equal(segundo.precoUnitario, 6500, '2o lote: R$ 65,00');
     assert.equal(dados.simulado, true);
+});
+
+test('janela de venda de cada lote', function () {
+    const um = buscarProduto('lote-1');
+    const dois = buscarProduto('lote-2');
+
+    // as datas precisam ser as mesmas dos data-inicio/data-fim do index.html
+    assert.equal(um.vendaDe, '2026-09-27');
+    assert.equal(um.vendaAte, '2026-10-06');
+    assert.equal(dois.vendaDe, '2026-10-07');
+    assert.equal(dois.vendaAte, '2026-10-15');
+
+    assert.equal(situacaoDoLote(um, new Date(2026, 8, 26, 23, 59)), 'espera', 'vespera da abertura');
+    assert.equal(situacaoDoLote(um, new Date(2026, 8, 27, 0, 0)), 'aberto', 'abre a meia-noite do dia 27');
+    assert.equal(situacaoDoLote(um, new Date(2026, 9, 6, 23, 59)), 'aberto', 'ultimo dia vende ate 23:59');
+    assert.equal(situacaoDoLote(um, new Date(2026, 9, 7, 0, 0)), 'encerrado', 'no dia seguinte ja fechou');
+
+    // os dois lotes se encaixam sem buraco nem sobreposicao
+    assert.equal(situacaoDoLote(dois, new Date(2026, 9, 7, 0, 0)), 'aberto', 'o 2o abre quando o 1o fecha');
+    assert.equal(situacaoDoLote(dois, new Date(2026, 9, 16)), 'encerrado', 'fechado no dia do evento');
 });
 
 test('checkout recusa dados inválidos campo a campo', async function () {
