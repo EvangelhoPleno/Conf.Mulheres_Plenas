@@ -7,10 +7,15 @@
     <meta name="description" content="Conferência Mulheres Plenas 2026, em Paragominas – PA. Uma realização da Igreja Evangelho Pleno. Garanta seu ingresso.">
     <meta name="theme-color" content="#F5E8E2">
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Conferência Mulheres Plenas">
+    <meta property="og:locale" content="pt_BR">
     <meta property="og:title" content="Conferência Mulheres Plenas 2026">
     <meta property="og:description" content="Um encontro para mulheres que desejam viver algo novo. Garanta seu ingresso.">
-    <!-- EDITAR: imagem de compartilhamento (1200x630) -->
+    <!-- EDITAR: imagem de compartilhamento (1200x630). Precisa ser URL absoluta
+         (https://.../compartilhamento.jpg): WhatsApp, Facebook e X não resolvem
+         caminho relativo. Enquanto o arquivo não existir, não há prévia. -->
     <meta property="og:image" content="assets/imagens/compartilhamento.jpg">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/png" href="assets/imagens/marca/favicon-64.png">
     <link rel="apple-touch-icon" href="assets/imagens/marca/apple-touch-180.png">
 
@@ -22,6 +27,8 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js" defer></script>
+    <!-- sem defer e antes do script.js: o configurarVagas() lê window.MP_CONFIG -->
+    <script src="config.js"></script>
     <script src="script.js" defer></script>
     <script>
         /* Abertura: liga antes da página pintar, para a landing não piscar por trás.
