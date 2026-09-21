@@ -8,6 +8,7 @@
    ============================================================= */
 const axios = require('axios');
 const config = require('../../config');
+const { descreverProduto } = require('../../catalogo');
 const { segredoConfere } = require('../../utils/seguranca');
 
 const INTEGRACAO_REVISADA = false;
@@ -36,7 +37,7 @@ function montarPayload({ pedido, produto, metodo, urls }) {
     return {
         referencia: pedido.pedidoId,
         valor: pedido.valorTotal,  // centavos — conferir se a Sipag espera reais (150.00)
-        descricao: 'Ingresso ' + produto.setor + ' ' + produto.tipo + ' x' + pedido.quantidade,
+        descricao: descreverProduto(produto) + ' x' + pedido.quantidade,
         formaPagamento: metodo === 'pix' ? 'PIX' : 'CARTAO_CREDITO',
         cliente: { nome: pedido.nome, email: pedido.email, documento: pedido.cpf },
         urlRetorno: urls.retorno,

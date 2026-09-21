@@ -7,7 +7,7 @@
    ============================================================= */
 const { config, abrirPlanilha, explicarErro } = require('./conexaoPlanilha');
 const { CABECALHO } = require('../src/services/sheetsService');
-const { listarProdutos } = require('../src/catalogo');
+const { listarProdutos, descreverProduto } = require('../src/catalogo');
 
 const TIJOLO = { red: 0x85 / 255, green: 0x35 / 255, blue: 0x1e / 255 };
 const TERRACOTA = { red: 0xb8 / 255, green: 0x68 / 255, blue: 0x4f / 255 };
@@ -102,7 +102,7 @@ async function prepararResumo(doc) {
     listarProdutos().forEach(function (produto, k) {
         const r = inicio + k;
         linhas.push([
-            produto.setor + ' · ' + produto.tipo + ' (' + produto.lote + ')',
+            descreverProduto(produto),
             '=SUMIFS(' + col('Quantidade') + ',' + status + ',"PAGO",' + col('Produto') + ',A' + r + ')',
             '=SUMIFS(' + col('Valor_Total') + ',' + status + ',"PAGO",' + col('Produto') + ',A' + r + ')'
         ]);

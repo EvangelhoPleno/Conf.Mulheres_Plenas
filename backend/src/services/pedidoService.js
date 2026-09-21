@@ -6,7 +6,7 @@
                    \-> RECUSADO / EXPIRADO / CANCELADO
    ============================================================= */
 const config = require('../config');
-const { buscarProduto } = require('../catalogo');
+const { buscarProduto, descreverProduto } = require('../catalogo');
 const { pedidos } = require('./sheetsService');
 const { pagamento } = require('./pagamento');
 const { enviarIngresso } = require('./emailService');
@@ -48,7 +48,7 @@ async function criarPedido(entrada) {
         criadoEm: dataHoraBrasil(agora),
         atualizadoEm: dataHoraBrasil(agora),
         status: 'PENDENTE',
-        produto: produto.setor + ' · ' + produto.tipo + ' (' + produto.lote + ')',
+        produto: descreverProduto(produto),
         quantidade,
         valorTotal: produto.precoUnitario * quantidade,
         metodo,

@@ -44,13 +44,16 @@ test('lista produtos com preço vindo do servidor', async function () {
     const r = await fetch(base + '/produtos');
     const dados = await r.json();
     assert.equal(r.status, 200);
-    const individual = dados.produtos.find(function (p) { return p.id === 'central-individual'; });
-    assert.equal(individual.precoUnitario, 15000);
+    assert.equal(dados.produtos.length, 2, 'dois lotes, um tipo de ingresso');
+    const primeiro = dados.produtos.find(function (p) { return p.id === 'lote-1'; });
+    const segundo = dados.produtos.find(function (p) { return p.id === 'lote-2'; });
+    assert.equal(primeiro.precoUnitario, 5500, '1o lote: R$ 55,00');
+    assert.equal(segundo.precoUnitario, 6500, '2o lote: R$ 65,00');
     assert.equal(dados.simulado, true);
 });
 
 test('checkout recusa dados inválidos campo a campo', async function () {
-    const r = await post('/checkout', { produto: 'central-individual', nome: 'Maria', email: 'x', cpf: '123' });
+    const r = await post('/checkout', { produto: 'lote-1', nome: 'Maria', email: 'x', cpf: '123' });
     const dados = await r.json();
     assert.equal(r.status, 422);
     assert.ok(dados.erros.nome && dados.erros.email && dados.erros.cpf);
@@ -58,15 +61,18 @@ test('checkout recusa dados inválidos campo a campo', async function () {
 
 test('checkout recusa produto e quantidade inválidos', async function () {
     assert.equal((await post('/checkout', Object.assign({ produto: 'vip-gratis' }, COMPRADORA))).status, 400);
-    assert.equal((await post('/checkout', Object.assign({ produto: 'central-caravana', quantidade: 3 }, COMPRADORA))).status, 400);
+    assert.equal((await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 6 }, COMPRADORA))).status, 400, 'acima do maximo de 5');
+    assert.equal((await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 2.5 }, COMPRADORA))).status, 400, 'quantidade quebrada');
+    // 0 e ausente sao a mesma coisa: caem no minimo do lote (ver pedidoService)
+    assert.equal((await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 0 }, COMPRADORA))).status, 201, '0 = nao informado, vira 1');
 });
 
 test('fluxo Pix: pendente -> pago -> ingressos, sem duplicar', async function () {
-    const r = await post('/checkout', Object.assign({ produto: 'arquibancada-trio', metodo: 'pix', valorTotal: 1 }, COMPRADORA));
+    const r = await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 3, metodo: 'pix', valorTotal: 1 }, COMPRADORA));
     const checkout = await r.json();
     assert.equal(r.status, 201);
     assert.equal(checkout.status, 'PENDENTE');
-    assert.equal(checkout.valorTotal, 45000, 'ignora valor mandado pelo navegador');
+    assert.equal(checkout.valorTotal, 16500, 'ignora valor mandado pelo navegador: 3 x R$ 55,00');
     assert.ok(checkout.pix.copiaECola);
     assert.match(checkout.pix.qrCode, /^data:image\/png;base64,/);
     assert.equal(checkout.email, 'ma***@exemplo.com');
@@ -97,9 +103,9 @@ test('fluxo Pix: pendente -> pago -> ingressos, sem duplicar', async function ()
 });
 
 test('fluxo cartão devolve link de pagamento', async function () {
-    const checkout = await (await post('/checkout', Object.assign({ produto: 'central-caravana', quantidade: 10, metodo: 'cartao' }, COMPRADORA))).json();
-    assert.equal(checkout.quantidade, 10);
-    assert.equal(checkout.valorTotal, 150000);
+    const checkout = await (await post('/checkout', Object.assign({ produto: 'lote-2', quantidade: 5, metodo: 'cartao' }, COMPRADORA))).json();
+    assert.equal(checkout.quantidade, 5);
+    assert.equal(checkout.valorTotal, 32500, '5 x R$ 65,00');
     assert.ok(checkout.linkPagamento);
     assert.equal(checkout.pix, null);
 });

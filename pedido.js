@@ -86,7 +86,7 @@
 
             marcarTeste(dados.simulado);
             preencher({
-                produto: produto.setor + ' · ' + produto.tipo,
+                produto: produto.tipo,
                 lote: produto.lote,
                 unitario: reais(produto.precoUnitario)
             });

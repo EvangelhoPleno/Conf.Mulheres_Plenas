@@ -333,7 +333,7 @@ fieldset.campo {
     border: 0;
 }
 
-/* quantidade da caravana */
+/* quantidade de ingressos do pedido */
 .quantidade {
     display: flex;
     align-items: center;
