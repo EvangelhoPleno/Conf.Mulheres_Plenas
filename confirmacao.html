@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingresso confirmado · Conferência Mulheres Plenas 2026</title>
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#F5E8E2">
+    <link rel="icon" type="image/png" href="assets/imagens/marca/favicon-64.png">
+    <link rel="apple-touch-icon" href="assets/imagens/marca/apple-touch-180.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@500;700&family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500..900,0..100,0..1;1,9..144,500..900,0..100,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pedido.css">
+    <script src="config.js"></script>
+    <script src="pedido.js" defer></script>
+</head>
+<body class="pedido-body" data-pagina="confirmacao">
+
+    <header class="pedido-topo">
+        <a href="index.html" class="nav-logo" aria-label="Mulheres Plenas — início">
+            <img src="assets/imagens/marca/mp-horizontal-escuro.png" alt="Mulheres Plenas" width="1100" height="198">
+        </a>
+        <a href="index.html" class="pedido-voltar">site</a>
+    </header>
+
+    <ol class="etapas" aria-label="Etapas da compra">
+        <li class="is-feita"><span>Seus dados</span></li>
+        <li class="is-feita"><span>Pagamento</span></li>
+        <li class="is-atual" aria-current="step"><span>Confirmação</span></li>
+    </ol>
+
+    <main class="pedido-main">
+        <div class="carregando" data-estado="carregando">Carregando seus ingressos…</div>
+
+        <div class="estado" data-estado="erro" hidden>
+            <h1 class="titulo">Pedido não encontrado</h1>
+            <p data-mensagem>Confira se o link está completo. Se você já pagou, os ingressos também estão no seu e-mail.</p>
+            <div class="acoes"><a class="btn-cta" href="index.html"><span class="btn-cta-text">Voltar ao site</span></a></div>
+        </div>
+
+        <div data-estado="pronto" hidden>
+            <div class="pedido-cabecalho">
+                <div class="confirmado-selo" aria-hidden="true">✓</div>
+                <span class="script">que alegria!</span>
+                <h1 class="titulo pedido-titulo">Ingresso confirmado</h1>
+                <p class="pedido-sub" data-texto-email></p>
+            </div>
+
+            <div class="aviso aviso--teste nao-imprimir" data-aviso-teste hidden>
+                <strong>Ambiente de teste.</strong> Este ingresso não vale para a entrada.
+            </div>
+
+            <ul class="ingressos-lista" data-ingressos></ul>
+
+            <section class="cartao" style="margin-top:28px" aria-labelledby="detTitulo">
+                <h2 class="titulo cartao-titulo" id="detTitulo">Detalhes do pedido</h2>
+                <p>Na portaria, apresente o QR Code de cada ingresso (no celular ou impresso).</p>
+                <dl class="detalhes">
+                    <div><dt>Ingresso</dt><dd data-resumo="produto"></dd></div>
+                    <div><dt>Quantidade</dt><dd data-resumo="quantidade"></dd></div>
+                    <div><dt>Valor pago</dt><dd data-resumo="total"></dd></div>
+                    <div><dt>Compra em</dt><dd data-resumo="criadoEm"></dd></div>
+                    <div><dt>ID da transação</dt><dd data-resumo="transacaoId"></dd></div>
+                </dl>
+            </section>
+
+            <div class="acoes" style="margin-top:28px">
+                <button type="button" class="btn-cta" data-imprimir><span class="btn-cta-text">Imprimir ingressos</span></button>
+                <a class="btn-secundario" href="index.html">Voltar ao site</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="pedido-rodape">&copy; 2026 Igreja Evangelho Pleno Paragominas</footer>
+</body>
+</html>

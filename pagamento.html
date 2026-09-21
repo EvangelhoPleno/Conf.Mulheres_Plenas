@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento · Conferência Mulheres Plenas 2026</title>
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#F5E8E2">
+    <link rel="icon" type="image/png" href="assets/imagens/marca/favicon-64.png">
+    <link rel="apple-touch-icon" href="assets/imagens/marca/apple-touch-180.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@500;700&family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500..900,0..100,0..1;1,9..144,500..900,0..100,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pedido.css">
+    <script src="config.js"></script>
+    <script src="pedido.js" defer></script>
+</head>
+<body class="pedido-body" data-pagina="pagamento">
+
+    <header class="pedido-topo">
+        <a href="index.html" class="nav-logo" aria-label="Mulheres Plenas — início">
+            <img src="assets/imagens/marca/mp-horizontal-escuro.png" alt="Mulheres Plenas" width="1100" height="198">
+        </a>
+        <a href="index.html" class="pedido-voltar">site</a>
+    </header>
+
+    <ol class="etapas" aria-label="Etapas da compra">
+        <li class="is-feita"><span>Seus dados</span></li>
+        <li class="is-atual" aria-current="step"><span>Pagamento</span></li>
+        <li><span>Confirmação</span></li>
+    </ol>
+
+    <main class="pedido-main">
+        <div class="carregando" data-estado="carregando">Carregando seu pedido…</div>
+
+        <!-- pedido não encontrado / erro -->
+        <div class="estado" data-estado="erro" hidden>
+            <h1 class="titulo">Pedido não encontrado</h1>
+            <p data-mensagem>Confira se o link está completo ou faça um novo pedido.</p>
+            <div class="acoes"><a class="btn-cta" href="index.html#setores"><span class="btn-cta-text">Ver ingressos</span></a></div>
+        </div>
+
+        <!-- recusado, expirado, cancelado -->
+        <div class="estado" data-estado="falhou" hidden>
+            <h1 class="titulo" data-falhou-titulo>Pagamento não aprovado</h1>
+            <p data-falhou-texto>Nenhum valor foi cobrado. Você pode tentar de novo com outra forma de pagamento.</p>
+            <div class="acoes"><a class="btn-cta" href="index.html#setores"><span class="btn-cta-text">Tentar novamente</span></a></div>
+        </div>
+
+        <!-- cartão: indo para a página do banco -->
+        <div class="estado" data-estado="redirecionando" hidden>
+            <h1 class="titulo">Indo para o pagamento</h1>
+            <p>Você será levada para a página segura do banco para pagar com cartão.</p>
+            <div class="acoes"><a class="btn-cta" data-link-pagamento href="#"><span class="btn-cta-text">Ir para o pagamento</span></a></div>
+        </div>
+
+        <div class="pedido-grid" data-estado="pronto" hidden>
+            <aside class="resumo" aria-label="Resumo do pedido">
+                <span class="script">seu pedido</span>
+                <p class="resumo-produto" data-resumo="produto"></p>
+                <dl class="resumo-linhas">
+                    <div class="resumo-linha"><dt>Nome</dt><dd data-resumo="nome"></dd></div>
+                    <div class="resumo-linha"><dt>E-mail</dt><dd data-resumo="email"></dd></div>
+                    <div class="resumo-linha"><dt>Quantidade</dt><dd data-resumo="quantidade"></dd></div>
+                    <div class="resumo-linha resumo-total"><dt>Total</dt><dd data-resumo="total"></dd></div>
+                </dl>
+            </aside>
+
+            <section class="cartao" aria-labelledby="pagTitulo">
+                <div class="aviso aviso--teste" data-aviso-teste hidden>
+                    <strong>Ambiente de teste.</strong> Nenhuma cobrança real será feita.
+                </div>
+
+                <!-- Pix -->
+                <div class="pix" data-bloco="pix" hidden>
+                    <h1 class="titulo cartao-titulo" id="pagTitulo">Pague com Pix</h1>
+                    <span class="aguardando" role="status">Aguardando pagamento</span>
+                    <div class="pix-qr"><img data-pix-qr alt="QR Code Pix para pagamento" width="320" height="320"></div>
+                    <div class="pix-copia">
+                        <input type="text" readonly data-pix-codigo aria-label="Código Pix copia e cola">
+                        <button type="button" class="btn-secundario" data-copiar>Copiar</button>
+                    </div>
+                    <ol class="pix-passos">
+                        <li>Abra o app do seu banco e escolha <strong>Pix</strong>.</li>
+                        <li>Escaneie o QR Code ou use o <strong>Pix copia e cola</strong>.</li>
+                        <li>Confirme o pagamento. Esta página atualiza sozinha.</li>
+                    </ol>
+                </div>
+
+                <!-- cartão simulado (só no modo de teste) -->
+                <div data-bloco="cartao-simulado" hidden>
+                    <h1 class="titulo cartao-titulo">Pagamento com cartão</h1>
+                    <p>No ambiente real, aqui entra a página segura do banco para digitar os dados do cartão.</p>
+                </div>
+
+                <!-- cartão: voltou da página do banco e o aviso ainda não chegou -->
+                <div class="pix" data-bloco="cartao-retorno" hidden>
+                    <h1 class="titulo cartao-titulo">Confirmando seu pagamento</h1>
+                    <span class="aguardando" role="status">Aguardando resposta do banco</span>
+                    <p>Isso costuma levar poucos segundos e esta página atualiza sozinha. Se você não concluiu o pagamento, volte para a página do banco.</p>
+                    <a class="btn-secundario" data-link-pagamento href="#">Voltar para o pagamento</a>
+                </div>
+
+                <div class="simulador" data-simulador hidden>
+                    <p><strong>Modo de teste:</strong> simule a resposta do banco.</p>
+                    <button type="button" class="btn-cta btn-bloco" data-simular><span class="btn-cta-text">Simular pagamento aprovado</span></button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="pedido-rodape">&copy; 2026 Igreja Evangelho Pleno Paragominas</footer>
+</body>
+</html>

@@ -1,0 +1,767 @@
+/* =============================================
+   TELAS DE COMPRA — checkout, pagamento e confirmação
+   Usa os tokens, fontes e botões do style.css.
+   ============================================= */
+
+.pedido-body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- topo ---------- */
+.pedido-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px var(--lateral);
+    border-bottom: 1px solid rgba(133, 53, 30, 0.12);
+}
+
+.pedido-topo .nav-logo img {
+    height: 28px;
+}
+
+.pedido-voltar {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--tijolo);
+}
+
+.pedido-voltar::before {
+    content: '← ';
+}
+
+/* ---------- etapas ---------- */
+.etapas {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: clamp(8px, 3vw, 28px);
+    margin: 28px auto 8px;
+    padding-inline: 16px;
+    counter-reset: etapa;
+}
+
+.etapas li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(74, 33, 22, 0.45);
+    counter-increment: etapa;
+}
+
+.etapas li::before {
+    content: counter(etapa);
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    font-size: 0.75rem;
+}
+
+.etapas li.is-atual {
+    color: var(--tijolo);
+}
+
+.etapas li.is-atual::before {
+    background: var(--tijolo);
+    border-color: var(--tijolo);
+    color: var(--rosado);
+}
+
+.etapas li.is-feita {
+    color: var(--terracota);
+}
+
+.etapas li.is-feita::before {
+    content: '✓';
+    background: var(--nude);
+    border-color: var(--nude);
+    color: var(--tijolo);
+}
+
+@media (max-width: 420px) {
+    .etapas li:not(.is-atual) span {
+        display: none;
+    }
+}
+
+/* ---------- conteúdo ---------- */
+.pedido-main {
+    flex: 1;
+    width: 100%;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 20px 16px 64px;
+}
+
+.pedido-cabecalho {
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+.pedido-cabecalho .script {
+    display: block;
+    font-size: clamp(1.6rem, 6vw, 2.2rem);
+}
+
+.pedido-titulo {
+    font-size: clamp(2rem, 8vw, 3.4rem);
+}
+
+.pedido-sub {
+    max-width: 52ch;
+    margin: 12px auto 0;
+    font-size: 1rem;
+}
+
+.pedido-grid {
+    display: grid;
+    gap: 24px;
+}
+
+@media (min-width: 900px) {
+    .pedido-grid {
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+        align-items: start;
+        gap: 36px;
+    }
+
+    .pedido-grid .resumo {
+        position: sticky;
+        top: 24px;
+        order: 2;
+    }
+}
+
+.cartao {
+    padding: clamp(20px, 5vw, 32px);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: var(--sombra-papel);
+}
+
+.cartao + .cartao {
+    margin-top: 20px;
+}
+
+.cartao-titulo {
+    margin-bottom: 18px;
+    font-size: clamp(1.3rem, 5vw, 1.6rem);
+}
+
+/* ---------- aviso (modo teste, erros, em breve) ---------- */
+.aviso {
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border-left: 4px solid var(--terracota);
+    background: var(--rosado);
+    font-size: 0.92rem;
+}
+
+.aviso--teste {
+    border-left-color: #B7791F;
+    background: #FDF3DC;
+    color: #5C3B06;
+}
+
+.aviso--erro {
+    border-left-color: #A61B1B;
+    background: #FBE6E4;
+    color: #6E1010;
+}
+
+.aviso[hidden] {
+    display: none;
+}
+
+/* ---------- resumo do ingresso ---------- */
+.resumo {
+    position: relative;
+    padding: 24px 22px 20px;
+    border-radius: 14px;
+    background: var(--tijolo);
+    color: var(--rosado);
+    overflow: hidden;
+}
+
+.resumo .script {
+    color: var(--nude);
+    font-size: 1.6rem;
+}
+
+.resumo-produto {
+    margin: 4px 0 2px;
+    font-family: var(--fonte-titulo);
+    font-weight: 800;
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    line-height: 1.05;
+}
+
+.resumo-lote {
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--nude);
+}
+
+.resumo-linhas {
+    margin: 18px 0 0;
+    padding-top: 16px;
+    border-top: 2px dashed rgba(245, 232, 226, 0.35);
+}
+
+.resumo-linha {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    font-size: 0.95rem;
+}
+
+.resumo-linha dd {
+    font-weight: 700;
+    text-align: right;
+}
+
+.resumo-total {
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(245, 232, 226, 0.25);
+    align-items: baseline;
+}
+
+.resumo-total dd {
+    font-family: var(--fonte-titulo);
+    font-size: 1.9rem;
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+}
+
+.resumo-seguro {
+    margin-top: 14px;
+    font-size: 0.78rem;
+    color: var(--nude);
+}
+
+/* ---------- formulário ---------- */
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.campo label,
+.campo legend {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--tijolo);
+}
+
+.campo .opcional {
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--terracota);
+}
+
+.campo input[type="text"],
+.campo input[type="email"],
+.campo input[type="tel"],
+.campo input[type="number"] {
+    width: 100%;
+    min-height: 50px;
+    padding: 12px 14px;
+    border: 2px solid var(--nude);
+    border-radius: 10px;
+    background: var(--papel);
+    color: var(--texto);
+    font: 500 1rem/1.3 var(--fonte-texto);
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.campo input:focus {
+    outline: none;
+    border-color: var(--terracota);
+    background: #fff;
+}
+
+.campo.is-invalido input {
+    border-color: #A61B1B;
+}
+
+.campo-erro {
+    min-height: 0;
+    font-size: 0.82rem;
+    color: #A61B1B;
+}
+
+.campo-erro:empty {
+    display: none;
+}
+
+.campo-dica {
+    font-size: 0.8rem;
+    color: rgba(74, 33, 22, 0.7);
+}
+
+@media (min-width: 600px) {
+    .campos-dupla {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 16px;
+    }
+}
+
+fieldset.campo {
+    border: 0;
+}
+
+/* quantidade da caravana */
+.quantidade {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quantidade button {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+    border: 2px solid var(--nude);
+    border-radius: 10px;
+    background: var(--papel);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--tijolo);
+    cursor: pointer;
+}
+
+.quantidade input[type="number"] {
+    max-width: 96px;
+    text-align: center;
+    -moz-appearance: textfield;
+}
+
+.quantidade input::-webkit-inner-spin-button,
+.quantidade input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+}
+
+/* forma de pagamento */
+.metodos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.metodo {
+    position: relative;
+}
+
+/* o .metodo é um <label> dentro de .campo: desfaz o estilo de rótulo */
+.campo .metodo {
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--texto);
+}
+
+.metodo input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+}
+
+.metodo span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    height: 100%;
+    padding: 14px;
+    border: 2px solid var(--nude);
+    border-radius: 10px;
+    background: var(--papel);
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.metodo strong {
+    font-size: 1rem;
+    color: var(--tijolo);
+}
+
+.metodo small {
+    font-size: 0.8rem;
+}
+
+.metodo input:checked + span {
+    border-color: var(--tijolo);
+    background: var(--rosado);
+    box-shadow: inset 0 0 0 1px var(--tijolo);
+}
+
+.metodo input:focus-visible + span {
+    outline: 3px solid var(--terracota);
+    outline-offset: 2px;
+}
+
+.aceite {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 6px 0 20px;
+    font-size: 0.88rem;
+}
+
+.aceite input {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    accent-color: var(--tijolo);
+}
+
+.btn-cta[disabled],
+.btn-cta.is-carregando {
+    opacity: 0.65;
+    pointer-events: none;
+}
+
+.btn-cta.is-carregando .btn-cta-text::after {
+    content: '…';
+}
+
+button.btn-cta {
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.pedido-form .btn-cta,
+.btn-bloco {
+    width: 100%;
+    border: 0;
+    cursor: pointer;
+}
+
+.btn-secundario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 10px 22px;
+    border: 2px solid var(--tijolo);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--tijolo);
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-secundario:hover {
+    background: var(--rosado);
+}
+
+/* ---------- pagamento (Pix) ---------- */
+.pix {
+    display: grid;
+    gap: 20px;
+    justify-items: center;
+    text-align: center;
+}
+
+.pix-qr {
+    width: min(260px, 70vw);
+    aspect-ratio: 1;
+    padding: 10px;
+    border: 2px dashed var(--nude);
+    border-radius: 14px;
+    background: #fff;
+}
+
+.pix-qr img {
+    width: 100%;
+    height: 100%;
+}
+
+.pix-copia {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+}
+
+.pix-copia input {
+    flex: 1;
+    min-width: 0;
+    min-height: 48px;
+    padding: 10px 12px;
+    border: 2px solid var(--nude);
+    border-radius: 10px;
+    background: var(--papel);
+    font: 0.85rem/1 'Courier New', monospace;
+    color: var(--texto);
+}
+
+.pix-passos {
+    width: 100%;
+    padding-left: 1.2em;
+    text-align: left;
+    font-size: 0.92rem;
+}
+
+.pix-passos li + li {
+    margin-top: 4px;
+}
+
+.aguardando {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: var(--rosado);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--tijolo);
+}
+
+.aguardando::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--terracota);
+    animation: pulsar 1.4s ease-in-out infinite;
+}
+
+@keyframes pulsar {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.6); opacity: 0.4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .aguardando::before { animation: none; }
+}
+
+.simulador {
+    margin-top: 20px;
+    padding: 16px;
+    border: 2px dashed #B7791F;
+    border-radius: 12px;
+    background: #FDF3DC;
+    text-align: center;
+    color: #5C3B06;
+}
+
+.simulador p {
+    margin-bottom: 12px;
+    font-size: 0.88rem;
+}
+
+/* ---------- estado centralizado (carregando, erro, em breve) ---------- */
+.estado {
+    max-width: 520px;
+    margin: 32px auto;
+    text-align: center;
+}
+
+.estado .titulo {
+    font-size: clamp(1.8rem, 7vw, 2.6rem);
+    margin-bottom: 12px;
+}
+
+.estado p + .acoes,
+.estado .acoes {
+    margin-top: 24px;
+}
+
+.acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+}
+
+.carregando {
+    display: grid;
+    place-items: center;
+    gap: 14px;
+    padding: 60px 0;
+    color: var(--terracota);
+}
+
+.carregando::before {
+    content: '';
+    width: 38px;
+    height: 38px;
+    border: 4px solid var(--nude);
+    border-top-color: var(--tijolo);
+    border-radius: 50%;
+    animation: girar 0.9s linear infinite;
+}
+
+@keyframes girar {
+    to { transform: rotate(360deg); }
+}
+
+[hidden] {
+    display: none !important;
+}
+
+/* ---------- confirmação ---------- */
+.confirmado-selo {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: var(--tijolo);
+    color: var(--rosado);
+    font-size: 2.2rem;
+    box-shadow: 4px 5px 0 var(--terracota);
+}
+
+.ingressos-lista {
+    list-style: none;
+    display: grid;
+    gap: 18px;
+}
+
+@media (min-width: 640px) {
+    .ingressos-lista {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .ingressos-lista .ingresso {
+        width: 280px;
+    }
+}
+
+.ingresso {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    padding: 22px 18px 18px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: var(--sombra-papel);
+    text-align: center;
+    break-inside: avoid;
+}
+
+.ingresso::before,
+.ingresso::after {
+    content: '';
+    position: absolute;
+    top: 58%;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--papel);
+}
+
+.ingresso::before { left: -11px; }
+.ingresso::after  { right: -11px; }
+
+.ingresso-num {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--terracota);
+}
+
+.ingresso img {
+    width: 190px;
+    height: 190px;
+}
+
+.ingresso-codigo {
+    width: 100%;
+    padding-top: 12px;
+    border-top: 2px dashed var(--nude);
+    font: 700 1.15rem/1.2 'Courier New', monospace;
+    letter-spacing: 0.1em;
+    color: var(--tijolo);
+}
+
+.detalhes {
+    display: grid;
+    gap: 0;
+    margin-top: 24px;
+}
+
+.detalhes div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rosado);
+    font-size: 0.95rem;
+}
+
+.detalhes div:last-child {
+    border-bottom: 0;
+}
+
+.detalhes dd {
+    font-weight: 700;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.pedido-rodape {
+    padding: 22px var(--lateral);
+    background: var(--tijolo);
+    color: var(--nude);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* ---------- impressão do ingresso ---------- */
+@media print {
+    body::after,
+    .pedido-topo,
+    .etapas,
+    .acoes,
+    .pedido-rodape,
+    .nao-imprimir {
+        display: none !important;
+    }
+
+    body {
+        background: #fff;
+    }
+
+    .ingresso,
+    .cartao {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}

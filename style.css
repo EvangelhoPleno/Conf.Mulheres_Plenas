@@ -95,6 +95,12 @@ body.sem-rolagem {
     outline-offset: 3px;
 }
 
+/* o anel é de quem navega pelo teclado: o clique de mouse não deve deixá-lo
+   preso no elemento (alguns navegadores tratam link clicado como focus-visible) */
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
 .sprite {
     position: absolute;
     width: 0;
@@ -968,12 +974,13 @@ html.entrada-ativa .entrada.is-dissolvendo {
 .faixa-rolante {
     position: relative;
     z-index: 3;
-    margin: -30px -5% -30px;
+    /* reta, de ponta a ponta: sem a inclinacao nao ha canto sobrando, entao
+       tambem nao precisa das sobras laterais que a cobriam */
+    margin: -30px 0;
     padding: 14px 0;
     overflow: hidden;
     background: var(--tijolo);
     color: var(--rosado);
-    rotate: -2deg;
     box-shadow: 0 12px 26px rgba(62, 26, 16, 0.2);
 }
 
@@ -1017,29 +1024,169 @@ html.entrada-ativa .entrada.is-dissolvendo {
    ============================================= */
 .recap {
     position: relative;
-    padding: clamp(110px, 13vw, 160px) var(--lateral) clamp(80px, 10vw, 128px);
+    /* O selo do tema sobe 58% para fora da faixa e a polaroid e a ultima
+       coisa da secao: o respiro util e medido a partir deles, nao da caixa. */
+    padding: clamp(90px, 8.4vw, 120px) var(--lateral) clamp(44px, 5vw, 72px);
     overflow: hidden;
     background: var(--tijolo);
     color: var(--rosado);
     text-align: center;
 }
 
-.recap-titulo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: clamp(40px, 6vw, 64px);
+/* TEMA OFICIAL: e o titulo da secao e o bloco de maior impacto dela.
+   Um cartaz de papel rosado, recortado a mao e torto ao contrario da
+   polaroid, com o coracao de tres petalas montado na borda de cima. O papel
+   claro sobre o tijolo e o que cria o contraste — nada de moldura. */
+.recap-tema {
+    position: relative;
+    z-index: 1;
+    max-width: 1320px;
+    margin: 0 auto clamp(56px, 8vw, 92px);
+    text-align: center;
 }
 
-.recap-kicker {
-    font-size: clamp(2rem, 8vw, 3.4rem);
+/* brilho quente por tras do cartaz, para ele descolar do fundo */
+.recap-tema::before {
+    content: '';
+    position: absolute;
+    inset: -14% -10%;
+    z-index: -1;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(223, 185, 166, 0.22) 0%, rgba(223, 185, 166, 0) 68%);
+}
+
+.recap-tema-cartaz {
+    position: relative;
+    z-index: 1;
+    display: block;
+    padding: clamp(40px, 4.2vw, 54px) clamp(18px, 2.6vw, 44px) clamp(30px, 3.2vw, 40px);
+    background: var(--rosado);
+    box-shadow: 0 26px 56px rgba(0, 0, 0, 0.32);
+    /* mesma tesoura da .faixa, mas com o recorte simetrico dos dois lados:
+       assimetrico ele dava a impressao de a faixa estar caindo */
+    clip-path: polygon(0 1.4%, 25% 0, 50% 1.3%, 75% 0, 100% 1.4%, 100% 98.6%, 75% 100%, 50% 98.7%, 25% 100%, 0 98.6%);
+}
+
+/* Selo redondo com o coracao da marca, montado na borda de cima do cartaz.
+   O disco e da cor do papel porque a petala mais escura do simbolo e o
+   proprio tijolo do fundo: solto sobre a secao ela sumiria. */
+.recap-tema-selo {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: clamp(64px, 6.6vw, 94px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--rosado);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.26);
+    transform: translate(-50%, -58%);
+}
+
+.recap-tema-selo img {
+    width: 56%;
+    height: auto;
+}
+
+/* Ramos da marca nos cantos da secao. No celular nao cabem sem encostar no
+   texto, entao so entram do tablet pra cima. */
+.recap-folha {
+    display: none;
+    z-index: 0;
+    fill: var(--nude);
     color: var(--nude);
-    rotate: -4deg;
+    opacity: 0.5;
 }
 
-.recap-titulo .titulo {
-    font-size: clamp(2.4rem, 10vw, 5.8rem);
-    color: var(--rosado);
+@media (min-width: 768px) {
+    .recap-folha {
+        display: block;
+        width: clamp(96px, 9vw, 130px);
+        height: clamp(208px, 19.5vw, 282px);
+    }
+
+    .recap-folha--esq {
+        left: -44px;
+        bottom: clamp(60px, 9vw, 130px);
+        rotate: 20deg;
+    }
+
+    .recap-folha--dir {
+        right: -48px;
+        top: clamp(150px, 19vw, 240px);
+        scale: -1 1;
+        rotate: 16deg;
+    }
+}
+
+/* etiqueta recortada, encaixada na borda de baixo da faixa */
+.recap-tema-rotulo {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    z-index: 2;
+    font-size: clamp(0.9rem, 2.4vw, 1.25rem);
+    letter-spacing: 0.12em;
+    transform: translate(-50%, 50%);
+}
+
+.recap-tema-frase {
+    display: block;
+    text-wrap: balance;
+}
+
+/* No celular a frase nao cabe deitada, entao cada oracao vira uma linha.
+   Do tablet pra cima elas voltam a correr juntas e a faixa fica fina. */
+.recap-tema-linha {
+    display: block;
+    font-size: clamp(1.65rem, 3.9vw, 3.6rem);
+    line-height: 1.06;
+    color: var(--tijolo);
+    /* os mesmos eixos da logo "Mulheres Plenas": Fraunces no tamanho optico
+       maximo, que e onde o contraste grosso/fino e os terminais em bolinha
+       aparecem. Sem o opsz fixo o navegador escolhe um valor pelo font-size
+       e a letra sai mais seca que a da marca. */
+    font-weight: 800;
+    font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+}
+
+/* A palavra-chave de cada linha: e o nome do tema, entao ela sai do tom do
+   resto da frase em tres frentes — corpo maior, tinta mais escura que o
+   tijolo do redor e o traco nude pintado por tras, o mesmo gesto do
+   .sublinhado. So a italica nao segurava o destaque: a terracota e mais
+   clara que o tijolo e as palavras vinham mais fracas que a frase. */
+.recap-tema-linha em {
+    position: relative;
+    font-style: italic;
+    font-size: 1.12em;
+    color: var(--tijolo-escuro);
+    font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+}
+
+/* o traco fica na altura da barriga da letra e sangra um pouco dos dois
+   lados, para parecer marcado a mao e nao um sublinhado de editor */
+.recap-tema-linha em::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: -0.09em;
+    right: -0.09em;
+    bottom: 0.04em;
+    height: 0.3em;
+    background: var(--nude);
+    /* as mesmas pontas irregulares das faixas recortadas do site */
+    clip-path: polygon(0 12%, 30% 0, 62% 9%, 100% 2%, 100% 88%, 66% 100%, 28% 92%, 0 100%);
+}
+
+/* do tablet pra cima as duas oracoes correm na mesma linha e a faixa fica
+   fina. Precisa vir depois da regra acima: mesma especificidade, quem
+   estiver por ultimo no arquivo ganha. */
+@media (min-width: 768px) {
+    .recap-tema-linha {
+        display: inline;
+    }
 }
 
 /* foto polaroid levemente torta */
@@ -1252,11 +1399,37 @@ html.entrada-ativa .entrada.is-dissolvendo {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 22px;
-    max-width: 720px;
+    gap: clamp(20px, 2.6vw, 30px);
+    max-width: 760px;
     margin-inline: auto;
     padding: 72px var(--lateral) 96px;
     text-align: center;
+}
+
+/* Abertura em duas vozes: a afirmacao em Fraunces, com os eixos da logo, e
+   o eco manuscrito logo abaixo. */
+.about-abre {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(6px, 1.2vw, 12px);
+    margin-bottom: clamp(4px, 1.4vw, 14px);
+}
+
+.about-abre-forte {
+    font-family: var(--fonte-titulo);
+    font-weight: 800;
+    font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+    font-size: clamp(1.75rem, 4.6vw, 2.9rem);
+    letter-spacing: -0.02em;
+    line-height: 1.04;
+    color: var(--tijolo);
+    text-wrap: balance;
+}
+
+.about-abre-eco {
+    font-size: clamp(1.5rem, 3.6vw, 2.2rem);
+    color: var(--terracota);
 }
 
 .about-text {
@@ -1267,6 +1440,28 @@ html.entrada-ativa .entrada.is-dissolvendo {
 
 .about-text .highlight {
     font-size: 1.12em;
+}
+
+/* Fecho: a frase que fica. Bloco nude recortado a mao, na mesma tesoura das
+   faixas do site. */
+.about-fecho {
+    max-width: 640px;
+    margin-top: clamp(6px, 1.6vw, 16px);
+    padding: clamp(18px, 3vw, 26px) clamp(20px, 4vw, 38px);
+    background: var(--nude);
+    font-family: var(--fonte-titulo);
+    font-weight: 700;
+    font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+    font-size: clamp(1.15rem, 2.8vw, 1.5rem);
+    line-height: 1.35;
+    color: var(--tijolo);
+    text-wrap: balance;
+    clip-path: polygon(0 1.6%, 25% 0, 50% 1.4%, 75% 0, 100% 1.6%, 100% 98.4%, 75% 100%, 50% 98.6%, 25% 100%, 0 98.4%);
+}
+
+.about-fecho em {
+    font-style: italic;
+    color: var(--tijolo-escuro);
 }
 
 .about .btn-cta {
@@ -1312,89 +1507,221 @@ html.entrada-ativa .entrada.is-dissolvendo {
 
 /* =============================================
    O QUE TE ESPERA
+   Lista editorial: número, título em caixa-alta e uma linha de
+   explicação, separados por fios pontilhados da identidade.
    ============================================= */
 .espera {
     position: relative;
     overflow: hidden;
-    padding: 32px var(--lateral) 104px;
+    /* o fecho e o botao ja dao respiro: o rodape da secao e mais curto que o topo */
+    padding: clamp(72px, 9vw, 120px) var(--lateral) clamp(44px, 5vw, 68px);
     background: var(--papel);
-    text-align: center;
 }
 
+/* no celular o ramo sai mais para fora para nao encostar no texto */
 .espera-folha {
-    right: -40px;
+    right: -72px;
     top: 30%;
     width: 130px;
     height: 282px;
     rotate: -24deg;
 }
 
-.espera-cabecalho {
+.espera-inner {
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    margin-bottom: clamp(40px, 6vw, 72px);
+    max-width: 1040px;
+    margin-inline: auto;
+    text-align: center;
 }
 
+.espera-cabecalho {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(8px, 1.4vw, 14px);
+}
+
+/* legenda pequena entre dois fios, como a ponte dos ingressos */
 .espera-pre {
-    font-weight: 500;
-    font-size: clamp(1.05rem, 4vw, 1.6rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    width: 100%;
+    font-family: var(--fonte-texto);
+    font-weight: 700;
+    font-size: clamp(0.7rem, 2.4vw, 0.82rem);
+    letter-spacing: 0.22em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--terracota);
+}
+
+.espera-pre::before,
+.espera-pre::after {
+    content: '';
+    flex: 1;
+    max-width: 96px;
+    height: 1.5px;
+    background: linear-gradient(to right, transparent, rgba(184, 104, 79, 0.5), transparent);
 }
 
 .espera-logo {
-    width: min(84vw, 560px);
+    width: min(78vw, 440px);
     height: auto;
 }
 
 .espera-ano {
-    font-size: clamp(1.8rem, 7vw, 2.8rem);
+    font-size: clamp(1.5rem, 5.6vw, 2.2rem);
     rotate: -4deg;
 }
 
+.espera-intro {
+    max-width: 36ch;
+    margin-top: clamp(20px, 3vw, 30px);
+    font-size: clamp(1.02rem, 3.1vw, 1.3rem);
+    line-height: 1.5;
+    color: var(--texto);
+    text-wrap: balance;
+}
+
+/* ---------- a lista ---------- */
 .espera-lista {
-    position: relative;
     list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: clamp(12px, 2.4vw, 28px);
-    max-width: 1100px;
-    margin: 0 auto 56px;
+    width: 100%;
+    margin-top: clamp(34px, 5vw, 60px);
+    border-top: 2px dotted rgba(184, 104, 79, 0.45);
+    text-align: left;
 }
 
 .espera-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: 4px clamp(14px, 3vw, 26px);
+    padding: clamp(22px, 3.4vw, 34px) clamp(6px, 1.6vw, 18px);
+    border-bottom: 2px dotted rgba(184, 104, 79, 0.45);
+    transition: background-color 0.35s var(--ease-saida);
+}
+
+.espera-item:hover {
+    background: rgba(245, 232, 226, 0.7);
+}
+
+.espera-num {
+    grid-row: 1 / span 2;
+    font-family: var(--fonte-titulo);
+    font-weight: 700;
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    font-size: clamp(0.85rem, 2.6vw, 1rem);
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--nude);
+    transition: color 0.35s var(--ease-saida);
+}
+
+.espera-item:hover .espera-num {
+    color: var(--terracota);
+}
+
+.espera-titulo {
     font-family: var(--fonte-faixa);
-    font-size: clamp(2.6rem, 12vw, 8rem);
-    line-height: 0.95;
+    font-weight: 400;
+    /* calibrado para "momento de adoração" caber numa linha só */
+    font-size: clamp(1.95rem, 7.4vw, 3.3rem);
+    line-height: 0.92;
     letter-spacing: 0.01em;
     text-transform: uppercase;
     text-wrap: balance;
     color: var(--tijolo);
 }
 
-.espera-item em {
+.espera-titulo em {
     font-family: var(--fonte-titulo);
     font-style: italic;
     font-weight: 700;
     font-variation-settings: "SOFT" 100, "WONK" 1;
-    font-size: 0.8em;
+    font-size: 0.78em;
     letter-spacing: -0.02em;
     text-transform: lowercase;
     color: var(--terracota);
 }
 
-.espera-item--mais {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: center;
-    gap: 0 0.25em;
+.espera-texto {
+    max-width: 46ch;
+    margin-top: clamp(6px, 1vw, 10px);
+    font-size: clamp(0.95rem, 2.6vw, 1.06rem);
+    line-height: 1.55;
+    color: rgba(74, 33, 22, 0.82);
 }
 
+/* ---------- fecho ---------- */
 .espera-mais {
-    font-size: 1em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: clamp(30px, 4.4vw, 46px);
+}
+
+.espera-mais-frase {
+    font-family: var(--fonte-faixa);
+    font-size: clamp(1.7rem, 6.4vw, 2.6rem);
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--tijolo);
+}
+
+.espera-mais-frase .script {
+    font-size: 1.15em;
     text-transform: none;
+}
+
+.espera-mais-nota {
+    max-width: 44ch;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
+    line-height: 1.5;
+    color: rgba(74, 33, 22, 0.72);
+    text-wrap: balance;
+}
+
+.espera .btn-cta {
+    margin-top: clamp(32px, 4.6vw, 52px);
+}
+
+/* so a partir de 900px o texto sai para a coluna da direita: abaixo disso a
+   coluna da descricao ficaria estreita demais e a lista perde o ritmo */
+@media (min-width: 900px) {
+    .espera-item {
+        grid-template-columns: auto minmax(0, 1.12fr) minmax(0, 0.88fr);
+        align-items: center;
+        gap: 0 clamp(20px, 3.4vw, 44px);
+    }
+
+    .espera-num {
+        grid-row: auto;
+        align-self: center;
+    }
+
+    .espera-texto {
+        margin-top: 0;
+        padding-left: clamp(16px, 2.4vw, 30px);
+        border-left: 2px dotted rgba(184, 104, 79, 0.35);
+    }
+
+    /* a partir daqui o titulo divide a linha com a descricao: a escala passa
+       a acompanhar a largura da coluna, para "momento de adoracao" nao quebrar */
+    .espera-titulo {
+        font-size: clamp(1.9rem, 4.4vw, 3.3rem);
+    }
+
+    .espera-folha {
+        right: -40px;
+    }
 }
 
 /* =============================================
@@ -1405,7 +1732,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 88px 0 104px;
+    padding: 88px 0 72px;
     overflow: hidden;
     background: var(--terracota);
 }
@@ -1580,7 +1907,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     --dither-topo: var(--terracota);
     --dither-base: var(--nude);
     position: relative;
-    padding: 132px var(--lateral) 140px;
+    padding: 104px var(--lateral) 108px;
     overflow: hidden;
     background: var(--tijolo);
     color: var(--rosado);
@@ -1632,7 +1959,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     align-items: center;
     justify-content: center;
     gap: 14px;
-    margin-bottom: clamp(30px, 5vw, 48px);
+    margin-bottom: clamp(24px, 3.6vw, 36px);
     font-weight: 500;
     font-size: clamp(1.05rem, 2.6vw, 1.35rem);
     line-height: 1.3;
@@ -1687,7 +2014,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     flex-direction: column;
     align-items: center;
     gap: 26px;
-    margin-bottom: clamp(44px, 6vw, 68px);
+    margin-bottom: clamp(30px, 4.2vw, 46px);
 }
 
 /* a escassez dita a seção: 700 em corpo grande, o resto discreto */
@@ -1811,45 +2138,27 @@ html.entrada-ativa .entrada.is-dissolvendo {
     color: var(--papel);
 }
 
-/* ---------- setores ---------- */
+/* ---------- lotes ----------
+   Dois lotes, um ingresso em cada, nenhum combo: os dois cards são iguais em
+   estrutura e só o preço, a janela de venda e a situação mudam. */
 .setores {
     display: flex;
     flex-direction: column;
-    gap: clamp(48px, 7vw, 76px);
-    margin-bottom: 56px;
+    gap: clamp(22px, 3.6vw, 32px);
+    margin-bottom: clamp(32px, 4vw, 42px);
     scroll-margin-top: calc(var(--nav-altura) + 24px);
 }
 
-.setor-cabecalho {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 4px 16px;
-    margin-bottom: 22px;
-    padding-bottom: 14px;
-    border-bottom: 1.5px dashed rgba(223, 185, 166, 0.4);
-}
-
-.setor-lote {
-    font-size: clamp(2.4rem, 10vw, 4.4rem);
-    color: var(--rosado);
-}
-
-.setor-nome {
-    font-family: var(--fonte-faixa);
-    font-size: clamp(1.4rem, 5vw, 2.2rem);
-    line-height: 1;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--nude);
-}
-
+/* o nome .setor-cards continua: é por ele que o GSAP acha os cards */
 .setor-cards {
     list-style: none;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
+    gap: clamp(16px, 3vw, 22px);
+}
+
+.lote {
+    display: flex;
 }
 
 /* ---------- o ingresso ---------- */
@@ -1858,9 +2167,9 @@ html.entrada-ativa .entrada.is-dissolvendo {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    height: 100%;
-    padding: 20px 18px 18px;
-    border-radius: 12px;
+    width: 100%;
+    padding: 18px 18px 18px;
+    border-radius: 14px;
     background: linear-gradient(170deg, #EBC7B3, var(--nude));
     color: var(--texto);
     text-decoration: none;
@@ -1873,11 +2182,10 @@ html.entrada-ativa .entrada.is-dissolvendo {
     box-shadow: 0 20px 38px rgba(0, 0, 0, 0.26);
 }
 
-/* o mais vendido é o centro da decisão: fundo claro que salta no meio dos
-   nudes, anel de luz e, no desktop, um degrau a mais de altura e de sombra */
+/* o lote mais barato é o centro da decisão: fundo claro que salta no meio do
+   nude e um anel de luz em volta */
 .ticket--destaque {
     background: var(--papel);
-    /* o selo fica sobreposto, então o conteúdo alinha com os outros cards */
     box-shadow: 0 14px 28px rgba(0, 0, 0, 0.26), 0 0 0 2px rgba(245, 232, 226, 0.55);
 }
 
@@ -1885,27 +2193,75 @@ html.entrada-ativa .entrada.is-dissolvendo {
     box-shadow: 0 26px 48px rgba(0, 0, 0, 0.34), 0 0 0 2px rgba(245, 232, 226, 0.85);
 }
 
-.ticket--destaque .ticket-preco {
-    font-size: clamp(2.1rem, 7.6vw, 3rem);
+/* ---------- cabeçalho do card: lote + situação ---------- */
+.ticket-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding-bottom: 10px;
+    border-bottom: 1.5px dashed rgba(133, 53, 30, 0.3);
 }
 
-.ticket--destaque .ticket-acao {
+.ticket-lote {
+    font-family: var(--fonte-faixa);
+    font-size: clamp(1.6rem, 5.6vw, 2.1rem);
+    line-height: 1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     color: var(--tijolo);
-    font-size: 0.82rem;
 }
 
-.ticket-selo {
-    position: absolute;
-    top: -11px;
-    right: 14px;
-    padding: 3px 11px;
+/* o selo só aparece quando o script.js sabe a situação real do lote */
+.ticket-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 11px;
+    border: 1.5px solid rgba(133, 53, 30, 0.3);
     border-radius: 999px;
-    background: var(--terracota);
-    color: var(--papel);
     font-size: 0.62rem;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
+    color: var(--tijolo);
+    white-space: nowrap;
+}
+
+.ticket-status[hidden] { display: none; }
+
+.ticket-status::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* vendas abertas: o único selo com cor cheia, com o ponto pulsando */
+.ticket-status--aberto {
+    border-color: transparent;
+    background: var(--terracota);
+    color: var(--papel);
+}
+
+.ticket-status--aberto::before {
+    animation: pontoPulsa 2.2s ease-in-out infinite;
+}
+
+@keyframes pontoPulsa {
+    50% { transform: scale(1.5); opacity: 0.55; }
+}
+
+.ticket-status--espera {
+    border-style: dashed;
+    opacity: 0.8;
+}
+
+.ticket-status--fim {
+    border-color: rgba(74, 33, 22, 0.25);
+    color: rgba(74, 33, 22, 0.6);
 }
 
 .ticket-tipo {
@@ -1921,14 +2277,14 @@ html.entrada-ativa .entrada.is-dissolvendo {
     font-family: var(--fonte-titulo);
     font-weight: 800;
     font-variation-settings: "SOFT" 100, "WONK" 1;
-    font-size: clamp(1.9rem, 7vw, 2.7rem);
+    font-size: clamp(2.4rem, 9vw, 3.4rem);
     line-height: 1;
     letter-spacing: -0.03em;
     color: var(--tijolo);
 }
 
 .ticket-preco small {
-    font-size: 0.45em;
+    font-size: 0.42em;
     letter-spacing: 0;
 }
 
@@ -1943,15 +2299,32 @@ html.entrada-ativa .entrada.is-dissolvendo {
     opacity: 0.66;
 }
 
-/* recortes laterais do ticket: dois círculos na cor do fundo da seção */
-.ticket-base {
-    position: relative;
+/* janela de venda: o dado que diferencia um lote do outro */
+.ticket-janela {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: auto;
-    padding-top: 14px;
-    border-top: 2px dashed rgba(133, 53, 30, 0.3);
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-top: 2px;
+    padding: 7px 11px;
+    border-radius: 9px;
+    background: rgba(133, 53, 30, 0.08);
+}
+
+.ticket-janela-rotulo {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.6;
+}
+
+.ticket-janela-datas {
+    font-family: var(--fonte-faixa);
+    font-size: clamp(1.05rem, 3.4vw, 1.25rem);
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--tijolo);
 }
 
 /* ---------- personalização do ingresso ---------- */
@@ -1960,6 +2333,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     width: 100%;
     max-width: 132px;
     height: auto;
+    margin-top: 4px;
     margin-bottom: 2px;
     /* sobre o nude o logo escuro já tem contraste; só tira um pouco do peso */
     opacity: 0.92;
@@ -1969,29 +2343,15 @@ html.entrada-ativa .entrada.is-dissolvendo {
     opacity: 1;
 }
 
-/* crédito da igreja no canhoto, discreto */
-.ticket-realizacao {
+/* recortes laterais do ticket: dois círculos na cor do fundo da seção */
+.ticket-base {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    margin-top: 4px;
-    padding-top: 10px;
-    border-top: 1px dotted rgba(133, 53, 30, 0.28);
-}
-
-.ticket-realizacao-rotulo {
-    font-size: 0.55rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    opacity: 0.55;
-}
-
-.ticket-realizacao img {
-    width: 100%;
-    max-width: 120px;
-    height: auto;
-    opacity: 0.68;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 2px dashed rgba(133, 53, 30, 0.3);
 }
 
 /* o círculo fica centrado na BORDA do card: como .ticket-base está 18px
@@ -2020,7 +2380,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.76rem;
+    font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -2036,19 +2396,63 @@ html.entrada-ativa .entrada.is-dissolvendo {
     transform: translateX(4px);
 }
 
+/* crédito da igreja no canhoto, discreto */
+.ticket-realizacao {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px dotted rgba(133, 53, 30, 0.28);
+}
+
+.ticket-realizacao-rotulo {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.55;
+}
+
+.ticket-realizacao img {
+    width: 100%;
+    max-width: 120px;
+    height: auto;
+    opacity: 0.68;
+}
+
+/* ---------- situação escrita pelo script.js ---------- */
+/* lote em venda: ganha o anel de luz mesmo sem ser o do destaque */
+.lote.is-aberto .ticket {
+    background: var(--papel);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28), 0 0 0 2px rgba(245, 232, 226, 0.7);
+}
+
+.lote.is-aberto .ticket:hover {
+    box-shadow: 0 26px 48px rgba(0, 0, 0, 0.34), 0 0 0 2px rgba(245, 232, 226, 0.9);
+}
+
+/* lote encerrado: some do caminho sem sumir da página */
+.lote.is-encerrado .ticket {
+    background: linear-gradient(170deg, #D9BCAE, #C9A695);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14);
+    opacity: 0.62;
+    pointer-events: none;
+}
+
+.lote.is-encerrado .ticket-acao::after {
+    content: none;
+}
+
 /* ---------- entrada ao rolar (termina no estado natural) ---------- */
 .setor-cards li:nth-child(1) { --t: 0; }
 .setor-cards li:nth-child(2) { --t: 1; }
 .setor-cards li:nth-child(3) { --t: 2; }
 .setor-cards li:nth-child(4) { --t: 3; }
 
-.setor.is-dentro .setor-cabecalho {
+.setores.is-dentro .ticket {
     animation: sobeSuave 0.6s var(--ease-saida) backwards;
-}
-
-.setor.is-dentro .ticket {
-    animation: sobeSuave 0.6s var(--ease-saida) backwards;
-    animation-delay: calc(0.12s + var(--t, 0) * 0.08s);
+    animation-delay: calc(0.08s + var(--t, 0) * 0.1s);
 }
 
 @keyframes sobeSuave {
@@ -2070,8 +2474,8 @@ html.entrada-ativa .entrada.is-dissolvendo {
 
 /* =============================================
    CONTAGEM REGRESSIVA
-   Entrou no lugar do antigo UPGRADE e herdou o nude dele: a borda
-   quadriculada no topo do FAQ e desenhada na cor da secao anterior.
+   Entrou no lugar do antigo UPGRADE e herdou o nude dele: e a ultima secao
+   antes do rodape, entao a borda quadriculada dele sai desta cor.
    ============================================= */
 .regressiva {
     --anterior: var(--tijolo);
@@ -2370,200 +2774,11 @@ html.entrada-ativa .entrada.is-dissolvendo {
 }
 
 /* =============================================
-   FAQ
-   ============================================= */
-.faq {
-    /* borda quadriculada no topo, na cor da seção anterior (nude),
-       igual à que fecha a seção na entrada do rodapé */
-    --dither-altura: 96px;
-    position: relative;
-    padding: calc(var(--dither-altura) + 56px) var(--lateral) 120px;
-    overflow: hidden;
-    background: var(--rosado);
-}
-
-/* escopado em .faq porque a regra .dither do rodapé vem depois no arquivo */
-.faq .dither--topo {
-    top: 0;
-    bottom: auto;
-    --dither-cor: var(--nude);
-}
-
-.faq-folha {
-    right: -30px;
-    /* logo abaixo da borda quadriculada, acompanhando a altura dela */
-    top: calc(var(--dither-altura) - 6px);
-    width: 110px;
-    height: 238px;
-    rotate: -22deg;
-    color: var(--terracota);
-    opacity: 0.5;
-}
-
-.faq-layout {
-    position: relative;
-    /* passa por cima da borda quadriculada */
-    z-index: 2;
-    max-width: 1100px;
-    margin-inline: auto;
-}
-
-.faq-titulo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 36px;
-    text-align: center;
-}
-
-.faq-kicker {
-    font-size: clamp(1.8rem, 7vw, 3rem);
-    rotate: -4deg;
-}
-
-.faq-titulo .titulo {
-    font-size: clamp(3rem, 15vw, 6.5rem);
-}
-
-.faq-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-/* Cada pergunta é um cartãozinho de papel, com cantos bem arredondados e
-   uma leve inclinação no hover — o mesmo jeito das polaroids e da faixa. */
-.faq-item {
-    --faq-num-col: 1.7rem;
-    position: relative;
-    border-radius: 26px;
-    background: var(--papel);
-    box-shadow: 0 2px 0 rgba(184, 104, 79, 0.14);
-    transition: box-shadow 0.35s var(--ease-saida), transform 0.35s var(--ease-saida), background-color 0.35s;
-}
-
-.faq-item:hover {
-    transform: translateY(-2px) rotate(-0.35deg);
-    box-shadow: 0 10px 24px rgba(184, 104, 79, 0.20);
-}
-
-.faq-item:has(.faq-pergunta[aria-expanded="true"]) {
-    background: #FFFBF9;
-    box-shadow: 0 12px 30px rgba(184, 104, 79, 0.22);
-}
-
-.faq-pergunta {
-    display: grid;
-    grid-template-columns: var(--faq-num-col) minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 18px;
-    width: 100%;
-    padding: 22px 24px;
-    border: none;
-    border-radius: 26px;
-    background: none;
-    cursor: pointer;
-    text-align: left;
-    /* serifa macia da marca no lugar do sans grosso: bem mais delicado */
-    font-family: var(--fonte-titulo);
-    font-weight: 600;
-    font-variation-settings: "SOFT" 100, "WONK" 1;
-    font-size: clamp(1.05rem, 2.4vw, 1.24rem);
-    line-height: 1.32;
-    color: var(--tijolo);
-    transition: color 0.25s;
-}
-
-.faq-pergunta:hover {
-    color: var(--terracota);
-}
-
-/* numeração escrita à mão, como as outras marcações da página */
-.faq-num {
-    font-family: var(--fonte-mao);
-    font-weight: 700;
-    font-size: 1.55rem;
-    line-height: 1;
-    color: var(--nude);
-    rotate: -8deg;
-    transition: color 0.35s, rotate 0.35s var(--ease-saida);
-}
-
-.faq-pergunta[aria-expanded="true"] .faq-num {
-    color: var(--terracota);
-    rotate: 4deg;
-}
-
-.faq-icone {
-    flex-shrink: 0;
-    width: 30px;
-    height: 30px;
-    padding: 5px;
-    border-radius: 50%;
-    background: var(--rosado);
-    color: var(--terracota);
-    transition: transform 0.4s var(--ease-saida), background-color 0.35s, color 0.35s;
-}
-
-.faq-pergunta[aria-expanded="true"] .faq-icone {
-    transform: rotate(135deg);
-    background: var(--terracota);
-    color: var(--papel);
-}
-
-/* abre e fecha animando a altura real do conteúdo, sem max-height chutado */
-.faq-resposta {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 0.45s var(--ease-saida);
-}
-
-.faq-resposta.is-open {
-    grid-template-rows: 1fr;
-}
-
-.faq-resposta-conteudo {
-    min-height: 0;
-    overflow: hidden;
-    font-size: 0.97rem;
-    line-height: 1.7;
-}
-
-/* alinha a resposta com o texto da pergunta, depois do número */
-.faq-resposta-conteudo > * {
-    padding-left: calc(24px + var(--faq-num-col) + 18px);
-    padding-right: 24px;
-}
-
-/* fiozinho pontilhado separando pergunta e resposta, como o fim da página */
-.faq-resposta-conteudo > :first-child {
-    padding-top: 16px;
-    border-top: 1.5px dotted var(--nude);
-    margin-left: calc(24px + var(--faq-num-col) + 18px);
-    margin-right: 24px;
-    padding-left: 0;
-    padding-right: 0;
-}
-
-.faq-resposta-conteudo > :last-child {
-    padding-bottom: 24px;
-}
-
-.faq-resposta-conteudo p + p {
-    margin-top: 10px;
-}
-
-.faq-resposta-conteudo a {
-    color: var(--terracota);
-    font-weight: 700;
-    text-underline-offset: 3px;
-}
-
-/* =============================================
    RODAPÉ
    ============================================= */
 .rodape {
-    --dither-cor: var(--rosado);
+    /* a borda quadriculada e desenhada na cor da secao anterior: a regressiva */
+    --dither-cor: var(--nude);
     --dither-altura: 96px;
     position: relative;
     padding: calc(var(--dither-altura) + 56px) var(--lateral) 32px;
@@ -2851,22 +3066,30 @@ html.entrada-ativa .entrada.is-dissolvendo {
     }
 
     .setor-cards {
-        /* 3 ingressos, 3 colunas: nenhuma sobra depois da remoção da caravana */
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 20px;
+        /* dois lotes lado a lado: a comparação de preço fica num olhar só */
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(20px, 3vw, 28px);
         align-items: stretch;
+        width: 100%;
+        max-width: 860px;
+        margin: 0 auto;
     }
 
-    /* o do meio sobe um degrau e fica maior que os vizinhos */
-    .setor-card--dupla .ticket--destaque {
-        transform: scale(1.055);
+    .ticket {
+        padding: 22px 22px 20px;
     }
 
-    .setor-card--dupla .ticket--destaque:hover {
-        transform: scale(1.055) translateY(-8px) rotate(-1deg);
+    /* o lote em venda sobe um degrau e fica maior que o vizinho */
+    .lote.is-aberto .ticket,
+    .lote:only-child .ticket {
+        transform: scale(1.04);
     }
 
-    .faq,
+    .lote.is-aberto .ticket:hover,
+    .lote:only-child .ticket:hover {
+        transform: scale(1.04) translateY(-8px) rotate(-1deg);
+    }
+
     .rodape {
         --dither-altura: 128px;
     }
@@ -3039,6 +3262,11 @@ html.entrada-ativa .entrada.is-dissolvendo {
     .galeria-card:nth-child(7) { width: 26%; left: 2%;  top: 69%; }
     .galeria-card:nth-child(8) { width: 30%; left: 40%; top: 65%; }
 
+    /* no desktop o texto e alinhado a esquerda: a abertura acompanha */
+    .about-abre {
+        align-items: flex-start;
+    }
+
     .about {
         align-items: flex-start;
         justify-content: center;
@@ -3068,12 +3296,12 @@ html.entrada-ativa .entrada.is-dissolvendo {
         display: none;
     }
 
-    .setor-cabecalho {
-        margin-bottom: 28px;
+    .ticket-topo {
+        padding-bottom: 12px;
     }
 
     .regressiva {
-        padding: 88px var(--lateral);
+        padding: 72px var(--lateral);
     }
 
     /* calendario a esquerda, relogio a direita */
@@ -3103,28 +3331,6 @@ html.entrada-ativa .entrada.is-dissolvendo {
         justify-content: start;
     }
 
-    .faq-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.6fr);
-        gap: 72px;
-        align-items: start;
-    }
-
-    .faq-titulo {
-        position: sticky;
-        top: calc(var(--nav-altura) + 32px);
-        align-items: flex-start;
-        margin: 0;
-        text-align: left;
-    }
-
-    .faq-titulo .titulo {
-        font-size: clamp(3.6rem, 5.6vw, 5.6rem);
-    }
-
-    /* as duas bordas do FAQ crescem juntas: a de cima aqui, a de baixo é
-       a do rodapé */
-    .faq,
     .rodape {
         --dither-altura: 152px;
     }
@@ -3188,14 +3394,16 @@ html.entrada-ativa .entrada.is-dissolvendo {
         animation-iteration-count: infinite !important;
     }
 
-    /* ingressos: entrada ao rolar */
-    .setor.is-dentro .setor-cabecalho {
-        animation-duration: 0.6s !important;
+    /* o ponto do selo "vendas abertas" continua batendo: nao esconde nada */
+    .ticket-status--aberto::before {
+        animation-duration: 2.2s !important;
+        animation-iteration-count: infinite !important;
     }
 
-    .setor.is-dentro .ticket {
+    /* ingressos: entrada ao rolar */
+    .setores.is-dentro .ticket {
         animation-duration: 0.6s !important;
-        animation-delay: calc(0.12s + var(--t, 0) * 0.08s) !important;
+        animation-delay: calc(0.08s + var(--t, 0) * 0.1s) !important;
     }
 
     /* linha do "rolar" no hero (só existe a partir de 1024px) */

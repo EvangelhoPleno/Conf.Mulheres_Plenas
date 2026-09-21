@@ -45,6 +45,9 @@
             }
             a.target = '_blank';
             a.rel = 'noopener';
+            a.addEventListener('click', function (e) {
+                if (e.detail > 0) a.blur();
+            });
         });
     }
 
@@ -107,6 +110,9 @@
                 if (a.hasAttribute('data-fechar-menu')) definirMenu(false);
                 rolarPara(alvo);
                 history.replaceState(null, '', href);
+                // clique de mouse (detail > 0) não deve deixar o anel de foco no link;
+                // pelo teclado (detail 0) o foco fica, que é como deve ser
+                if (e.detail > 0) a.blur();
             });
         });
     }
@@ -1018,12 +1024,13 @@
             });
         });
 
-        gsap.utils.toArray('.espera-item').forEach(function (item, i) {
-            gsap.fromTo(item, { xPercent: i % 2 ? 8 : -8, opacity: 0.15 }, {
-                xPercent: 0,
+        // as linhas da programacao sobem e acendem conforme entram na tela
+        gsap.utils.toArray('.espera-item').forEach(function (item) {
+            gsap.fromTo(item, { y: 28, opacity: 0.25 }, {
+                y: 0,
                 opacity: 1,
                 ease: 'none',
-                scrollTrigger: { trigger: item, start: 'top 95%', end: 'top 60%', scrub: true }
+                scrollTrigger: { trigger: item, start: 'top 95%', end: 'top 68%', scrub: true }
             });
         });
 
@@ -1203,11 +1210,11 @@
     /* ---------------------------------------------------------
        VAGAS VENDIDAS (seção de ingressos)
        O painel começa com hidden e SÓ é revelado quando chega um número
-       real. Sem dado, fica só a frase das 700 vagas — o site nunca mostra
+       real. Sem dado, fica só a frase das 350 vagas — o site nunca mostra
        contador inventado. A origem, nesta ordem:
-         1) window.MP_CONFIG.vagas = { total: 700, vendidos: 128 }
+         1) window.MP_CONFIG.vagas = { total: 350, vendidos: 128 }
          2) campo "vagas" da resposta de GET /api/produtos:
-            { "vagas": { "total": 700, "vendidos": 128 } }
+            { "vagas": { "total": 350, "vendidos": 128 } }
        --------------------------------------------------------- */
     function configurarVagas() {
         var painel = document.getElementById('vagasPainel');
@@ -1226,7 +1233,7 @@
 
         function mostrar(vendidos, total) {
             if (!numero(vendidos)) return;
-            if (!numero(total) || total <= 0) total = parseInt(painel.dataset.total, 10) || 700;
+            if (!numero(total) || total <= 0) total = parseInt(painel.dataset.total, 10) || 350;
 
             var v = Math.min(Math.round(vendidos), total);
             var pct = Math.round((v / total) * 100);
@@ -1258,7 +1265,70 @@
             .then(function (dados) {
                 if (dados && dados.vagas) mostrar(dados.vagas.vendidos, dados.vagas.total);
             })
-            .catch(function () { /* sem API: fica só a frase das 700 vagas */ });
+            .catch(function () { /* sem API: fica só a frase das 350 vagas */ });
+    }
+
+    /* ---------------------------------------------------------
+       SITUAÇÃO DOS LOTES (seção de ingressos)
+       Cada [data-lote] traz a janela de venda no data-inicio / data-fim do
+       HTML — nenhuma data mora aqui. A partir dela o selo diz se o lote está
+       em venda, se ainda vai abrir ou se já passou. O selo começa com hidden:
+       se este trecho não rodar, ficam só o preço e as datas, sem promessa.
+       --------------------------------------------------------- */
+    function configurarLotes() {
+        var lotes = document.querySelectorAll('[data-lote]');
+        if (!lotes.length) return;
+
+        var hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        Array.prototype.forEach.call(lotes, function (lote) {
+            var inicio = lerDia(lote.getAttribute('data-inicio'));
+            var fim = lerDia(lote.getAttribute('data-fim'));
+            var selo = lote.querySelector('[data-lote-status]');
+            if (!inicio || !fim || !selo) return;
+
+            // o último dia vende até o fim do dia
+            fim.setHours(23, 59, 59, 999);
+
+            var estado, texto;
+            if (hoje < inicio) {
+                estado = 'espera';
+                texto = 'abre ' + diaMes(inicio);
+            } else if (hoje <= fim) {
+                estado = 'aberto';
+                texto = 'vendas abertas';
+            } else {
+                estado = 'encerrado';
+                texto = 'encerrado';
+            }
+
+            lote.classList.add('is-' + estado);
+            selo.classList.add('ticket-status--' + (estado === 'encerrado' ? 'fim' : estado));
+            selo.textContent = texto;
+            selo.hidden = false;
+
+            if (estado !== 'encerrado') return;
+
+            // lote vencido não leva a lugar nenhum: sai do caminho do teclado
+            var ticket = lote.querySelector('.ticket');
+            if (!ticket) return;
+            ticket.setAttribute('aria-disabled', 'true');
+            ticket.setAttribute('tabindex', '-1');
+            ticket.removeAttribute('href');
+            var acao = ticket.querySelector('.ticket-acao');
+            if (acao) acao.textContent = 'vendas encerradas';
+        });
+
+        function lerDia(texto) {
+            var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(texto || '');
+            // meia-noite no fuso de quem está vendo, igual à contagem regressiva
+            return p ? new Date(+p[1], +p[2] - 1, +p[3]) : null;
+        }
+
+        function diaMes(data) {
+            return ('0' + data.getDate()).slice(-2) + '/' + ('0' + (data.getMonth() + 1)).slice(-2);
+        }
     }
 
     /* ---------------------------------------------------------
@@ -1364,27 +1434,6 @@
     }
 
     /* ---------------------------------------------------------
-       FAQ
-       --------------------------------------------------------- */
-    function configurarFaq() {
-        document.querySelectorAll('.faq-pergunta').forEach(function (btn, i) {
-            var resposta = btn.nextElementSibling;
-            if (!resposta) return;
-
-            resposta.id = resposta.id || 'faq-resposta-' + (i + 1);
-            btn.setAttribute('aria-controls', resposta.id);
-            resposta.inert = true;
-
-            btn.addEventListener('click', function () {
-                var abrir = btn.getAttribute('aria-expanded') !== 'true';
-                btn.setAttribute('aria-expanded', String(abrir));
-                resposta.classList.toggle('is-open', abrir);
-                resposta.inert = !abrir;
-            });
-        });
-    }
-
-    /* ---------------------------------------------------------
        TECLADO: Esc fecha modal ou menu
        --------------------------------------------------------- */
     document.addEventListener('keydown', function (e) {
@@ -1407,10 +1456,10 @@
     // sem GSAP (ou com menos movimento) as entradas ficam por conta do CSS
     configurarEntradas(!heroTl);
     configurarVagas();
+    configurarLotes();
     configurarDithers();
     configurarCarrossel();
     configurarModais();
-    configurarFaq();
     configurarRegressiva();
 
     executarEntrada(function (coracaoPousou) {

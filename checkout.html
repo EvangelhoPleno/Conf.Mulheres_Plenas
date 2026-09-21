@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seus dados · Conferência Mulheres Plenas 2026</title>
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#F5E8E2">
+    <link rel="icon" type="image/png" href="assets/imagens/marca/favicon-64.png">
+    <link rel="apple-touch-icon" href="assets/imagens/marca/apple-touch-180.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@500;700&family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500..900,0..100,0..1;1,9..144,500..900,0..100,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pedido.css">
+    <script src="config.js"></script>
+    <script src="pedido.js" defer></script>
+</head>
+<body class="pedido-body" data-pagina="checkout">
+
+    <header class="pedido-topo">
+        <a href="index.html" class="nav-logo" aria-label="Mulheres Plenas — início">
+            <img src="assets/imagens/marca/mp-horizontal-escuro.png" alt="Mulheres Plenas" width="1100" height="198">
+        </a>
+        <a href="index.html#setores" class="pedido-voltar">ingressos</a>
+    </header>
+
+    <ol class="etapas" aria-label="Etapas da compra">
+        <li class="is-atual" aria-current="step"><span>Seus dados</span></li>
+        <li><span>Pagamento</span></li>
+        <li><span>Confirmação</span></li>
+    </ol>
+
+    <main class="pedido-main">
+        <div class="pedido-cabecalho">
+            <span class="script">quase lá!</span>
+            <h1 class="titulo pedido-titulo">Garanta seu ingresso</h1>
+            <p class="pedido-sub">Preencha seus dados. O ingresso chega no e-mail informado assim que o pagamento for confirmado.</p>
+        </div>
+
+        <div class="carregando" data-estado="carregando">Carregando…</div>
+
+        <!-- vendas desligadas ou backend fora do ar -->
+        <div class="estado" data-estado="indisponivel" hidden>
+            <h2 class="titulo">Vendas em breve</h2>
+            <p data-mensagem>As vendas on-line ainda não foram abertas. Fique de olho nas nossas redes!</p>
+            <div class="acoes"><a class="btn-cta" href="index.html"><span class="btn-cta-text">Voltar ao site</span></a></div>
+        </div>
+
+        <div class="pedido-grid" data-estado="pronto" hidden>
+            <aside class="resumo" aria-label="Resumo do pedido">
+                <span class="script">seu ingresso</span>
+                <p class="resumo-produto" data-resumo="produto"></p>
+                <p class="resumo-lote" data-resumo="lote"></p>
+                <dl class="resumo-linhas">
+                    <div class="resumo-linha"><dt>Valor por pessoa</dt><dd data-resumo="unitario"></dd></div>
+                    <div class="resumo-linha"><dt>Quantidade</dt><dd data-resumo="quantidade"></dd></div>
+                    <div class="resumo-linha resumo-total"><dt>Total</dt><dd data-resumo="total"></dd></div>
+                </dl>
+                <p class="resumo-seguro">Pagamento processado com segurança. Não guardamos dados de cartão.</p>
+            </aside>
+
+            <form class="cartao pedido-form" novalidate>
+                <div class="aviso aviso--teste" data-aviso-teste hidden>
+                    <strong>Ambiente de teste.</strong> Nenhuma cobrança real será feita.
+                </div>
+                <div class="aviso aviso--erro" role="alert" data-aviso-erro hidden></div>
+
+                <h2 class="titulo cartao-titulo">Seus dados</h2>
+
+                <div class="campo">
+                    <label for="nome">Nome completo</label>
+                    <input type="text" id="nome" name="nome" autocomplete="name" maxlength="120" required>
+                    <span class="campo-erro" data-erro="nome"></span>
+                </div>
+
+                <div class="campo">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" autocomplete="email" inputmode="email" maxlength="160" required>
+                    <span class="campo-dica">O ingresso será enviado para este e-mail.</span>
+                    <span class="campo-erro" data-erro="email"></span>
+                </div>
+
+                <div class="campos-dupla">
+                    <div class="campo">
+                        <label for="cpf">CPF</label>
+                        <input type="text" id="cpf" name="cpf" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" required>
+                        <span class="campo-erro" data-erro="cpf"></span>
+                    </div>
+                    <div class="campo">
+                        <label for="telefone">WhatsApp <span class="opcional">(opcional)</span></label>
+                        <input type="tel" id="telefone" name="telefone" inputmode="tel" autocomplete="tel-national" placeholder="(91) 90000-0000" maxlength="15">
+                        <span class="campo-erro" data-erro="telefone"></span>
+                    </div>
+                </div>
+
+                <div class="campo" data-bloco-quantidade hidden>
+                    <label for="quantidade">Quantidade de pessoas</label>
+                    <div class="quantidade">
+                        <button type="button" data-qtd="-1" aria-label="Diminuir">−</button>
+                        <input type="number" id="quantidade" name="quantidade" inputmode="numeric">
+                        <button type="button" data-qtd="1" aria-label="Aumentar">+</button>
+                    </div>
+                    <span class="campo-dica" data-dica-quantidade></span>
+                    <span class="campo-erro" data-erro="quantidade"></span>
+                </div>
+
+                <fieldset class="campo" data-bloco-metodo>
+                    <legend>Forma de pagamento</legend>
+                    <div class="metodos">
+                        <label class="metodo" data-metodo="pix">
+                            <input type="radio" name="metodo" value="pix" checked>
+                            <span><strong>Pix</strong><small>Aprovação na hora</small></span>
+                        </label>
+                        <label class="metodo" data-metodo="cartao">
+                            <input type="radio" name="metodo" value="cartao">
+                            <span><strong>Cartão de crédito</strong><small>Página segura do banco</small></span>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <label class="aceite">
+                    <input type="checkbox" name="aceite" required>
+                    <span>Li e concordo que o ingresso é pessoal e que o cancelamento pode ser pedido em até 7 dias após a compra.</span>
+                </label>
+                <span class="campo-erro" data-erro="aceite"></span>
+
+                <button type="submit" class="btn-cta"><span class="btn-cta-text">Continuar para o pagamento</span></button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="pedido-rodape">&copy; 2026 Igreja Evangelho Pleno Paragominas</footer>
+</body>
+</html>
