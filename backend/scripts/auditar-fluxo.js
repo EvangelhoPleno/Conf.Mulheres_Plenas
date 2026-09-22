@@ -10,7 +10,9 @@ process.env.API_URL = 'http://localhost:3998';
 process.env.ASAAS_WEBHOOK_TOKEN = 'token-de-auditoria';
 
 const axios = require('axios');
-const app = require('../../api/index.js');
+const http = require('http');
+// a mesma porta de entrada que a Vercel usa
+const handler = require('../../api/index.js');
 const catalogo = require('../src/catalogo');
 const config = require('../src/config');
 
@@ -161,7 +163,7 @@ async function main() {
     produto.vendaDe = janelaOriginal;
 }
 
-const servidor = app.listen(3998, async function () {
+const servidor = http.createServer(handler).listen(3998, async function () {
     try {
         await main();
     } catch (e) {

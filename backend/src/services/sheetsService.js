@@ -6,7 +6,6 @@
    reenviar e-mail, conferir ingressos e retomar um Pix.
    Sem credenciais do Google, os pedidos ficam em memória (só para testes).
    ============================================================= */
-const { GoogleSpreadsheet } = require('google-spreadsheet');
 const { JWT } = require('google-auth-library');
 const config = require('../config');
 
@@ -77,12 +76,30 @@ function daLinha(row) {
 
 /* ---------- implementação Google Sheets ---------- */
 function criarRepositorioPlanilha() {
-    const auth = new JWT({
-        email: config.google.email,
-        key: config.google.chave,
-        scopes: ['https://www.googleapis.com/auth/spreadsheets']
-    });
-    const doc = new GoogleSpreadsheet(config.google.planilhaId, auth);
+    let docPromessa = null;
+
+    /* O google-spreadsheet só existe como módulo ESM (ele puxa o ky). O Node
+       do computador aceita exigi-lo com require(), mas o carregador de
+       funções da Vercel não — a API inteira morria ao subir. Carregado aqui
+       dentro, com import(), funciona nos dois, e só na primeira vez que
+       alguém precisa da planilha. */
+    function documento() {
+        if (!docPromessa) {
+            docPromessa = (async function () {
+                const { GoogleSpreadsheet } = await import('google-spreadsheet');
+                const auth = new JWT({
+                    email: config.google.email,
+                    key: config.google.chave,
+                    scopes: ['https://www.googleapis.com/auth/spreadsheets']
+                });
+                return new GoogleSpreadsheet(config.google.planilhaId, auth);
+            })().catch(function (erro) {
+                docPromessa = null;   // tenta de novo na próxima chamada
+                throw erro;
+            });
+        }
+        return docPromessa;
+    }
 
     let abaPromessa = null;
     let cache = { em: 0, linhas: null };
@@ -91,6 +108,7 @@ function criarRepositorioPlanilha() {
     function aba() {
         if (!abaPromessa) {
             abaPromessa = (async function () {
+                const doc = await documento();
                 await doc.loadInfo();
                 const sheet = doc.sheetsByTitle[config.google.aba];
                 if (!sheet) {

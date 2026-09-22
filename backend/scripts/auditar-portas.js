@@ -9,7 +9,9 @@ process.env.SITE_URL = 'https://conf-mulheres-plenas.vercel.app';
 process.env.API_URL = 'https://conf-mulheres-plenas.vercel.app';
 process.env.ADMIN_TOKEN = 'token-de-auditoria';
 
-const app = require('../../api/index.js');
+const http = require('http');
+// a mesma porta de entrada que a Vercel usa
+const handler = require('../../api/index.js');
 const config = require('../src/config');
 
 const BASE = 'http://localhost:3997';
@@ -80,7 +82,7 @@ async function main() {
     ok(quebrado.status === 400, 'corpo invalido devolve 400', 'HTTP ' + quebrado.status);
 }
 
-const servidor = app.listen(3997, async function () {
+const servidor = http.createServer(handler).listen(3997, async function () {
     try { await main(); } catch (e) { console.error('\nINTERROMPIDO:', e.message); falhas++; }
     console.log('\n' + (falhas ? falhas + ' FALHA(S)' : 'tudo passou'));
     servidor.close();
