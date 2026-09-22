@@ -63,6 +63,12 @@ const config = {
         provedor: (process.env.PAYMENT_PROVIDER || 'mock').trim().toLowerCase()
     },
 
+    asaas: {
+        apiUrl: semBarraFinal(process.env.ASAAS_API_URL, 'https://api-sandbox.asaas.com/v3'),
+        apiKey: (process.env.ASAAS_API_KEY || '').trim(),
+        webhookToken: (process.env.ASAAS_WEBHOOK_TOKEN || '').trim()
+    },
+
     sipag: {
         apiUrl: semBarraFinal(process.env.SIPAG_API_URL, 'https://api.sipag.com.br/v1'),
         clientId: process.env.SIPAG_CLIENT_ID || '',
@@ -92,6 +98,19 @@ if (config.ambiente !== 'production') {
     ['http://localhost:5500', 'http://127.0.0.1:5500', 'http://localhost:8080', 'http://127.0.0.1:8080'].forEach(function (origem) {
         if (!config.origensPermitidas.includes(origem)) config.origensPermitidas.push(origem);
     });
+}
+
+/* Chave de sandbox em URL de produção (ou o contrário) devolve 401 sem
+   explicar por quê. O Asaas prefixa as chaves: $aact_hmlg_ e $aact_prod_. */
+const asaasEmProducao = /\/\/api\.asaas\.com/.test(config.asaas.apiUrl);
+config.asaas.ambiente = asaasEmProducao ? 'producao' : 'sandbox';
+config.asaas.configurado = Boolean(config.asaas.apiKey);
+if (config.asaas.apiKey) {
+    const chaveDeProducao = config.asaas.apiKey.includes('_prod_');
+    if (chaveDeProducao !== asaasEmProducao) {
+        console.warn('[asaas] ATENÇÃO: a chave é de ' + (chaveDeProducao ? 'PRODUÇÃO' : 'SANDBOX') +
+            ' e a URL é de ' + (asaasEmProducao ? 'PRODUÇÃO' : 'SANDBOX') + '. Ajuste ASAAS_API_URL ou ASAAS_API_KEY.');
+    }
 }
 
 config.google.configurado = Boolean(config.google.planilhaId && config.google.email && config.google.chave);

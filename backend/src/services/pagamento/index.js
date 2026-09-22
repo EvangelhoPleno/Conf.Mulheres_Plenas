@@ -16,6 +16,7 @@ const config = require('../../config');
 
 const PROVEDORES = {
     mock: function () { return require('./mockProvider'); },
+    asaas: function () { return require('./asaasProvider'); },
     sipag: function () { return require('./sipagProvider'); }
 };
 
