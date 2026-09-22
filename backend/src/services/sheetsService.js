@@ -32,6 +32,26 @@ const COLUNAS = [
 ];
 const CABECALHO = COLUNAS.map(function (c) { return c[1]; });
 
+/* As colunas que a aba Resumo soma com SUMIF/SUMIFS precisam ser NÚMERO na
+   planilha: texto é ignorado pelas somas e o total sai zerado. O getRows()
+   devolve toda célula como texto e o save() reescreve a linha inteira, então
+   sem isto atualizar um pedido transformaria 110 em "110". */
+const COLUNAS_NUMERICAS = ['Quantidade', 'Valor_Total'];
+
+function comoNumero(valor) {
+    return Number(String(valor == null ? '' : valor).replace(',', '.')) || 0;
+}
+
+/* Põe os campos novos na linha e devolve as colunas numéricas ao tipo número.
+   Separada de atualizar() para poder ser testada sem falar com o Google. */
+function prepararLinha(row, campos) {
+    row.assign(paraLinha(campos));
+    COLUNAS_NUMERICAS.forEach(function (coluna) {
+        row.set(coluna, comoNumero(row.get(coluna)));
+    });
+    return row;
+}
+
 // pedido (valorTotal em centavos, codigos em array) -> linha da planilha
 function paraLinha(pedido) {
     const linha = {};
@@ -128,7 +148,7 @@ function criarRepositorioPlanilha() {
             cache.linhas = null;  // lê de novo: outra instância pode ter mexido
             const row = await acharLinha('pedidoId', pedidoId);
             if (!row) throw new Error('Pedido não encontrado na planilha: ' + pedidoId);
-            row.assign(paraLinha(campos));
+            prepararLinha(row, campos);
             await row.save({ raw: true });
             cache.linhas = null;
             return daLinha(row);
@@ -179,4 +199,4 @@ function pedidos() {
     return repositorio;
 }
 
-module.exports = { pedidos, CABECALHO };
+module.exports = { pedidos, CABECALHO, COLUNAS_NUMERICAS, prepararLinha };
