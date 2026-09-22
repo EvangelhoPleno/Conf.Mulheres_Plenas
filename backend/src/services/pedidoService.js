@@ -37,6 +37,19 @@ async function criarPedido(entrada) {
 
     const provedor = pagamento();
 
+    /* Sem planilha, os pedidos vivem na memória de UMA instância. Na Vercel
+       cada requisição pode cair noutra: a compradora pagaria e o webhook
+       chegaria num processo que nunca ouviu falar desse pedido — dinheiro
+       cobrado, ingresso nenhum. Melhor a venda fechar na cara de todo mundo
+       do que falhar escondido numa compradora de cada vez.
+
+       Só vale no ar: no computador, rodar com gateway de verdade e sem
+       planilha é justamente como se testa. */
+    if (config.ambiente === 'production' && !provedor.simulado && pedidos().tipo === 'memoria') {
+        console.error('[pedido] RECUSANDO VENDAS: gateway de verdade sem planilha configurada (GOOGLE_*).');
+        throw erroPublico(503, 'As vendas on-line estão fora do ar por instantes. Tente de novo em alguns minutos.');
+    }
+
     /* A landing já tira o link do lote fora da janela, mas isso é só a
        vitrine: quem abrir checkout.html?produto=... na mão chega aqui. No modo
        simulado a janela NÃO é aplicada, senão não daria para testar o fluxo

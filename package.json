@@ -13,7 +13,8 @@
     "test": "node --test \"backend/test/**/*.test.js\"",
     "planilha:testar": "node backend/scripts/testar-planilha.js",
     "planilha:preparar": "node backend/scripts/preparar-planilha.js",
-    "asaas:testar": "node backend/scripts/testar-asaas.js"
+    "asaas:testar": "node backend/scripts/testar-asaas.js",
+    "auditar": "node backend/scripts/auditar-fluxo.js && node backend/scripts/auditar-portas.js"
   },
   "dependencies": {
     "axios": "^1.20.0",
