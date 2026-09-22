@@ -1,0 +1,10 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.vercel/
+tmp/
+
+# chave da conta de serviço do Google (nunca vai para o GitHub)
+credenciais-google*.json
+*-service-account*.json

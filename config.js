@@ -5,7 +5,7 @@
    Vazio = vendas on-line desligadas (as telas mostram "em breve").
    ============================================================= */
 window.MP_CONFIG = {
-    apiUrl: ''  // ex.: 'https://mulheres-plenas-api.vercel.app'
+    apiUrl: 'https://conf-mulheres-plenas.vercel.app'
 };
 
 // abrindo o site no próprio computador, usa o backend local (npm run dev)

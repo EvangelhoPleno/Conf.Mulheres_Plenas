@@ -14,12 +14,16 @@ confirmacao.html ◄── ingressos (códigos MP26-XXXX-XXXX)
 
 ## Rodar no computador
 
+Os comandos rodam na **raiz do repositório**, não dentro de `backend/`: a
+Vercel monta o site estático e a função da API a partir da raiz, então o
+`package.json` mora lá. O código do servidor continua aqui em `backend/`.
+
 ```bash
-cd backend
 npm install
-cp .env.example .env      # pode deixar como está para testar
-npm run dev               # API em http://localhost:3000
-npm test                  # testes do fluxo completo
+cp backend/.env.example backend/.env   # pode deixar como está para testar
+npm run dev                            # API em http://localhost:3000
+npm test                               # testes do fluxo completo
+npm run asaas:testar                   # compra de ponta a ponta no sandbox do Asaas
 ```
 
 Em outro terminal, sirva o site pela raiz do repositório (ex.: `python -m http.server 5500`) e abra `http://localhost:5500`. O `config.js` já aponta para a API local quando o endereço é `localhost`. Os e-mails de teste são salvos em `backend/tmp/` para abrir no navegador.

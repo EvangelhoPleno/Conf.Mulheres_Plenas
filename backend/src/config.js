@@ -2,7 +2,10 @@
    deve ler process.env diretamente. */
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config({ quiet: true });
+/* O .env fica em backend/, mas os comandos agora rodam da raiz do projeto
+   (é de lá que a Vercel monta o site e a função). Apontar o caminho na mão
+   evita depender de onde o comando foi chamado. */
+require('dotenv').config({ quiet: true, path: path.resolve(__dirname, '..', '.env') });
 
 function lista(valor) {
     return (valor || '')
