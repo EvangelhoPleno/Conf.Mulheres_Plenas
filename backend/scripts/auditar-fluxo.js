@@ -123,7 +123,11 @@ async function main() {
     const cobrancaId = busca.data.data[0].id;
 
     console.log('  (marcando a cobranca como paga no sandbox)');
-    await asaas.post('/payments/' + cobrancaId + '/receiveInCash', { paymentDate: '2026-09-22', value: 110, notifyCustomer: false });
+    /* A data tem que ser >= a criacao da cobranca e <= hoje, no fuso de Brasilia.
+       Cravar a data do ensaio fazia a auditoria quebrar no dia seguinte. */
+    const hojeBR = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+    const valorCobrado = busca.data.data[0].value;
+    await asaas.post('/payments/' + cobrancaId + '/receiveInCash', { paymentDate: hojeBR, value: valorCobrado, notifyCustomer: false });
 
     const notificacao = await chamar('/api/webhook', { method: 'POST', headers: cabecalhos, corpo: { event: 'PAYMENT_RECEIVED', payment: { id: cobrancaId } } });
     ok(notificacao.status === 200, 'webhook legitimo devolve 200', 'HTTP ' + notificacao.status);
