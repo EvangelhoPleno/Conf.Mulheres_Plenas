@@ -109,16 +109,21 @@ teria quebrado por CORS no instante do deploy. Hoje vale
 **Não verificado:** de que endereço o ingresso chega numa compra real. A
 trava de 27/09 impede o teste, e `/api/saude` não expõe o remetente.
 
-### 2. Limpeza de segredo (fazer agora — o resto já está pronto)
+### 2. Limpeza de segredo — FEITA em 23/09
 
-- Revogar o token da Vercel em Settings → Tokens (ele foi exposto num chat)
-- Revogar o token do GitHub: ele ficou em texto puro na URL do remote, dentro
-  do `.git/config`. Já foi retirado de lá em 23/09 e a autenticação passou
-  para o Git Credential Manager, mas o token em si continua válido
-- Apagar a linha `VERCEL_TOKEN` de `backend/.env`
-- Apagar o arquivo `backend/.env.vercel` (tem todos os segredos em claro)
+- Token da Vercel revogado e substituído; o novo vive em `backend/.env`
+- Token do GitHub revogado. **Não foi substituído no projeto, e nem precisa:**
+  o `git push` autentica pelo Git Credential Manager, que tem credencial
+  OAuth própria no cofre do Windows. O remote não carrega segredo nenhum.
+- `backend/.env.vercel` **apagado** (40 linhas, 12 chaves, todas já na
+  Vercel). Sobraram só `backend/.env` e `.env.example`.
 
-Nenhum dos dois está no Git.
+Fica valendo: o `VERCEL_TOKEN` em `backend/.env` é o que dá acesso ao
+projeto na Vercel e está em texto claro no disco. O site não precisa dele
+para funcionar — é ferramenta de manutenção. Revogar quando o projeto
+estabilizar depois de 27/09.
+
+E nunca pôr token na URL do remote: era o que bloqueava o `git push`.
 
 ### 3. Antes de divulgar (domingo, 27/09) — FEITO
 
@@ -218,9 +223,7 @@ Conferido **em produção**, no domínio novo:
 E no repositório: `.env` e `.env.vercel` fora do Git, remote sem token na
 URL, os 4 registros de e-mail no ar.
 
-**Pendente:** apagar `backend/.env.vercel` do disco (as 12 chaves dele já
-vivem todas na Vercel, que tem 14 — é cópia redundante em texto claro), e
-revogar os dois tokens.
+Tudo o que estava pendente aqui foi feito no mesmo dia — ver item 2.
 
 ### 7. Opcional
 
