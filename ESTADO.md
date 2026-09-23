@@ -22,6 +22,8 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 | Domínio | **https://evangelhoplenoparagominas.com.br** — site, API e e-mail, tudo no domínio próprio desde 23/09 |
 | Git | remote **sem token na URL**; autenticação no Git Credential Manager (cofre do Windows). `git push` funciona direto |
 | GitHub Pages | **desligado** em 23/09 — `github.io` devolve 404 |
+| Repositório | **privado** desde 23/09; a Vercel continua implantando pelo GitHub App |
+| `www` | responde com **308** para a raiz |
 
 **Ensaio completo feito em 22/09 e depois limpo:** compra pelo site → cobrança
 no Asaas → Pix com QR → pedido na planilha → pagamento → webhook 200 → ingresso
@@ -114,16 +116,30 @@ trava de 27/09 impede o teste, e `/api/saude` não expõe o remetente.
 
 Nenhum dos dois está no Git.
 
-### 3. Antes de divulgar (domingo, 27/09) — Pages FEITO
+### 3. Antes de divulgar (domingo, 27/09) — FEITO
 
-O GitHub Pages foi desligado em 23/09 (`github.io` devolve 404) e o
-`github.io` saiu do `ALLOWED_ORIGINS`. Sobrou um endereço público de venda,
-que é o certo.
+Em 23/09: GitHub Pages desligado (`github.io` devolve 404), `github.io`
+removido do `ALLOWED_ORIGINS`, repositório fechado (privado) e `www`
+redirecionando para a raiz com 308.
 
-Falta: fechar o repositório (privado), e o `www` redirecionando para a raiz
-— na Vercel com "Redirecionar para" a raiz, e um `CNAME www ->
-dc089d8ac3330511.vercel-dns-017.com.` no Registro.br. Hoje quem digitar
-`www.` bate em erro.
+Sobrou um endereço público de venda, que é o certo.
+
+Zona de DNS final, 7 registros:
+
+| Nome | Tipo | Valor |
+|---|---|---|
+| (raiz) | A | `216.198.79.1` |
+| (raiz) | A | `64.29.17.1` |
+| `www` | CNAME | `dc089d8ac3330511.vercel-dns-017.com` |
+| `resend._domainkey` | TXT | chave DKIM |
+| `send` | CNAME | `send.forge.rmta.net` |
+| `rsend` | CNAME | `rsend-sae1.forge.rmta.net` |
+| `_dmarc` | TXT | `v=DMARC1; p=none; rua=...` |
+
+O Registro.br **republica a zona de forma assíncrona**: logo depois de
+salvar, o serial do SOA ainda é o antigo e o registro novo não existe. Não é
+erro, é fila — esperar alguns minutos. E conferir sempre em `d.sec.dns.br`,
+nunca em `a.auto.dns.br`.
 
 ### 4. Asaas de produção — tem a mesma data-limite da venda
 
@@ -183,6 +199,7 @@ O `.env` fica em `backend/.env` (o `config.js` aponta o caminho na mão).
 | Previews da Vercel | têm proteção de login e devolvem 302; só a URL de produção é aberta |
 | Data cravada no `receiveInCash` | a auditoria tinha `paymentDate: '2026-09-22'` fixo e passou a falhar com 400 no dia seguinte ao ensaio; o Asaas exige data entre a criação da cobrança e hoje |
 | Token na URL do remote | `git push` era bloqueado por vazamento de credencial; a saída é remote limpo + Git Credential Manager |
+| Deploy `BLOCKED` na Vercel | aconteceu com o deploy em voo na hora de fechar o repositório; a API não dá motivo nenhum nesse estado (nem `errorCode`, nem `blockedReason`) — o redeploy resolveu, e o motivo legível só aparece no painel |
 
 ---
 
