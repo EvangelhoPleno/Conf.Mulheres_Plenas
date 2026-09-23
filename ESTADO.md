@@ -106,8 +106,11 @@ produção a única origem liberada é a do `SITE_URL` — o checkout do Pages
 teria quebrado por CORS no instante do deploy. Hoje vale
 `conf-mulheres-plenas.vercel.app` e o `www`.
 
-**Não verificado:** de que endereço o ingresso chega numa compra real. A
-trava de 27/09 impede o teste, e `/api/saude` não expõe o remetente.
+**Parcialmente verificado (23/09, auditoria):** o `EMAIL_FROM` gravado em
+Production é `Ingressos Conferência <ingressos@evangelhoplenoparagominas.com.br>`
+— o remetente configurado está no domínio próprio, e o domínio está `verified`
+no Resend. O que continua **não verificado** é a entrega de uma compra real:
+a trava de 27/09 impede o teste, e `/api/saude` não expõe o remetente.
 
 ### 2. Limpeza de segredo — FEITA em 23/09
 
@@ -232,6 +235,69 @@ devolve o campo `vagas`. Dá para ligar contando os pedidos PAGOS da planilha.
 
 ---
 
+## Auditoria completa de 23/09 (PROMPT-AUDITORIA.md)
+
+`npm test` (26) e `npm run auditar` (61) verdes antes e depois.
+
+### Corrigido
+
+**A janela de venda era decidida pelo fuso do servidor.** `catalogo.js` montava
+as bordas com `new Date(ano, mes, dia)`. Na Vercel, que roda em UTC, o 1º lote
+abriria às 21 h de 26/09 e fecharia às 21 h de 06/10, não às 23:59.
+
+O estrago não era abrir cedo: era a noite de **06/10, das 21:00 às 23:59**. A
+landing (que usa o fuso do navegador, o certo) ainda mostra "vendas abertas" a
+R$ 55 e deixa clicável só o lote 1 — que a API já recusa com 409 — enquanto o
+lote 2, que a API já aceita, está sem link. **Ninguém consegue comprar durante
+as 3 h em que o preço vira.** O mesmo nas últimas 3 h de 15/10, a véspera do
+evento. Agora as bordas são instantes absolutos (UTC-3 fixo) e o teste as crava
+em UTC, então o mesmo erro não volta: rodando com `TZ=UTC`, o teste novo falha
+contra o código antigo e passa contra o corrigido.
+
+### Provado nesta auditoria
+
+| O quê | Como |
+|---|---|
+| Os 7 registros de DNS | consultados em `d.sec.dns.br` (200.160.0.14); todos intactos, SOA serial 2026266003 |
+| Resend | API `/domains`: `verified`, `sa-east-1`, domínio próprio |
+| `EMAIL_FROM` em produção | `Ingressos Conferência <ingressos@evangelhoplenoparagominas.com.br>` — o remetente **está** no domínio próprio |
+| Asaas em produção | chave e URL **os dois em sandbox**, combinando (sem a armadilha do 401) |
+| As 14 variáveis | todas presentes em Production; nenhuma que o código lê está faltando |
+| `ALLOWED_ORIGINS` | `conf-mulheres-plenas.vercel.app` + `www...`; mais a origem do `SITE_URL`, somada pelo código |
+| Portas fechadas | `/api/dev/simular-pagamento` 404, admin e webhook 401 sem token e com token errado, `/backend/.env` 404, CORS estranho sem permissão |
+| Trava de janela no ar | `POST /api/checkout` devolve 409 |
+| Segredo no Git | nenhum, nem no histórico: só `.env.example` |
+| Código morto | procurado e **não encontrado**: as 8 dependências são usadas, as 12 imagens são referenciadas, e `sipagProvider` é citado pelo `README` e por `fluxo.test.js` |
+
+### Pendente, e é o mais urgente
+
+**1. O `git push` não implanta mais.** Desde que o repositório virou privado
+(23/09), todo deploy vindo do GitHub volta `BLOCKED` com
+`seatBlock.blockCode = TEAM_ACCESS_REQUIRED`. Os 5 commits anteriores a esta
+auditoria nunca foram ao ar — por sorte eram só `.md`, então o **código** no ar
+continuava igual ao do `main`. **Isto precisa ser resolvido no painel da Vercel
+antes de 26/09:** é nessa data que se decide adiar a abertura mexendo nas datas
+dos lotes, e hoje esse commit não chegaria em produção sozinho. Enquanto não
+for resolvido, todo push precisa ser seguido de um redeploy manual.
+
+**2. O 1º lote abre em 27/09 com o Asaas ainda em sandbox.** Confirmado nesta
+auditoria: a chave e a URL em produção são as duas de sandbox. Se a aprovação
+não sair até sábado, a compradora recebe um QR que o banco dela não reconhece.
+A decisão do item 4 continua de pé — reavaliar no sábado, 26/09.
+
+**3. Dois ingressos podem sair com códigos diferentes.** `confirmarPagamento()`
+segura a corrida dentro de uma instância (`emAndamento`), mas o webhook e a
+consulta da página de pagamento podem cair em instâncias diferentes da Vercel.
+Se as duas lerem o pedido ainda `PENDENTE`, cada uma gera um par de códigos e a
+segunda sobrescreve a planilha. O e-mail sai uma vez só (a chave de idempotência
+do Resend segura), mas **com os códigos da primeira, enquanto a planilha fica
+com os da segunda** — a portaria não confere. A janela é curta (as duas leituras
+antes da primeira escrita) e não foi observada acontecendo. Saída sugerida:
+derivar os códigos do `Pedido_ID` em vez de sortear, para que as duas instâncias
+cheguem ao mesmo resultado.
+
+---
+
 ## Comandos (rodam na RAIZ do repositório, não em `backend/`)
 
 ```bash
@@ -262,8 +328,11 @@ O `.env` fica em `backend/.env` (o `config.js` aponta o caminho na mão).
 | Variável nova na Vercel sem redeploy | fica gravada e a função continua com a antiga até o próximo deploy |
 | Previews da Vercel | têm proteção de login e devolvem 302; só a URL de produção é aberta |
 | Data cravada no `receiveInCash` | a auditoria tinha `paymentDate: '2026-09-22'` fixo e passou a falhar com 400 no dia seguinte ao ensaio; o Asaas exige data entre a criação da cobrança e hoje |
+| Fuso do servidor na janela de venda | `new Date(ano, mes, dia)` usa o fuso de quem roda. A Vercel roda em UTC e a máquina de desenvolvimento está em UTC-3, igual a Paragominas: o erro passava despercebido no teste e deslocava a venda em 3 h no ar. Corrigido em 23/09 — as bordas agora são instantes absolutos |
+| `TZ=` no Windows | o Node desta máquina só respeita `TZ=UTC`; `TZ=America/Belem`, `Asia/Tokyo` etc. caem silenciosamente no fuso da máquina. Conferir com `getTimezoneOffset()` antes de confiar num teste "em outro fuso" |
+| Ler variável da Vercel pela API | `/v9/projects/.../env` devolve o valor **cifrado** mesmo com `decrypt=true`; quem devolve texto claro é `/v1/projects/.../env/<id>`, um id por vez. E variável do tipo `sensitive` (hoje só `EMAIL_REPLY_TO`) **nunca** devolve valor — `undefined` ali significa "não revelado", não "vazio" |
 | Token na URL do remote | `git push` era bloqueado por vazamento de credencial; a saída é remote limpo + Git Credential Manager |
-| Deploy `BLOCKED` na Vercel | aconteceu com o deploy em voo na hora de fechar o repositório; a API não dá motivo nenhum nesse estado (nem `errorCode`, nem `blockedReason`) — o redeploy resolveu, e o motivo legível só aparece no painel |
+| Deploy `BLOCKED` na Vercel | **o `git push` parou de implantar quando o repositório virou privado** (23/09). O motivo existe na API, só não em `errorCode`/`blockedReason`: está em `readyStateReason` e `seatBlock.blockCode` = `TEAM_ACCESS_REQUIRED` — "the commit author doesn't have permission to create deployments for this project". Enquanto isso não for resolvido no painel, **push não vai para o ar**; só o redeploy manual (painel ou API) implanta |
 
 ---
 
