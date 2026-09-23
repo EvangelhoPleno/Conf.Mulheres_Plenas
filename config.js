@@ -5,7 +5,7 @@
    Vazio = vendas on-line desligadas (as telas mostram "em breve").
    ============================================================= */
 window.MP_CONFIG = {
-    apiUrl: 'https://conf-mulheres-plenas.vercel.app'
+    apiUrl: 'https://evangelhoplenoparagominas.com.br'
 };
 
 // abrindo o site no próprio computador, usa o backend local (npm run dev)

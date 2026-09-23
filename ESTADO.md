@@ -1,4 +1,4 @@
-# Estado do projeto — 22/09/2026
+# Estado do projeto — 23/09/2026
 
 Resumo para retomar o trabalho sem reler o histórico. Evento: **Conferência
 Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
@@ -16,8 +16,9 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 | Pagamento | Asaas **SANDBOX** (`PAYMENT_PROVIDER=asaas`) |
 | Webhook | cadastrado no Asaas e **testado no ar: status 200** |
 | Planilha | Google Sheets gravando (`/api/saude` mostra `planilha: google-sheets`) |
-| E-mail | Resend entrega, mas **cai no spam** — falta domínio |
-| Variáveis | as 12 cadastradas na Vercel (Production + Preview) |
+| E-mail | Resend no domínio próprio, **Verified** (sa-east-1). Teste no Gmail em 23/09: SPF, DKIM e DMARC **PASS** nos três |
+| Variáveis | as 12 + `EMAIL_REPLY_TO`. Atenção: `EMAIL_FROM` e `EMAIL_REPLY_TO` foram criadas **só em Production** |
+| Domínio | `evangelhoplenoparagominas.com.br` — zona de DNS configurada em 23/09, **manda e-mail**; o site ainda **não aponta** para a Vercel |
 
 **Ensaio completo feito em 22/09 e depois limpo:** compra pelo site → cobrança
 no Asaas → Pix com QR → pedido na planilha → pagamento → webhook 200 → ingresso
@@ -40,19 +41,58 @@ Ele existe para isso.
 
 ## O que falta, em ordem
 
-### 1. Domínio — único item com prazo de terceiro
+### 1. Domínio — e-mail pronto, site ainda não aponta
 
-Sem ele o ingresso cai no spam (comprovado no ensaio). Em 5 dias abre a venda.
+**`evangelhoplenoparagominas.com.br`**. Correção de 23/09: a delegação no
+TLD `.br` é **`d.sec.dns.br` / `f.sec.dns.br`** (conjunto assinado com
+DNSSEC), não `a.auto.dns.br` / `b.auto.dns.br` como estava escrito aqui.
+Os `auto` ainda respondem com uma cópia velha do template de fábrica —
+**não conferir DNS por eles**, dão resposta errada com ar de autoritativa.
 
-1. Registrar **`mulheresplenas.com.br`** no [registro.br](https://registro.br)
-   (estava livre em 22/09). Usar **CNPJ da igreja** se existir, senão CPF.
-   Pelo menos 3 anos. **Pagar com Pix** — boleto leva até 3 dias úteis.
-2. Não mexer no DNS: deixar o gratuito do Registro.br (`a.auto.dns.br`).
-3. Adicionar o domínio no **Resend** e colar os registros SPF, DKIM e DMARC
-   no "Editar Zona" do Registro.br. Depois trocar `EMAIL_FROM` na Vercel para
-   `Ingressos Conferência <ingressos@mulheresplenas.com.br>`.
-4. Adicionar o domínio na **Vercel** e criar os registros que ela pedir.
-   Depois atualizar `SITE_URL`, `API_URL` e o `apiUrl` do `config.js` da raiz.
+**Os três registros de fábrica saíram da zona** (o null MX, o `v=spf1 -all`
+da raiz e o `_dmarc p=reject`). Confirmado nos dois autoritativos. O
+`p=reject` que trabalhava contra nós não existe mais.
+
+#### Metade do e-mail: FEITA em 23/09
+
+Zona hoje (4 registros, conferidos em `d.sec` e `f.sec`):
+
+| Nome | Tipo | Valor |
+|---|---|---|
+| `resend._domainkey` | TXT | chave DKIM do Resend |
+| `send` | CNAME | `send.forge.rmta.net` |
+| `rsend` | CNAME | `rsend-sae1.forge.rmta.net` |
+| `_dmarc` | TXT | `v=DMARC1; p=none; rua=mailto:jadisonribeiro1996@gmail.com` |
+
+O setup novo do Resend dispensa MX e SPF próprios: o CNAME do `send.`
+entrega os dois (MX de bounce `feedback.forge.rmta.net` e o SPF do Resend).
+Não falta registro nenhum.
+
+Resend **Verified**, região São Paulo (`sa-east-1`). Remetente
+`ingressos@evangelhoplenoparagominas.com.br`, reply-to no Gmail do Jadison —
+sem MX na raiz, resposta sem reply-to volta pro remetente.
+
+Teste de 23/09 (`npm run email:testar`): entregue, e o "Mostrar original" do
+Gmail deu **SPF PASS, DKIM PASS alinhado ao domínio, DMARC PASS**.
+
+Quando o DMARC tiver alguns dias de relatório limpo, dá para apertar o
+`p=none` para `p=quarantine` no Registro.br.
+
+#### Metade do site: FALTA
+
+1. Adicionar o domínio na **Vercel** e criar os registros que ela pedir
+   (`A` na raiz, `CNAME` no `www`) no Registro.br.
+2. Esperar responder de verdade. Só depois atualizar na Vercel `SITE_URL` e
+   `API_URL` e o `apiUrl` do `config.js` da raiz — este último **por
+   último**, senão o site sai do ar no intervalo.
+3. `SITE_URL` ainda aponta para o GitHub Pages, tanto no `backend/.env`
+   quanto na Vercel. É o endereço que vai **dentro** do e-mail de ingresso:
+   enquanto não trocar, o ingresso manda a compradora para o Pages.
+
+**Não verificado:** `/api/saude` não expõe o remetente, então ninguém
+confirmou ainda que a Vercel está usando o `EMAIL_FROM` novo — o teste de
+23/09 rodou com o `.env` local. A prova é uma compra de verdade e olhar de
+que endereço o ingresso chega.
 
 ### 2. Limpeza de segredo (fazer hoje)
 
@@ -64,10 +104,23 @@ Nenhum dos dois está no Git.
 
 ### 3. Antes de divulgar (domingo, 27/09)
 
-O GitHub Pages ainda serve uma cópia antiga do site, sem checkout. Desligar ou
-redirecionar — duas páginas públicas da mesma conferência confunde.
+O GitHub Pages em `evangelhopleno.github.io/Conf.Mulheres_Plenas/` **não é uma
+cópia velha**: ele publica da `main`, então está atualizado, tem o checkout e
+aponta para a mesma API. São duas páginas públicas igualmente funcionais
+vendendo o mesmo ingresso. Desligar o Pages nas Settings do repositório — com
+o domínio próprio chegando, seriam três endereços para a mesma coisa.
 
-### 4. Quando o Asaas aprovar a conta de produção
+### 4. Asaas de produção — tem a mesma data-limite da venda
+
+**Isto não é "quando der": em 27/09 a janela do 1º lote abre sozinha, pelo
+relógio.** Se a conta de produção não estiver ligada até lá, as primeiras
+compras rodam em **sandbox** — a compradora vê o QR, o pedido entra na
+planilha, o ingresso é emitido, e o dinheiro nunca chega.
+
+Se até 26/09 o Asaas não tiver aprovado, empurrar a data de abertura nos
+**dois** lugares (`catalogo.js` e `index.html`) em vez de abrir a venda.
+
+Quando aprovar:
 
 1. Gerar a chave de produção **sem permissão de saque** e sem expiração curta
    (chargeback chega até ~90 dias depois)
@@ -91,6 +144,7 @@ npm test                 # 26 testes de unidade
 npm run auditar          # 61 verificações: compra inteira no sandbox + portas fechadas
 npm run asaas:testar     # só o Asaas, ponta a ponta
 npm run planilha:testar  # acesso e permissão na planilha
+npm run email:testar -- voce@gmail.com   # dispara um ingresso falso ([TESTE] no assunto)
 npm run dev              # API local em http://localhost:3000
 ```
 
@@ -108,7 +162,9 @@ O `.env` fica em `backend/.env` (o `config.js` aponta o caminho na mão).
 | Celular "implausível" (11 dígitos iguais) | o Asaas recusa com `invalid_mobilePhone` e derrubava a compra; agora o cadastro é refeito sem telefone |
 | Prefixo da chave × URL | `$aact_hmlg_` só com sandbox, `$aact_prod_` só com produção; trocado dá 401 sem explicação |
 | Sem `GOOGLE_*` em produção | o checkout recusa com 503 de propósito: pedido em memória na Vercel = dinheiro cobrado e ingresso nenhum |
-| `onboarding@resend.dev` | só entrega para o dono da conta Resend, e mesmo assim no spam |
+| `onboarding@resend.dev` | só entrega para o dono da conta Resend, e mesmo assim no spam (resolvido em 23/09) |
+| `a.auto.dns.br` responde pelo domínio | e responde **errado** — a delegação real é `d.sec`/`f.sec`. Conferir DNS por ele dá diagnóstico falso |
+| Variável nova na Vercel sem redeploy | fica gravada e a função continua com a antiga até o próximo deploy |
 | Previews da Vercel | têm proteção de login e devolvem 302; só a URL de produção é aberta |
 
 ---
@@ -129,6 +185,6 @@ novo-evento/
     src/config.js            lê o .env e valida
     src/routes/              publicas, webhook, admin
     src/services/            pagamento/, sheetsService, emailService, pedidoService
-    scripts/                 auditar-fluxo, auditar-portas, testar-asaas, planilha
+    scripts/                 auditar-fluxo, auditar-portas, testar-asaas, testar-email, planilha
     test/                    26 testes
 ```
