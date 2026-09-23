@@ -7,7 +7,8 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ## O que já está no ar e provado
 
-**https://conf-mulheres-plenas.vercel.app** — site e API no mesmo domínio.
+**https://evangelhoplenoparagominas.com.br** — site e API no mesmo domínio.
+(`conf-mulheres-plenas.vercel.app` continua respondendo, como endereço interno.)
 
 | Peça | Estado |
 |---|---|
@@ -18,7 +19,9 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 | Planilha | Google Sheets gravando (`/api/saude` mostra `planilha: google-sheets`) |
 | E-mail | Resend no domínio próprio, **Verified** (sa-east-1). Teste no Gmail em 23/09: SPF, DKIM e DMARC **PASS** nos três |
 | Variáveis | as 12 + `EMAIL_REPLY_TO`. Atenção: `EMAIL_FROM` e `EMAIL_REPLY_TO` foram criadas **só em Production** |
-| Domínio | `evangelhoplenoparagominas.com.br` — zona de DNS configurada em 23/09, **manda e-mail**; o site ainda **não aponta** para a Vercel |
+| Domínio | **https://evangelhoplenoparagominas.com.br** — site, API e e-mail, tudo no domínio próprio desde 23/09 |
+| Git | remote **sem token na URL**; autenticação no Git Credential Manager (cofre do Windows). `git push` funciona direto |
+| GitHub Pages | **desligado** em 23/09 — `github.io` devolve 404 |
 
 **Ensaio completo feito em 22/09 e depois limpo:** compra pelo site → cobrança
 no Asaas → Pix com QR → pedido na planilha → pagamento → webhook 200 → ingresso
@@ -41,7 +44,7 @@ Ele existe para isso.
 
 ## O que falta, em ordem
 
-### 1. Domínio — e-mail pronto, site ainda não aponta
+### 1. Domínio — CONCLUÍDO em 23/09
 
 **`evangelhoplenoparagominas.com.br`**. Correção de 23/09: a delegação no
 TLD `.br` é **`d.sec.dns.br` / `f.sec.dns.br`** (conjunto assinado com
@@ -78,37 +81,49 @@ Gmail deu **SPF PASS, DKIM PASS alinhado ao domínio, DMARC PASS**.
 Quando o DMARC tiver alguns dias de relatório limpo, dá para apertar o
 `p=none` para `p=quarantine` no Registro.br.
 
-#### Metade do site: FALTA
 
-1. Adicionar o domínio na **Vercel** e criar os registros que ela pedir
-   (`A` na raiz, `CNAME` no `www`) no Registro.br.
-2. Esperar responder de verdade. Só depois atualizar na Vercel `SITE_URL` e
-   `API_URL` e o `apiUrl` do `config.js` da raiz — este último **por
-   último**, senão o site sai do ar no intervalo.
-3. `SITE_URL` ainda aponta para o GitHub Pages, tanto no `backend/.env`
-   quanto na Vercel. É o endereço que vai **dentro** do e-mail de ingresso:
-   enquanto não trocar, o ingresso manda a compradora para o Pages.
+#### Provado em produção no domínio novo (23/09)
 
-**Não verificado:** `/api/saude` não expõe o remetente, então ninguém
-confirmou ainda que a Vercel está usando o `EMAIL_FROM` novo — o teste de
-23/09 rodou com o `.env` local. A prova é uma compra de verdade e olhar de
-que endereço o ingresso chega.
+| Verificação | Resultado |
+|---|---|
+| `config.js` servido | aponta para o domínio próprio |
+| `/api/saude` | Asaas, Google Sheets e Resend de pé |
+| Trava de janela | `POST /api/checkout` devolve **409**, "abre em 27/09" |
+| Acentuação | UTF-8 correto ponta a ponta |
+| Certificado | emitido pela Vercel alguns minutos depois do `A` |
 
-### 2. Limpeza de segredo (fazer hoje)
+Registros `A` na raiz: `216.198.79.1` e `64.29.17.1` (faixa nova; o
+`76.76.21.21` ainda funciona mas é a antiga).
+
+`ALLOWED_ORIGINS` **foi criada na Vercel** e não existe no Git. Sem ela, em
+produção a única origem liberada é a do `SITE_URL` — o checkout do Pages
+teria quebrado por CORS no instante do deploy. Hoje vale
+`conf-mulheres-plenas.vercel.app` e o `www`.
+
+**Não verificado:** de que endereço o ingresso chega numa compra real. A
+trava de 27/09 impede o teste, e `/api/saude` não expõe o remetente.
+
+### 2. Limpeza de segredo (fazer agora — o resto já está pronto)
 
 - Revogar o token da Vercel em Settings → Tokens (ele foi exposto num chat)
+- Revogar o token do GitHub: ele ficou em texto puro na URL do remote, dentro
+  do `.git/config`. Já foi retirado de lá em 23/09 e a autenticação passou
+  para o Git Credential Manager, mas o token em si continua válido
 - Apagar a linha `VERCEL_TOKEN` de `backend/.env`
 - Apagar o arquivo `backend/.env.vercel` (tem todos os segredos em claro)
 
 Nenhum dos dois está no Git.
 
-### 3. Antes de divulgar (domingo, 27/09)
+### 3. Antes de divulgar (domingo, 27/09) — Pages FEITO
 
-O GitHub Pages em `evangelhopleno.github.io/Conf.Mulheres_Plenas/` **não é uma
-cópia velha**: ele publica da `main`, então está atualizado, tem o checkout e
-aponta para a mesma API. São duas páginas públicas igualmente funcionais
-vendendo o mesmo ingresso. Desligar o Pages nas Settings do repositório — com
-o domínio próprio chegando, seriam três endereços para a mesma coisa.
+O GitHub Pages foi desligado em 23/09 (`github.io` devolve 404) e o
+`github.io` saiu do `ALLOWED_ORIGINS`. Sobrou um endereço público de venda,
+que é o certo.
+
+Falta: fechar o repositório (privado), e o `www` redirecionando para a raiz
+— na Vercel com "Redirecionar para" a raiz, e um `CNAME www ->
+dc089d8ac3330511.vercel-dns-017.com.` no Registro.br. Hoje quem digitar
+`www.` bate em erro.
 
 ### 4. Asaas de produção — tem a mesma data-limite da venda
 
@@ -166,6 +181,8 @@ O `.env` fica em `backend/.env` (o `config.js` aponta o caminho na mão).
 | `a.auto.dns.br` responde pelo domínio | e responde **errado** — a delegação real é `d.sec`/`f.sec`. Conferir DNS por ele dá diagnóstico falso |
 | Variável nova na Vercel sem redeploy | fica gravada e a função continua com a antiga até o próximo deploy |
 | Previews da Vercel | têm proteção de login e devolvem 302; só a URL de produção é aberta |
+| Data cravada no `receiveInCash` | a auditoria tinha `paymentDate: '2026-09-22'` fixo e passou a falhar com 400 no dia seguinte ao ensaio; o Asaas exige data entre a criação da cobrança e hoje |
+| Token na URL do remote | `git push` era bloqueado por vazamento de credencial; a saída é remote limpo + Git Credential Manager |
 
 ---
 
