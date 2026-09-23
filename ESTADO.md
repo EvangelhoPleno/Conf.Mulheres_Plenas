@@ -29,18 +29,22 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 no Asaas → Pix com QR → pedido na planilha → pagamento → webhook 200 → ingresso
 `MP26-XXXX-XXXX` → e-mail entregue → aba Resumo somando certo.
 
-### Lotes (as datas moram em DOIS lugares e têm que andar juntas)
+### Lotes (as datas moram em TRÊS lugares e têm que andar juntas)
 
 | Lote | Janela | Preço |
 |---|---|---|
 | 1º | 27/09 a 06/10 | R$ 55,00 |
 | 2º | 07/10 a 15/10 | R$ 65,00 |
 
-- `backend/src/catalogo.js` — o que a API vende
-- `index.html`, atributos `data-inicio` / `data-fim` — o que a landing mostra
+- `backend/src/catalogo.js`, linha ~31 — o que a API vende (e recusa)
+- `index.html`, linhas 458 e 482, `data-inicio` / `data-fim` — o selo da landing
+- `backend/test/fluxo.test.js`, linhas 61-64 — as quatro datas cravadas
 
 Se mudar uma e esquecer a outra, o teste `janela de venda de cada lote` falha.
-Ele existe para isso.
+Ele existe para isso: o teste é a trava, não um quarto lugar que "também"
+precisa mudar. Mexeu nos dois primeiros, o teste quebra de propósito — aí
+você ajusta as linhas 61-64 e, se moveu as bordas, os `new Date(...)` das
+linhas 66-73 (mês é base zero: `new Date(2026, 8, 27)` é 27 de setembro).
 
 ---
 
@@ -141,25 +145,43 @@ salvar, o serial do SOA ainda é o antigo e o registro novo não existe. Não é
 erro, é fila — esperar alguns minutos. E conferir sempre em `d.sec.dns.br`,
 nunca em `a.auto.dns.br`.
 
-### 4. Asaas de produção — tem a mesma data-limite da venda
+### 4. Asaas de produção — DUAS etapas pendentes, não uma
+
+**Situação em 23/09** (conferida no painel):
+
+| Etapa | Estado |
+|---|---|
+| Preenchimento dos Dados Comerciais | **Aprovado** |
+| Envio de documentos | **Em análise** |
+| Aprovação geral | **Pendente** — só começa depois das anteriores |
+| Chave Pix | bloqueada, depende da mesma fila |
+
+**Decisão tomada em 23/09: manter a abertura em 27/09 e reavaliar no sábado,
+26/09.** O endereço ainda não foi divulgado, então a exposição é pequena.
 
 **Isto não é "quando der": em 27/09 a janela do 1º lote abre sozinha, pelo
-relógio.** Se a conta de produção não estiver ligada até lá, as primeiras
-compras rodam em **sandbox** — a compradora vê o QR, o pedido entra na
-planilha, o ingresso é emitido, e o dinheiro nunca chega.
+relógio.** Se a conta não estiver aprovada até lá, a compradora recebe um QR
+de **sandbox**, que o banco dela não reconhece: ela não consegue pagar, o
+pedido fica pendente na planilha e o ingresso não sai.
 
-Se até 26/09 o Asaas não tiver aprovado, empurrar a data de abertura nos
-**dois** lugares (`catalogo.js` e `index.html`) em vez de abrir a venda.
+#### O que fazer no sábado, 26/09
 
-Quando aprovar:
+Se a aprovação geral **não** tiver saído, adiar a abertura. Mudança sugerida:
+1º lote de `2026-10-01` a `2026-10-06`, 2º lote intacto. São os três lugares
+da seção "Lotes" acima, e depois `npm test`.
+
+Se tiver saído:
 
 1. Gerar a chave de produção **sem permissão de saque** e sem expiração curta
    (chargeback chega até ~90 dias depois)
 2. Na Vercel: `ASAAS_API_URL=https://api.asaas.com/v3` e a chave `$aact_prod_`
-3. Cadastrar o webhook na conta de produção — mesma URL, mesmo
+   — **e redeployar**, senão a função continua com a de sandbox
+3. Cadastrar o webhook na conta de produção — mesma URL
+   (`https://evangelhoplenoparagominas.com.br/api/webhook`), mesmo
    `ASAAS_WEBHOOK_TOKEN`, mesmos 6 eventos, v3, não sequencial
-4. Conferir se a conta tem **chave Pix ativa** (sem ela o primeiro QR falha)
-5. Cobrança real de teste de **R$ 5,00 ou mais** (o Asaas recusa R$ 1,00)
+4. Conferir se a **chave Pix** está ativa (sem ela o primeiro QR falha com 400)
+5. Cobrança real de teste de **R$ 5,00 ou mais** (o Asaas recusa R$ 1,00) —
+   e é ela que finalmente prova de que endereço o e-mail de ingresso chega
 
 ### 5. Opcional
 
