@@ -277,6 +277,8 @@ novo-evento/
   api/index.js               entrada da API na Vercel
   vercel.json                manda /api/... para a função
   package.json               dependências e comandos (raiz)
+  PROMPT-AUDITORIA.md        runbook de auditoria completa (fases, regras,
+                             limpeza e formato do relatorio)
   backend/
     .env                     segredos (fora do Git)
     src/catalogo.js          lotes, preços e janelas
