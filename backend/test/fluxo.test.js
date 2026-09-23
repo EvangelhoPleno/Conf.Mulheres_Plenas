@@ -63,14 +63,28 @@ test('janela de venda de cada lote', function () {
     assert.equal(dois.vendaDe, '2026-10-07');
     assert.equal(dois.vendaAte, '2026-10-15');
 
-    assert.equal(situacaoDoLote(um, new Date(2026, 8, 26, 23, 59)), 'espera', 'vespera da abertura');
-    assert.equal(situacaoDoLote(um, new Date(2026, 8, 27, 0, 0)), 'aberto', 'abre a meia-noite do dia 27');
-    assert.equal(situacaoDoLote(um, new Date(2026, 9, 6, 23, 59)), 'aberto', 'ultimo dia vende ate 23:59');
-    assert.equal(situacaoDoLote(um, new Date(2026, 9, 7, 0, 0)), 'encerrado', 'no dia seguinte ja fechou');
+    /* Os instantes vao em UTC de proposito. new Date(2026, 8, 27) usaria o
+       fuso de quem roda o teste, e ai o teste passaria na maquina do
+       desenvolvedor (UTC-3, igual a Paragominas) e mentiria sobre a Vercel,
+       que roda em UTC. Cada linha traz o horario de Paragominas ao lado. */
+    const emBelem = function (utc) { return new Date(utc); };
+
+    assert.equal(situacaoDoLote(um, emBelem('2026-09-27T02:59:00Z')), 'espera', '26/09 23:59 em Paragominas: vespera');
+    assert.equal(situacaoDoLote(um, emBelem('2026-09-27T03:00:00Z')), 'aberto', '27/09 00:00 em Paragominas: abre');
+    assert.equal(situacaoDoLote(um, emBelem('2026-10-07T02:59:00Z')), 'aberto', '06/10 23:59 em Paragominas: ultimo dia vende');
+    assert.equal(situacaoDoLote(um, emBelem('2026-10-07T03:00:00Z')), 'encerrado', '07/10 00:00 em Paragominas: fechou');
+
+    /* As bordas que o fuso do servidor estragava: as 21:00 de Paragominas o
+       relogio em UTC ja virou o dia. Se a venda abrir ou fechar aqui, o
+       servidor esta decidindo pelo fuso dele. */
+    assert.equal(situacaoDoLote(um, emBelem('2026-09-27T00:00:00Z')), 'espera', '26/09 21:00 em Paragominas: ainda nao abriu');
+    assert.equal(situacaoDoLote(um, emBelem('2026-10-07T00:00:00Z')), 'aberto', '06/10 21:00 em Paragominas: ainda vende');
+    assert.equal(situacaoDoLote(dois, emBelem('2026-10-07T00:00:00Z')), 'espera', '06/10 21:00 em Paragominas: o 2o ainda nao abriu');
+    assert.equal(situacaoDoLote(dois, emBelem('2026-10-16T02:59:00Z')), 'aberto', '15/10 23:59 em Paragominas: ultimo dia vende');
 
     // os dois lotes se encaixam sem buraco nem sobreposicao
-    assert.equal(situacaoDoLote(dois, new Date(2026, 9, 7, 0, 0)), 'aberto', 'o 2o abre quando o 1o fecha');
-    assert.equal(situacaoDoLote(dois, new Date(2026, 9, 16)), 'encerrado', 'fechado no dia do evento');
+    assert.equal(situacaoDoLote(dois, emBelem('2026-10-07T03:00:00Z')), 'aberto', 'o 2o abre quando o 1o fecha');
+    assert.equal(situacaoDoLote(dois, emBelem('2026-10-16T03:00:00Z')), 'encerrado', 'fechado no dia do evento');
 });
 
 test('checkout recusa dados inválidos campo a campo', async function () {

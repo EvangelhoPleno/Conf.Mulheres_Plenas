@@ -31,12 +31,22 @@ const lotes = [
     { id: 'lote-2', lote: '2º lote', preco: 6500, de: '2026-10-07', ate: '2026-10-15' }
 ];
 
+/* A janela de venda vale pelo relogio de Paragominas, nao pelo do servidor.
+   America/Belem e UTC-3 o ano inteiro (o Brasil nao tem mais horario de
+   verao desde 2019), entao o deslocamento e fixo e nao precisa de tabela.
+
+   Montar a data com new Date(ano, mes, dia) usaria o fuso de quem roda. Na
+   Vercel isso e UTC: a venda abriria as 21h do dia ANTERIOR em Paragominas e
+   o ultimo dia de cada lote fecharia as 21h em vez de 23:59. No computador de
+   quem desenvolve, que ja esta em UTC-3, o erro nao aparece. */
+const HORAS_ATRAS_DE_UTC = 3;
+
 function diaBR(iso, fimDoDia) {
     const p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
     if (!p) return null;
     return fimDoDia
-        ? new Date(+p[1], +p[2] - 1, +p[3], 23, 59, 59, 999)
-        : new Date(+p[1], +p[2] - 1, +p[3]);
+        ? new Date(Date.UTC(+p[1], +p[2] - 1, +p[3], 23 + HORAS_ATRAS_DE_UTC, 59, 59, 999))
+        : new Date(Date.UTC(+p[1], +p[2] - 1, +p[3], HORAS_ATRAS_DE_UTC));
 }
 
 function formatarJanela(de, ate) {
