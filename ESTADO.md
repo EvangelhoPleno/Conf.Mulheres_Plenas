@@ -183,7 +183,46 @@ Se tiver saído:
 5. Cobrança real de teste de **R$ 5,00 ou mais** (o Asaas recusa R$ 1,00) —
    e é ela que finalmente prova de que endereço o e-mail de ingresso chega
 
-### 5. Opcional
+### 5. Teste com os pastores — decidido: NÃO antes do Asaas
+
+Perguntado em 23/09 se dava para os pastores testarem o fluxo inteiro até o
+e-mail chegar. **Dá**, e sem quebrar nada: eles compram, recebem o QR, e a
+cobrança é marcada como paga pela API do sandbox (o mesmo `receiveInCash` da
+auditoria), o que dispara o webhook real, emite o ingresso e manda o e-mail
+de verdade. O único passo impossível é pagar — QR de sandbox não é aceito
+por banco nenhum.
+
+**O custo:** a janela de venda teria que ficar aberta durante o teste, e aí
+o site fica genuinamente comprável por qualquer um com o endereço. Além
+disso o e-mail deles **não** viria marcado como teste (o `[TESTE]` no
+assunto só sai quando a transação começa com `mock_`; pelo sandbox do Asaas
+ela começa com `pay_`), e os pedidos entrariam na planilha real.
+
+**Decisão: não fazer.** O mesmo teste sai mais fiel e sem exposição nenhuma
+depois da aprovação do Asaas, com uma cobrança real de R$ 5,00 que se estorna
+— e é ele que também vai provar de que endereço o e-mail de ingresso chega.
+
+### 6. Varredura de segurança de 23/09 (tudo passou)
+
+Conferido **em produção**, no domínio novo:
+
+| Porta | Resposta |
+|---|---|
+| `/api/dev/simular-pagamento` | 404 (só existe com `PAYMENT_PROVIDER=mock`) |
+| `/api/admin/...` sem token e com token errado | 401 |
+| `/api/webhook` sem token | 401 |
+| rota inventada | 404 |
+| CORS de origem estranha | sem permissão |
+| `/backend/.env` pela web | 404 |
+
+E no repositório: `.env` e `.env.vercel` fora do Git, remote sem token na
+URL, os 4 registros de e-mail no ar.
+
+**Pendente:** apagar `backend/.env.vercel` do disco (as 12 chaves dele já
+vivem todas na Vercel, que tem 14 — é cópia redundante em texto claro), e
+revogar os dois tokens.
+
+### 7. Opcional
 
 O contador "X de 350 vendidos" da landing nunca aparece: `/api/produtos` não
 devolve o campo `vagas`. Dá para ligar contando os pedidos PAGOS da planilha.
