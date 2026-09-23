@@ -183,7 +183,11 @@ Se tiver saído:
 1. Gerar a chave de produção **sem permissão de saque** e sem expiração curta
    (chargeback chega até ~90 dias depois)
 2. Na Vercel: `ASAAS_API_URL=https://api.asaas.com/v3` e a chave `$aact_prod_`
-   — **e redeployar**, senão a função continua com a de sandbox
+   — **e redeployar**, senão a função continua com a de sandbox. Depois do
+   deploy, conferir em `/api/saude`: tem que dizer
+   `"asaas": { "ambiente": "producao", "chaveCombina": true }`. Se vier
+   `chaveCombina: false` (e `ok:false`), a chave e a URL estão trocadas —
+   corrija antes de qualquer divulgação, senão toda compra dá 502
 3. Cadastrar o webhook na conta de produção — mesma URL
    (`https://evangelhoplenoparagominas.com.br/api/webhook`), mesmo
    `ASAAS_WEBHOOK_TOKEN`, mesmos 6 eventos, v3, não sequencial
@@ -294,16 +298,30 @@ auditoria: a chave e a URL em produção são as duas de sandbox. Se a aprovaç�
 não sair até sábado, a compradora recebe um QR que o banco dela não reconhece.
 A decisão do item 4 continua de pé — reavaliar no sábado, 26/09.
 
-**3. Dois ingressos podem sair com códigos diferentes.** `confirmarPagamento()`
-segura a corrida dentro de uma instância (`emAndamento`), mas o webhook e a
-consulta da página de pagamento podem cair em instâncias diferentes da Vercel.
-Se as duas lerem o pedido ainda `PENDENTE`, cada uma gera um par de códigos e a
-segunda sobrescreve a planilha. O e-mail sai uma vez só (a chave de idempotência
-do Resend segura), mas **com os códigos da primeira, enquanto a planilha fica
-com os da segunda** — a portaria não confere. A janela é curta (as duas leituras
-antes da primeira escrita) e não foi observada acontecendo. Saída sugerida:
-derivar os códigos do `Pedido_ID` em vez de sortear, para que as duas instâncias
-cheguem ao mesmo resultado.
+**3. Dois ingressos podiam sair com códigos diferentes — CORRIGIDO.** Os
+códigos eram sorteados, e o webhook e a consulta da página de pagamento podem
+cair em instâncias diferentes: se as duas lessem o pedido ainda `PENDENTE`,
+cada uma sorteava um par. O e-mail saía com o da primeira (a idempotência do
+Resend segura o segundo) e a planilha ficava com o da segunda — a mulher
+chegava na portaria com um código que a planilha não conhecia. Agora os
+códigos são **derivados do `Pedido_ID`**: as duas instâncias chegam ao mesmo
+resultado e a corrida deixa de importar. No ar desde 23/09 (`456d3e0`).
+
+**4. Falha de e-mail não era retentada — CORRIGIDO.** `emailEnviado: ERRO`
+ficava parado esperando alguém reparar na coluna da planilha, com o dinheiro
+já dentro. Agora `ERRO` conta como pendente e cada consulta tenta de novo; a
+chave de idempotência do Resend impede o e-mail dobrado.
+
+**5. `/api/saude` agora denuncia o par do Asaas.** Chave trocada com a URL dá
+401 mudo, que vira 502 na cara da compradora, e antes isso só aparecia num
+`console.warn` que ninguém lê a tempo. A resposta agora traz
+`asaas: { ambiente, chaveCombina }` e devolve `ok:false` se não combinarem —
+**é assim que se confere a virada para produção no domingo, sem comprar nada.**
+A chave nunca aparece na resposta. Hoje em produção:
+
+```json
+"asaas": { "ambiente": "sandbox", "chaveCombina": true }
+```
 
 ---
 
