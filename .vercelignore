@@ -1,0 +1,14 @@
+# O deploy pela CLI envia a PASTA, não o commit — sem isto o .env e a chave do
+# Google subiriam junto. As variáveis já vivem no painel da Vercel; nenhum
+# segredo precisa viajar no pacote.
+node_modules
+.git
+tmp
+backend/tmp
+backend/.env
+backend/.env.*
+!backend/.env.example
+credenciais-google*.json
+backend/credenciais-google*.json
+*-service-account*.json
+.vercel
