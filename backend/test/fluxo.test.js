@@ -166,3 +166,58 @@ test('mapeia status da Sipag', function () {
     assert.equal(sipag._mapearStatus('DECLINED'), 'RECUSADO');
     assert.equal(sipag._mapearStatus('???'), null);
 });
+
+/* ---------- códigos derivados do Pedido_ID (corrida entre instâncias) ---------- */
+const { codigosDoPedido, PADRAO_INGRESSO, novoPedidoId } = require('../src/utils/codigos');
+
+test('duas instancias emitindo o mesmo pedido chegam aos MESMOS codigos', function () {
+    const pedidoId = novoPedidoId();
+
+    // o webhook e a consulta da pagina de pagamento, cada um na sua instancia
+    const doWebhook = codigosDoPedido(pedidoId, 3);
+    const daConsulta = codigosDoPedido(pedidoId, 3);
+
+    assert.deepEqual(doWebhook, daConsulta,
+        'se divergirem, o e-mail sai com um par e a planilha fica com outro');
+});
+
+test('codigos de pedidos diferentes nao colidem e respeitam o formato', function () {
+    assert.equal(codigosDoPedido(novoPedidoId(), 0).length, 0);
+
+    const todos = [];
+    for (let i = 0; i < 300; i++) todos.push.apply(todos, codigosDoPedido(novoPedidoId(), 5));
+
+    todos.forEach(function (codigo) {
+        assert.match(codigo, PADRAO_INGRESSO, codigo + ' fora do formato da portaria');
+    });
+    assert.equal(new Set(todos).size, todos.length, '1500 codigos, nenhum repetido');
+
+    // dentro do mesmo pedido os ingressos tambem sao distintos entre si
+    const doMesmoPedido = codigosDoPedido(novoPedidoId(), 5);
+    assert.equal(new Set(doMesmoPedido).size, 5);
+});
+
+test('/saude denuncia se a chave do Asaas nao combina com a URL', async function () {
+    const saude = await (await fetch(base + '/saude')).json();
+    // neste teste o provedor e o mock, entao o bloco do asaas nao aparece
+    assert.equal(saude.asaas, undefined);
+    assert.equal(saude.ok, true);
+
+    // e o config classifica os pares corretamente
+    const caminho = require.resolve('../src/config');
+    const salvo = { ...process.env };
+    for (const [url, chave, esperado] of [
+        ['https://api-sandbox.asaas.com/v3', '$aact_hmlg_abc', true],
+        ['https://api.asaas.com/v3', '$aact_prod_abc', true],
+        ['https://api.asaas.com/v3', '$aact_hmlg_abc', false],
+        ['https://api-sandbox.asaas.com/v3', '$aact_prod_abc', false]
+    ]) {
+        delete require.cache[caminho];
+        process.env.ASAAS_API_URL = url;
+        process.env.ASAAS_API_KEY = chave;
+        const cfg = require('../src/config');
+        assert.equal(cfg.asaas.chaveCombina, esperado, url + ' + ' + chave.slice(0, 11));
+    }
+    delete require.cache[caminho];
+    process.env = salvo;
+});

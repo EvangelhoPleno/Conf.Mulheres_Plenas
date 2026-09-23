@@ -22,14 +22,25 @@ async function comQrDoPix(visao) {
 
 router.get('/saude', function (req, res) {
     const provedor = pagamento();
-    res.json({
+    const saude = {
         ok: true,
         pagamento: provedor.nome,
         simulado: Boolean(provedor.simulado),
         metodos: provedor.metodos,
         planilha: pedidos().tipo,
         email: config.email.configurado ? 'resend' : 'desligado'
-    });
+    };
+
+    /* Chave de sandbox com URL de produção (ou o contrário) devolve 401 sem
+       explicar, e vira 502 na cara de toda compradora. Aqui dá para conferir a
+       virada para produção sem fazer uma compra. Só o ambiente e o veredito —
+       a chave nunca sai daqui. */
+    if (provedor.nome === 'asaas') {
+        saude.asaas = { ambiente: config.asaas.ambiente, chaveCombina: config.asaas.chaveCombina };
+        if (config.asaas.chaveCombina === false) saude.ok = false;
+    }
+
+    res.json(saude);
 });
 
 router.get('/produtos', function (req, res) {

@@ -12,9 +12,18 @@ const { pagamento } = require('./pagamento');
 const { enviarIngresso } = require('./emailService');
 const { validarComprador, mascararEmail } = require('../utils/validacao');
 const { dataHoraBrasil } = require('../utils/datas');
-const { novoPedidoId, novoCodigoIngresso } = require('../utils/codigos');
+const { novoPedidoId, codigosDoPedido } = require('../utils/codigos');
 
 const STATUS_FINAIS = ['PAGO', 'RECUSADO', 'EXPIRADO', 'CANCELADO', 'REEMBOLSADO'];
+
+/* O ingresso ainda não chegou na caixa dela: ou nunca tentamos, ou a tentativa
+   falhou. 'ERRO' conta porque o dinheiro já entrou — desistir no primeiro
+   tropeço do Resend deixava o pedido pago sem ingresso, esperando alguém
+   reparar na coluna da planilha. Cada nova consulta da página de pagamento
+   tenta de novo, e a chave de idempotência do Resend impede o e-mail dobrado. */
+function faltaEmail(pedido) {
+    return pedido.emailEnviado === 'NAO' || pedido.emailEnviado === 'ERRO';
+}
 
 function erroPublico(status, mensagem, extra) {
     const erro = new Error(mensagem);
@@ -117,7 +126,7 @@ function confirmarPagamento(pedidoId) {
         if (pedido.status !== 'PAGO') {
             const codigos = pedido.codigos.length
                 ? pedido.codigos
-                : Array.from({ length: pedido.quantidade }, novoCodigoIngresso);
+                : codigosDoPedido(pedidoId, pedido.quantidade);
             pedido = await pedidos().atualizar(pedidoId, {
                 status: 'PAGO',
                 codigos,
@@ -126,7 +135,7 @@ function confirmarPagamento(pedidoId) {
             });
         }
 
-        if (pedido.emailEnviado === 'NAO') pedido = await enviarEmailDoPedido(pedido);
+        if (faltaEmail(pedido)) pedido = await enviarEmailDoPedido(pedido);
         return pedido;
     })().finally(function () { emAndamento.delete(pedidoId); });
 
@@ -152,7 +161,7 @@ async function enviarEmailDoPedido(pedido, opcoes) {
 // exceto por estorno.
 async function aplicarStatus(pedido, novoStatus) {
     if (!novoStatus || novoStatus === pedido.status) {
-        if (novoStatus === 'PAGO' && pedido.emailEnviado === 'NAO') return confirmarPagamento(pedido.pedidoId);
+        if (novoStatus === 'PAGO' && faltaEmail(pedido)) return confirmarPagamento(pedido.pedidoId);
         return pedido;
     }
     if (novoStatus === 'PAGO') return confirmarPagamento(pedido.pedidoId);
@@ -176,7 +185,7 @@ async function consultarPedido(pedidoId) {
     const pedido = await pedidos().buscarPorId(pedidoId);
     if (!pedido) return null;
     // pago mas sem e-mail tentado = a confirmação caiu no meio; termina agora
-    if (STATUS_FINAIS.includes(pedido.status) && !(pedido.status === 'PAGO' && pedido.emailEnviado === 'NAO')) return pedido;
+    if (STATUS_FINAIS.includes(pedido.status) && !(pedido.status === 'PAGO' && faltaEmail(pedido))) return pedido;
 
     try {
         const status = pedido.status === 'PAGO' ? 'PAGO' : await pagamento().consultarStatus(pedido.transacaoId);

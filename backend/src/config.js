@@ -108,9 +108,14 @@ if (config.ambiente !== 'production') {
 const asaasEmProducao = /\/\/api\.asaas\.com/.test(config.asaas.apiUrl);
 config.asaas.ambiente = asaasEmProducao ? 'producao' : 'sandbox';
 config.asaas.configurado = Boolean(config.asaas.apiKey);
+/* O aviso no console não basta: na Vercel ninguém lê o log antes da primeira
+   compradora. Guardado aqui, o /api/saude denuncia o par errado sem expor a
+   chave — é como se confere a virada para produção sem precisar comprar. */
+config.asaas.chaveCombina = null;
 if (config.asaas.apiKey) {
     const chaveDeProducao = config.asaas.apiKey.includes('_prod_');
-    if (chaveDeProducao !== asaasEmProducao) {
+    config.asaas.chaveCombina = chaveDeProducao === asaasEmProducao;
+    if (!config.asaas.chaveCombina) {
         console.warn('[asaas] ATENÇÃO: a chave é de ' + (chaveDeProducao ? 'PRODUÇÃO' : 'SANDBOX') +
             ' e a URL é de ' + (asaasEmProducao ? 'PRODUÇÃO' : 'SANDBOX') + '. Ajuste ASAAS_API_URL ou ASAAS_API_KEY.');
     }
