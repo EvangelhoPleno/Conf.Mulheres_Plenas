@@ -22,7 +22,7 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 | Domínio | **https://evangelhoplenoparagominas.com.br** — site, API e e-mail, tudo no domínio próprio desde 23/09 |
 | Git | remote **sem token na URL**; autenticação no Git Credential Manager (cofre do Windows). `git push` funciona direto |
 | GitHub Pages | **desligado** em 23/09 — `github.io` devolve 404 |
-| Repositório | **privado** desde 23/09; a Vercel continua implantando pelo GitHub App |
+| Repositório | **público** — foi privado por algumas horas em 23/09 e isso quebrou o deploy (ver armadilha); voltou a ser público e o push implanta de novo |
 | `www` | responde com **308** para a raiz |
 
 **Ensaio completo feito em 22/09 e depois limpo:** compra pelo site → cobrança
@@ -252,7 +252,8 @@ lote 2, que a API já aceita, está sem link. **Ninguém consegue comprar durant
 as 3 h em que o preço vira.** O mesmo nas últimas 3 h de 15/10, a véspera do
 evento. Agora as bordas são instantes absolutos (UTC-3 fixo) e o teste as crava
 em UTC, então o mesmo erro não volta: rodando com `TZ=UTC`, o teste novo falha
-contra o código antigo e passa contra o corrigido.
+contra o código antigo e passa contra o corrigido. **No ar desde 23/09** (deploy
+`7ce2305`).
 
 ### Provado nesta auditoria
 
@@ -271,14 +272,22 @@ contra o código antigo e passa contra o corrigido.
 
 ### Pendente, e é o mais urgente
 
-**1. O `git push` não implanta mais.** Desde que o repositório virou privado
-(23/09), todo deploy vindo do GitHub volta `BLOCKED` com
-`seatBlock.blockCode = TEAM_ACCESS_REQUIRED`. Os 5 commits anteriores a esta
-auditoria nunca foram ao ar — por sorte eram só `.md`, então o **código** no ar
-continuava igual ao do `main`. **Isto precisa ser resolvido no painel da Vercel
-antes de 26/09:** é nessa data que se decide adiar a abertura mexendo nas datas
-dos lotes, e hoje esse commit não chegaria em produção sozinho. Enquanto não
-for resolvido, todo push precisa ser seguido de um redeploy manual.
+**1. O `git push` não implantava — RESOLVIDO em 23/09.** Desde que o
+repositório virou privado, todo deploy voltava `BLOCKED` com
+`seatBlock.blockCode = TEAM_ACCESS_REQUIRED`: o projeto fica sob um *team* e a
+conta é Hobby, que não aceita membro de time. Nem o botão Redeploy funcionava.
+Os 5 commits daquele intervalo nunca foram ao ar — por sorte eram só `.md`.
+
+**Saída tomada: o repositório voltou a ser público**, que é o único estado em
+que este projeto comprovadamente implanta. Conferido antes de abrir: nenhum
+segredo versionado, nem no histórico — só `.env.example`. O que protege o site
+são as variáveis no painel da Vercel, não a privacidade do código. Se um dia
+fechar de novo, o deploy volta a quebrar: a alternativa grátis é deploy pela
+CLI com um token **de conta** (o do `.env` é escopado ao projeto e o CLI recusa).
+
+Deploy `7ce2305` **READY** em 23/09, com a correção do fuso. Verificado no ar:
+`/api/saude` de pé, checkout devolvendo 409, as 4 páginas em 200 e as 6 portas
+fechadas.
 
 **2. O 1º lote abre em 27/09 com o Asaas ainda em sandbox.** Confirmado nesta
 auditoria: a chave e a URL em produção são as duas de sandbox. Se a aprovação
@@ -332,7 +341,9 @@ O `.env` fica em `backend/.env` (o `config.js` aponta o caminho na mão).
 | `TZ=` no Windows | o Node desta máquina só respeita `TZ=UTC`; `TZ=America/Belem`, `Asia/Tokyo` etc. caem silenciosamente no fuso da máquina. Conferir com `getTimezoneOffset()` antes de confiar num teste "em outro fuso" |
 | Ler variável da Vercel pela API | `/v9/projects/.../env` devolve o valor **cifrado** mesmo com `decrypt=true`; quem devolve texto claro é `/v1/projects/.../env/<id>`, um id por vez. E variável do tipo `sensitive` (hoje só `EMAIL_REPLY_TO`) **nunca** devolve valor — `undefined` ali significa "não revelado", não "vazio" |
 | Token na URL do remote | `git push` era bloqueado por vazamento de credencial; a saída é remote limpo + Git Credential Manager |
-| Deploy `BLOCKED` na Vercel | **o `git push` parou de implantar quando o repositório virou privado** (23/09). O motivo existe na API, só não em `errorCode`/`blockedReason`: está em `readyStateReason` e `seatBlock.blockCode` = `TEAM_ACCESS_REQUIRED` — "the commit author doesn't have permission to create deployments for this project". Enquanto isso não for resolvido no painel, **push não vai para o ar**; só o redeploy manual (painel ou API) implanta |
+| Repositório privado em conta Hobby | **derruba o deploy inteiro.** Em 23/09 o repo virou privado e todo push passou a voltar `BLOCKED`: `seatBlock.blockCode` = `TEAM_ACCESS_REQUIRED`, "the commit author doesn't have permission to create deployments". O projeto fica sob um *team*, e Hobby não aceita membro de time — nem o botão Redeploy funciona, ele só oferece *Upgrade to Pro*. **Saída tomada: repositório de volta a público.** O motivo está em `readyStateReason`/`seatBlock`, não em `errorCode`/`blockedReason` |
+| Deploy `BLOCKED` não pode ser reimplantado | a API responde `deployment_can_never_deploy` — "please try again from a fresh commit". Não adianta insistir no redeploy: resolva a causa e faça um commit novo (vazio serve) |
+| `VERCEL_TOKEN` do `.env` é escopado ao projeto | serve para a API do projeto (deployments, variáveis), mas **o CLI não autentica com ele**: o `vercel` chama `/v2/user` primeiro e recebe `User not found`. Para usar o CLI, gerar um token de conta |
 
 ---
 
