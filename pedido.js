@@ -404,17 +404,11 @@
                 num.className = 'ingresso-num';
                 num.textContent = 'Ingresso ' + (i + 1) + ' de ' + pedido.ingressos.length;
 
-                var img = document.createElement('img');
-                img.src = ingresso.qr;
-                img.alt = 'QR Code do ingresso ' + ingresso.codigo;
-                img.width = 190;
-                img.height = 190;
-
                 var codigo = document.createElement('span');
                 codigo.className = 'ingresso-codigo';
                 codigo.textContent = ingresso.codigo;
 
-                li.append(num, img, codigo);
+                li.append(num, codigo);
                 lista.appendChild(li);
             });
 

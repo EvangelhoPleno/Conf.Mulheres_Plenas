@@ -679,7 +679,8 @@ button.btn-cta {
 .ingresso::after {
     content: '';
     position: absolute;
-    top: 58%;
+    /* na altura da linha pontilhada: padding de cima + número + gap - meio recorte */
+    top: 33px;
     width: 22px;
     height: 22px;
     border-radius: 50%;
@@ -697,17 +698,14 @@ button.btn-cta {
     color: var(--terracota);
 }
 
-.ingresso img {
-    width: 190px;
-    height: 190px;
-}
-
 .ingresso-codigo {
     width: 100%;
     padding-top: 12px;
     border-top: 2px dashed var(--nude);
-    font: 700 1.15rem/1.2 'Courier New', monospace;
-    letter-spacing: 0.1em;
+    /* 14 caracteres cabem numa linha no card de 280px */
+    font: 700 1.35rem/1.2 'Courier New', monospace;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
     color: var(--tijolo);
 }
 

@@ -7,15 +7,15 @@ const { escapar } = require('../utils/html');
 
 const COR = { tijolo: '#85351E', terracota: '#B8684F', nude: '#DFB9A6', rosado: '#F5E8E2', papel: '#FBF5F2', texto: '#4A2116' };
 
+/* Sem QR Code: não há leitor na portaria, e o QR só repetia o código.
+   O que vale é o código, conferido na lista. */
 function blocoIngresso(codigo, indice, total) {
-    const qr = config.apiUrl + '/api/ingressos/' + encodeURIComponent(codigo) + '/qr.png';
     return `
         <tr><td style="padding:0 0 16px">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border:2px dashed ${COR.nude};border-radius:14px">
                 <tr><td style="padding:18px;text-align:center">
                     <p style="margin:0 0 4px;font:700 12px/1.3 Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:${COR.terracota}">Ingresso ${indice + 1} de ${total}</p>
-                    <img src="${qr}" width="180" height="180" alt="QR Code do ingresso ${escapar(codigo)}" style="display:block;margin:8px auto;border:0">
-                    <p style="margin:6px 0 0;font:700 20px/1.2 'Courier New',monospace;letter-spacing:2px;color:${COR.tijolo}">${escapar(codigo)}</p>
+                    <p style="margin:10px 0 2px;font:700 28px/1.2 'Courier New',monospace;letter-spacing:3px;color:${COR.tijolo}">${escapar(codigo)}</p>
                 </td></tr>
             </table>
         </td></tr>`;
@@ -47,7 +47,7 @@ function emailIngresso(pedido) {
             <p style="margin:0 0 14px">Olá, <strong>${escapar(primeiroNome)}</strong>!</p>
             <p style="margin:0 0 14px">Recebemos o seu pagamento e a sua vaga na <strong>${escapar(evento.nome)}</strong> está garantida. Estamos esperando por você!</p>
             <p style="margin:0 0 20px;padding:14px 16px;background:${COR.rosado};border-left:4px solid ${COR.terracota};border-radius:6px">
-                <strong>Na portaria:</strong> apresente este e-mail (no celular ou impresso) com o QR Code de cada ingresso.
+                <strong>Na portaria:</strong> apresente este e-mail (no celular ou impresso). O código de cada ingresso é a sua entrada.
             </p>
         </td></tr>
 
@@ -70,7 +70,7 @@ function emailIngresso(pedido) {
 
         <tr><td align="center" style="padding:22px 24px 30px">
             <a href="${linkConfirmacao}" style="display:inline-block;padding:14px 28px;background:${COR.tijolo};color:${COR.rosado};border-radius:999px;font:700 14px/1 Arial,sans-serif;letter-spacing:1px;text-transform:uppercase;text-decoration:none">Ver meus ingressos</a>
-            <p style="margin:18px 0 0;font:13px/1.5 Arial,sans-serif;color:${COR.terracota}">Guarde este e-mail. Cada QR Code vale uma entrada.</p>
+            <p style="margin:18px 0 0;font:13px/1.5 Arial,sans-serif;color:${COR.terracota}">Guarde este e-mail. Cada código vale uma entrada.</p>
         </td></tr>
 
         <tr><td style="background:${COR.tijolo};padding:16px 24px;text-align:center;font:12px/1.5 Arial,sans-serif;color:${COR.nude}">
