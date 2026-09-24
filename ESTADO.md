@@ -59,9 +59,20 @@ portaria e o QR só repetia o código. E-mail e `confirmacao.html` mostram o
 código em destaque e mandam apresentar o e-mail na portaria. A rota
 `/api/ingressos/:codigo/qr.png` continua existindo, sem uso na tela.
 
-**Falta:** estornar a compra de teste pelo painel do Mercado Pago (o webhook
-deve marcar o pedido como REEMBOLSADO na planilha sozinho). Divulgar o link
-no domingo, 27/09.
+**Reembolso provado em produção em 24/09:** 2ª compra real de R$ 55 no Pix
+(Nubank) → PAGO → ingresso `MP26-2YJQ-PN4S` → e-mail → **Devolver dinheiro** no
+painel (operação 179642872509) → webhook → pedido **REEMBOLSADO** na planilha,
+sozinho. Com a devolução total o Mercado Pago **devolve a tarifa** (0,99% no Pix,
+R$ 0,54 em R$ 55): teste de compra + estorno custa zero. No app do Nubank a
+devolução aparece como um Pix vindo do Mercado Pago, não como "estorno".
+
+**Falta:** devolver a 1ª compra de teste (operação **179634462601**, 09:18 de
+24/09, ainda `approved`). A linha dela foi apagada da planilha à mão, então o
+webhook do estorno será ignorado — é o esperado. Divulgar o link no domingo, 27/09.
+
+Tela do Pix: avisa que o recebedor aparece como **Jadison S. Ribeiro** (o Pix
+mostra o titular da conta; só uma conta no CNPJ da igreja mudaria isso).
+Links "Ingressos": o `id="setores"` fica no **título** da seção, não nos cards.
 
 ---
 
