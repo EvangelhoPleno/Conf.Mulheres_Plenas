@@ -66,9 +66,17 @@ sozinho. Com a devolução total o Mercado Pago **devolve a tarifa** (0,99% no P
 R$ 0,54 em R$ 55): teste de compra + estorno custa zero. No app do Nubank a
 devolução aparece como um Pix vindo do Mercado Pago, não como "estorno".
 
-**Falta:** devolver a 1ª compra de teste (operação **179634462601**, 09:18 de
-24/09, ainda `approved`). A linha dela foi apagada da planilha à mão, então o
-webhook do estorno será ignorado — é o esperado. Divulgar o link no domingo, 27/09.
+A 1ª compra de teste (operação **179634462601**, 09:18 de 24/09) foi
+**resolvida à mão**: o valor saiu por um Pix comum do Jadison para ele mesmo, não
+por "Devolver dinheiro". No Mercado Pago ela segue `approved` (e a tarifa de
+R$ 0,54 não voltou); a linha foi apagada da planilha, então não entra em total
+nenhum. **Não estornar de novo.**
+
+E-mail com logo e tema testado em 24/09 (`npm run email:testar`): chegou na
+**caixa de entrada** do Gmail, logo carregando.
+
+**Falta:** divulgar o link no domingo, 27/09. Opcional: uma compra real no
+**cartão** (o único caminho ainda não provado com dinheiro de verdade) e o estorno.
 
 Tela do Pix: avisa que o recebedor aparece como **Jadison S. Ribeiro** (o Pix
 mostra o titular da conta; só uma conta no CNPJ da igreja mudaria isso).
