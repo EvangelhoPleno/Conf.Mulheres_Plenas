@@ -40,9 +40,18 @@ Descoberto no teste (não redescobrir):
 - A página do Checkout Pro também oferece saldo em conta e Débito Virtual CAIXA
   (só boleto e Pix foram excluídos). Pagam na hora; deixado assim.
 
-**Falta, em ordem:** provar o Pix com a credencial de produção (gera e
-cancela) → variáveis na Vercel → push/redeploy → `/api/saude` → "Simular" do
-webhook no painel → compra real de R$ 55 no Pix e estorno.
+**No ar desde 24/09, 12:13 (deploy `9a4ec76` READY).** Vercel: `PAYMENT_PROVIDER=mercadopago`,
+`MERCADOPAGO_ACCESS_TOKEN` e `MERCADOPAGO_WEBHOOK_SECRET` (só Production); as
+`ASAAS_*` foram apagadas. Conferido no ar: `/api/saude` `ok:true` com
+`credencial` e `webhookAssinado` true, planilha e Resend ligados; 4 páginas
+200; webhook sem assinatura 401, `/api/dev` 404, admin 401, `.env` 404, CORS
+estranho sem permissão; 1º lote aberto e o card mostrando "27/09 a 06/10".
+
+Pix de produção provado em 24/09 (`npm run mercadopago:testar -- --producao`):
+QR gerado na conta JADISON_S_RIBEIRO, consulta PENDENTE, cancelado.
+
+**Falta:** "Simular" do webhook no painel → compra real de R$ 55 no Pix pelo
+site (webhook assinado + planilha + e-mail de ponta a ponta) → estorno.
 
 ---
 
