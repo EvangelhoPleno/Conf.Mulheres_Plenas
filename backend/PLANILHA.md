@@ -67,7 +67,7 @@ Os cinco últimos são **finais**: o sistema não mexe mais na linha depois dele
 | `NAO` | Ainda não saiu (é o estado inicial, e também o de todo pedido não pago). |
 | `SIM` | Enviado pelo Resend. |
 | `SIMULADO` | Sem `RESEND_API_KEY` configurada: o e-mail foi só impresso no console. |
-| `ERRO` | Tentou e falhou. **É o que você procura para reenviar** — a aba `Resumo` conta esses. |
+| `ERRO` | Tentou e falhou. **É o que você procura para reenviar** — o painel `Acompanhamento` conta esses. |
 
 ### Formato dos códigos
 
@@ -80,35 +80,41 @@ conferir pelo código lido ou digitado à mão.
 
 ---
 
-## Aba `Resumo` — totais automáticos
+## Aba `Acompanhamento` — o painel de vendas
 
-Criada pelo mesmo comando. **Não digite nada aqui**: são fórmulas que leem a aba
-`Pedidos` e se atualizam sozinhas.
+É a primeira aba da planilha. Criada pelo mesmo comando, **inteira por
+fórmula**: se atualiza sozinha a cada venda, e o site não grava nada nela (não
+gasta a cota do Google). Rodar `npm run planilha:preparar` **apaga e refaz a
+aba** — não escreva nada nela.
 
-```
-Resumo de vendas
-  Pedidos pagos                          =COUNTIF(Pedidos!F:F;"PAGO")
-  Ingressos vendidos                     =SUMIF(…;"PAGO";Pedidos!I:I)
-  Arrecadado (R$)                        =SUMIF(…;"PAGO";Pedidos!J:J)
-  Aguardando pagamento                   =COUNTIF(…;"PENDENTE")
-  Recusados / expirados / cancelados
-  Reembolsados
-  E-mails com erro (reenviar)            =COUNTIF(Pedidos!N:N;"ERRO")
-
-Vendas por ingresso
-  Ingresso                        Ingressos    Valor (R$)
-  Ingresso individual (1º lote)        …             …
-  Ingresso individual (2º lote)        …             …
-  Total                                …             …
-```
-
-A parte "Vendas por ingresso" tem **uma linha por item do catálogo**. Se você
-mudar os lotes em `src/catalogo.js`, rode `npm run planilha:preparar` de novo: o
-script reescreve essa parte e limpa as sobras da versão anterior.
+- **Faixa do topo:** logo (na primeira vez o Google pede um clique em
+  "Permitir acesso" para carregar a imagem do site), evento e hora da última
+  atualização.
+- **Cartões:** arrecadado (e ticket médio), ingressos vendidos (e % das 350
+  vagas), pessoas únicas por CPF, aguardando pagamento, conversão (pagos ÷
+  todos os pedidos) e um mini-gráfico de ingressos por dia.
+- **Números menores:** pedidos pagos, pedidos no total, não concluídos
+  (recusados, expirados, cancelados), reembolsados, **e-mails com erro** (fica
+  vermelho se passar de zero: reenviar pelo admin) e o melhor dia.
+- **Vendas por lote:** ingressos e valor de cada lote do catálogo, com total.
+  Mudou os lotes em `src/catalogo.js`? Rode o comando de novo.
+- **Forma de pagamento:** Pix x cartão (pagos), com barra de participação.
+- **Vendas por dia:** pedidos, ingressos e valor de cada dia com venda paga.
+- **Pedidos, mais recentes primeiro:** data e hora, nome, e-mail, status
+  colorido, Pix/cartão, quantidade, valor, código do ingresso e **"Pedido da
+  pessoa"**: "2 de 2" = o 2º pedido desse e-mail, de 2 no total. Mais de um
+  fica em destaque (tentou de novo, ou comprou para outras pessoas).
 
 > **Atenção:** "Ingressos vendidos" soma a coluna `Quantidade`, e "Pedidos pagos"
 > conta linhas. Como um pedido pode ter até 5 ingressos, **os dois números são
 > diferentes** — o que vale para as 350 vagas é "Ingressos vendidos".
+
+A antiga aba `Resumo` foi absorvida pelo painel: o comando a remove.
+
+A aba `Pedidos` também ganha visual pelo comando — cabeçalho tijolo, linhas
+alternadas, status colorido, `ERRO` de e-mail em vermelho — tudo por
+formatação **condicional**, porque a API grava cada venda inserindo uma linha,
+e linha inserida copia o formato da de cima.
 
 ---
 

@@ -1,5 +1,5 @@
 /* Gravação na planilha: tipos das células.
-   A aba Resumo soma Quantidade e Valor_Total com SUMIF/SUMIFS, que ignoram
+   O painel Acompanhamento soma Quantidade e Valor_Total com SUMIF/SUMIFS, que ignoram
    texto. O getRows() devolve toda célula como string e o save() reescreve a
    linha inteira — então atualizar um pedido já zerou os totais uma vez.
    Rode com: npm test */

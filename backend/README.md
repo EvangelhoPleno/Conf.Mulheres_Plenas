@@ -57,7 +57,7 @@ Em outro terminal, sirva o site pela raiz do repositório (ex.: `python -m http.
 3. Salve o arquivo como **`backend/credenciais-google.json`**. Ele já está no `.gitignore`.
 4. Na planilha, clique em **Compartilhar** e adicione o `client_email` do JSON como **Editor**.
 5. No `.env`: `GOOGLE_SHEET_ID=<link da planilha>` (pode ser o link inteiro).
-6. `npm run planilha:preparar` → cria ou completa a aba **Pedidos** e a aba **Resumo**, sem mexer nas outras abas.
+6. `npm run planilha:preparar` → cria ou completa a aba **Pedidos** e monta o painel **Acompanhamento**, sem apagar pedidos.
 7. `npm run planilha:testar` → confere o acesso e grava e apaga uma linha de teste.
 
 O sistema procura a aba pelo **nome "Pedidos"**, então a planilha pode ter outras abas. Não mude os nomes das colunas; colunas extras depois da Q podem ser criadas à vontade.

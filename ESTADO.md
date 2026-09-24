@@ -79,6 +79,11 @@ E-mail com logo e tema testado em 24/09 (`npm run email:testar`): chegou na
 os argumentos das fórmulas se separam com `;`. O `planilha:preparar` agora lê
 a localidade e escolhe o separador; se a localidade mudar, é só rodá-lo de novo.
 
+**Planilha com 2 abas (24/09):** `Acompanhamento` (painel com logo, cartões,
+lotes, Pix x cartão, dias e pedidos; só fórmulas, 1ª aba) e `Pedidos`. O
+`Resumo` foi absorvido e apagado. Fuso da planilha corrigido de Los Angeles
+para `America/Belem`. Tudo pelo `planilha:preparar`; ver `backend/PLANILHA.md`.
+
 **Carga simultânea (24/09) — `npm run carga`:** simula N compradoras juntas no
 mesmo Wi-Fi, com a planilha de verdade numa aba temporária "Teste carga"
 (apagada no fim), pagamento simulado e e-mail desligado.

@@ -31,7 +31,7 @@ const COLUNAS = [
 ];
 const CABECALHO = COLUNAS.map(function (c) { return c[1]; });
 
-/* As colunas que a aba Resumo soma com SUMIF/SUMIFS precisam ser NÚMERO na
+/* As colunas que o painel Acompanhamento soma com SUMIF/SUMIFS precisam ser NÚMERO na
    planilha: texto é ignorado pelas somas e o total sai zerado. O getRows()
    devolve toda célula como texto e o save() reescreve a linha inteira, então
    sem isto atualizar um pedido transformaria 110 em "110". */
