@@ -409,7 +409,7 @@
              Se um dia a venda for por plataforma externa (Sympla etc.), basta
              preencher CONFIG.links.ingressos no script.js: o data-link faz
              todos estes botões apontarem para lá. -->
-        <section class="ingressos" aria-labelledby="ingressosTitulo">
+        <section class="ingressos" aria-labelledby="setores">
             <!-- bordas quadriculadas, iguais à do rodapé: em cima na cor da
                  seção anterior, embaixo na cor da seguinte -->
             <canvas class="dither dither--topo" aria-hidden="true"></canvas>
@@ -417,7 +417,10 @@
             <svg class="folha folha--traco ingressos-folha-1" aria-hidden="true" data-flutuar><use href="#ramo-traco"/></svg>
             <svg class="folha ingressos-folha-2" aria-hidden="true" data-flutuar><use href="#ramo"/></svg>
             <div class="ingressos-inner">
-                <h2 class="cant-sub" id="ingressosTitulo">Escolha seu <span class="highlight-ingresso script">ingresso</span> abaixo:</h2>
+                <!-- id="setores" fica no título, não nos cards: todo link "Ingressos"
+                     aponta para cá, e mirando os cards o "são apenas 350 vagas"
+                     ficava escondido atrás do menu -->
+                <h2 class="cant-sub" id="setores">Escolha seu <span class="highlight-ingresso script">ingresso</span> abaixo:</h2>
 
                 <!-- CAPACIDADE + ANDAMENTO DAS VENDAS
                      O painel de vendidos só aparece quando existe número REAL.
@@ -453,7 +456,7 @@
                      selo de situação ("vendas abertas", "abre dia...", "encerrado")
                      é escrito pelo configurarLotes() do script.js a partir delas
                      e começa oculto: sem JS, o site não promete nada. -->
-                <div class="setores" id="setores" data-entrada>
+                <div class="setores" data-entrada>
                     <ul class="setor-cards lotes">
                         <li class="lote" data-lote data-inicio="2026-09-24" data-fim="2026-10-06">
                             <a class="ticket ticket--destaque" href="checkout.html?produto=lote-1" data-link="ingressos">

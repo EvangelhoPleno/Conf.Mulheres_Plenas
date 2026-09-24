@@ -2138,6 +2138,10 @@ html.entrada-ativa .entrada.is-dissolvendo {
     flex-direction: column;
     gap: clamp(22px, 3.6vw, 32px);
     margin-bottom: clamp(32px, 4vw, 42px);
+}
+
+/* destino de todo link "Ingressos": o título da seção, logo abaixo do menu */
+#setores {
     scroll-margin-top: calc(var(--nav-altura) + 24px);
 }
 
