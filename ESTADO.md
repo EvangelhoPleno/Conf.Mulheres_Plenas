@@ -84,6 +84,17 @@ lotes, Pix x cartão, dias e pedidos; só fórmulas, 1ª aba) e `Pedidos`. O
 `Resumo` foi absorvido e apagado. Fuso da planilha corrigido de Los Angeles
 para `America/Belem`. Tudo pelo `planilha:preparar`; ver `backend/PLANILHA.md`.
 
+**Dois defeitos achados em 24/09 à tarde (corrigidos):**
+- **Valor zerado ao atualizar pedido:** o `getRows()` devolve o valor
+  formatado ("R$ 55,00") e o `comoNumero` antigo dava 0 — todo pedido pago ou
+  reembolsado era regravado com R$ 0,00 (e o e-mail diria "Valor pago R$
+  0,00"). Os pedidos de teste da Débora e da Raiany ficaram assim.
+  `comoNumero` agora lê "R$ 1.234,56", "1,234.56" etc.; teste em
+  `planilha.test.js`.
+- **Painel zerado:** as fórmulas usavam `Pedidos!F2:F`; a 1ª venda entra
+  inserindo linha na 2 e o Google empurra a referência para `F3:F`. Agora
+  usam coluna inteira (`F:F`) e tiram o cabeçalho com `ROW()>1`.
+
 **Carga simultânea (24/09) — `npm run carga`:** simula N compradoras juntas no
 mesmo Wi-Fi, com a planilha de verdade numa aba temporária "Teste carga"
 (apagada no fim), pagamento simulado e e-mail desligado.

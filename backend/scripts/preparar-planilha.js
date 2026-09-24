@@ -290,13 +290,19 @@ const CARTOES = [[0, 1], [2, 2], [3, 4], [5, 7], [8, 8], [10, 13]];
 async function prepararAcompanhamento(doc) {
     const f = formulaNaLocalidade(doc);
     const P = "'" + config.google.aba + "'!";
+    /* Coluna INTEIRA (F:F), nunca "da linha 2 para baixo" (F2:F). A venda
+       entra inserindo linha logo abaixo do cabeçalho, e o Google empurra a
+       referência junto: F2:F virava F3:F e a venda nova ficava de fora — o
+       painel zerado com a venda ali na aba Pedidos. F:F não se mexe.
+       O cabeçalho entra na coluna: as contas por "PAGO" não o pegam, e as
+       listas o tiram com ROW()>1. */
     const c = function (nomeColuna) {
         const l = letra(CABECALHO.indexOf(nomeColuna));
-        return P + l + '2:' + l;
+        return P + l + ':' + l;
     };
     const status = c('Status');
     const pago = status + '="PAGO"';
-    const temPedido = c('Pedido_ID') + '<>""';
+    const temPedido = c('Pedido_ID') + '<>"",ROW(' + c('Pedido_ID') + ')>1';
     const T = TABELA;
     const D = DADOS;
 
@@ -335,7 +341,7 @@ async function prepararAcompanhamento(doc) {
     // secundários primeiro: os cartões usam A11 (pagos) e C11 (total)
     const secundarios = [
         ['Pedidos pagos', '=COUNTIF(' + status + ',"PAGO")'],
-        ['Pedidos no total', '=COUNTIF(' + c('Pedido_ID') + ',"?*")'],
+        ['Pedidos no total', '=COUNTIF(' + c('Pedido_ID') + ',"?*")-1'],  // -1: o cabeçalho
         ['Não concluídos', '=COUNTIF(' + status + ',"RECUSADO")+COUNTIF(' + status + ',"EXPIRADO")+COUNTIF(' + status + ',"CANCELADO")'],
         ['Reembolsados', '=COUNTIF(' + status + ',"REEMBOLSADO")'],
         ['E-mails com erro', '=COUNTIF(' + c('Email_Enviado') + ',"ERRO")'],

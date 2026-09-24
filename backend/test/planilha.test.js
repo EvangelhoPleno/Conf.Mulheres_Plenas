@@ -8,7 +8,7 @@ process.env.GOOGLE_SHEET_ID = '';
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { CABECALHO, COLUNAS_NUMERICAS, prepararLinha } = require('../src/services/sheetsService');
+const { CABECALHO, COLUNAS_NUMERICAS, prepararLinha, comoNumero } = require('../src/services/sheetsService');
 
 /* Imita a GoogleSpreadsheetRow: o que vem da planilha vem como texto. */
 function linhaFalsa(valores) {
@@ -83,4 +83,22 @@ test('valores estranhos não viram NaN', function () {
     prepararLinha(row, {});
     assert.equal(row.get('Quantidade'), 0, 'célula vazia vira 0');
     assert.equal(row.get('Valor_Total'), 110.5, 'vírgula decimal é aceita');
+});
+
+/* A coluna Valor_Total está em formato de dinheiro, e o getRows() devolve o
+   texto formatado. Antes, "R$ 55,00" virava 0 e todo pedido pago ou
+   reembolsado era regravado com valor zero. */
+test('valor formatado como dinheiro continua valendo', function () {
+    const row = linhaFalsa({ Quantidade: '1', Valor_Total: 'R$ 55,00' });
+    prepararLinha(row, { status: 'PAGO' });
+    assert.equal(row.get('Valor_Total'), 55);
+});
+
+test('comoNumero lê os formatos que a planilha pode devolver', function () {
+    [
+        ['R$ 55,00', 55], ['R$ 1.234,56', 1234.56], ['$1,234.56', 1234.56], ['1,234.56', 1234.56],
+        ['110,50', 110.5], ['165', 165], ['275.00', 275], ['', 0], [null, 0], [65, 65], ['R$ 0,00', 0]
+    ].forEach(function ([entrada, esperado]) {
+        assert.equal(comoNumero(entrada), esperado, JSON.stringify(entrada));
+    });
 });

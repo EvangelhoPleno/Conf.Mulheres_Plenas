@@ -37,8 +37,25 @@ const CABECALHO = COLUNAS.map(function (c) { return c[1]; });
    sem isto atualizar um pedido transformaria 110 em "110". */
 const COLUNAS_NUMERICAS = ['Quantidade', 'Valor_Total'];
 
+/* O getRows() devolve o valor FORMATADO da célula. Com a coluna em formato
+   de dinheiro, Valor_Total chega como "R$ 55,00" — e o Number() antigo dava
+   NaN → 0: todo pedido pago ou reembolsado era regravado com valor zero (e o
+   e-mail dizia "Valor pago R$ 0,00"). Aceita "R$ 1.234,56", "1,234.56",
+   "110,50" e "165": o último separador é o decimal. */
 function comoNumero(valor) {
-    return Number(String(valor == null ? '' : valor).replace(',', '.')) || 0;
+    if (typeof valor === 'number') return valor;
+    let texto = String(valor == null ? '' : valor).replace(/[^\d,.-]/g, '');
+    const virgula = texto.lastIndexOf(',');
+    const ponto = texto.lastIndexOf('.');
+    if (virgula > -1 && ponto > -1) {
+        // os dois: o que vem por último é o decimal, o outro é milhar
+        texto = virgula > ponto ? texto.replace(/\./g, '').replace(',', '.') : texto.replace(/,/g, '');
+    } else if (virgula > -1) {
+        texto = texto.replace(/,(?=.*,)/g, '').replace(',', '.');
+    } else if ((texto.match(/\./g) || []).length > 1) {
+        texto = texto.replace(/\./g, '');  // "1.234.567": só milhar
+    }
+    return Number(texto) || 0;
 }
 
 /* Põe os campos novos na linha e devolve as colunas numéricas ao tipo número.
@@ -67,8 +84,8 @@ function paraLinha(pedido) {
 function daLinha(row) {
     const pedido = {};
     COLUNAS.forEach(function ([campo, coluna]) { pedido[campo] = row.get(coluna); });
-    pedido.quantidade = Number(pedido.quantidade) || 0;
-    pedido.valorTotal = Math.round(Number(String(pedido.valorTotal).replace(',', '.')) * 100) || 0;
+    pedido.quantidade = comoNumero(pedido.quantidade);
+    pedido.valorTotal = Math.round(comoNumero(pedido.valorTotal) * 100);
     pedido.codigos = String(pedido.codigos || '').split(/\s+/).filter(Boolean);
     pedido.cpf = String(pedido.cpf || '');
     return pedido;
@@ -295,4 +312,4 @@ function pedidos() {
     return repositorio;
 }
 
-module.exports = { pedidos, CABECALHO, COLUNAS_NUMERICAS, prepararLinha, repetindoSeOcupado };
+module.exports = { pedidos, CABECALHO, COLUNAS_NUMERICAS, prepararLinha, comoNumero, repetindoSeOcupado };
