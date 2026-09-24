@@ -50,8 +50,18 @@ estranho sem permissão; 1º lote aberto e o card mostrando "27/09 a 06/10".
 Pix de produção provado em 24/09 (`npm run mercadopago:testar -- --producao`):
 QR gerado na conta JADISON_S_RIBEIRO, consulta PENDENTE, cancelado.
 
-**Falta:** "Simular" do webhook no painel → compra real de R$ 55 no Pix pelo
-site (webhook assinado + planilha + e-mail de ponta a ponta) → estorno.
+**Provado em produção em 24/09:** "Simular" do webhook no painel → **200**
+(assinatura confere); **compra real de R$ 55 no Pix pelo site** → pago →
+e-mail do ingresso entregue → pedido PAGO na planilha.
+
+**QR Code do ingresso removido (deploy `e9ccd28`):** não há leitor na
+portaria e o QR só repetia o código. E-mail e `confirmacao.html` mostram o
+código em destaque e mandam apresentar o e-mail na portaria. A rota
+`/api/ingressos/:codigo/qr.png` continua existindo, sem uso na tela.
+
+**Falta:** estornar a compra de teste pelo painel do Mercado Pago (o webhook
+deve marcar o pedido como REEMBOLSADO na planilha sozinho). Divulgar o link
+no domingo, 27/09.
 
 ---
 
