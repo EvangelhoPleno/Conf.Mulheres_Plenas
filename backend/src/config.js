@@ -52,7 +52,7 @@ function credencialGoogle() {
 
 const credencial = credencialGoogle();
 
-const siteUrl = semBarraFinal(process.env.SITE_URL, 'https://evangelhopleno.github.io/Conf.Mulheres_Plenas');
+const siteUrl = semBarraFinal(process.env.SITE_URL, 'https://evangelhoplenoparagominas.com.br');
 const siteOrigem = new URL(siteUrl).origin;
 
 const config = {

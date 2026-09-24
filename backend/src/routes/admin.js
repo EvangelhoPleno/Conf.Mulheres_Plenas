@@ -8,10 +8,10 @@ const { segredoConfere } = require('../utils/seguranca');
 
 const router = express.Router();
 
-/* ---------- modo de teste: só existe com PAYMENT_PROVIDER=mock ---------- */
+/* ---------- modo de teste: só existe com PAYMENT_PROVIDER=mock, e nunca no ar ---------- */
 router.post('/dev/simular-pagamento/:pedidoId', async function (req, res) {
     const provedor = pagamento();
-    if (!provedor.simulado) return res.status(404).json({ erro: 'Não encontrado.' });
+    if (!provedor.simulado || config.ambiente === 'production') return res.status(404).json({ erro: 'Não encontrado.' });
 
     const pedido = await pedidos().buscarPorId(req.params.pedidoId);
     if (!pedido) return res.status(404).json({ erro: 'Pedido não encontrado.' });

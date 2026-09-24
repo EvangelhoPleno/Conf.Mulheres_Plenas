@@ -12,3 +12,11 @@ credenciais-google*.json
 backend/credenciais-google*.json
 *-service-account*.json
 .vercel
+
+# A raiz inteira vira site: sem isto, ESTADO.md, os runbooks, os testes e os
+# scripts de manutenção ficavam abertos no domínio de venda. A função da API
+# só carrega api/ e backend/src/ — nada daqui é lido em tempo de execução.
+*.md
+backend/test
+backend/scripts
+backend/.env.example

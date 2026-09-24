@@ -265,6 +265,23 @@ test('cartão: se o webhook se perder, a página de pagamento descobre sozinha',
     assert.equal(pago.ingressos.length, 1);
 });
 
+/* No Checkout Pro ela pode tentar outro cartão na mesma página depois de uma
+   recusa. Se o webhook do cartão aprovado se perder, o pedido ficaria RECUSADO
+   para sempre: a tela diria "não aprovado" para quem pagou, e ela compraria de novo. */
+test('cartão: recusado e depois aprovado sem webhook, a página ainda descobre o PAGO', async function () {
+    const pedido = await (await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 1, metodo: 'cartao' }, COMPRADORA))).json();
+    const recusado = { id: proximoId++, status: 'rejected', external_reference: pedido.pedidoId };
+    falso.pagamentos.set(String(recusado.id), recusado);
+    assert.equal((await avisar(recusado.id)).status, 200);
+    assert.equal((await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json()).status, 'RECUSADO');
+
+    const aprovado = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId };
+    falso.pagamentos.set(String(aprovado.id), aprovado);
+    const pago = await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json();
+    assert.equal(pago.status, 'PAGO');
+    assert.equal(pago.ingressos.length, 1);
+});
+
 test('avisos que não são de pagamento, ou de pagamento inexistente, devolvem 200', async function () {
     // o botão "simular" do painel manda um ID que não existe
     const simulado = await avisar(123456);

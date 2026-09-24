@@ -1278,23 +1278,19 @@
         var lotes = document.querySelectorAll('[data-lote]');
         if (!lotes.length) return;
 
-        var hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
+        var agora = new Date();
 
         Array.prototype.forEach.call(lotes, function (lote) {
-            var inicio = lerDia(lote.getAttribute('data-inicio'));
-            var fim = lerDia(lote.getAttribute('data-fim'));
+            var inicio = lerDia(lote.getAttribute('data-inicio'), false);
+            var fim = lerDia(lote.getAttribute('data-fim'), true);
             var selo = lote.querySelector('[data-lote-status]');
             if (!inicio || !fim || !selo) return;
 
-            // o último dia vende até o fim do dia
-            fim.setHours(23, 59, 59, 999);
-
             var estado, texto;
-            if (hoje < inicio) {
+            if (agora < inicio) {
                 estado = 'espera';
-                texto = 'abre ' + diaMes(inicio);
-            } else if (hoje <= fim) {
+                texto = 'abre ' + lote.getAttribute('data-inicio').slice(8, 10) + '/' + lote.getAttribute('data-inicio').slice(5, 7);
+            } else if (agora <= fim) {
                 estado = 'aberto';
                 texto = 'vendas abertas';
             } else {
@@ -1322,14 +1318,17 @@
             if (acao) acao.textContent = estado === 'espera' ? 'em breve' : 'vendas encerradas';
         });
 
-        function lerDia(texto) {
+        /* Pelo relógio de Paragominas (UTC-3 fixo), igual ao diaBR() do
+           backend/src/catalogo.js. Com o fuso de quem está vendo, em Manaus ou
+           no Acre o lote virava em outra hora que a API: o link do lote que ela
+           já recusa continuava aceso, e o do lote aberto, apagado. O último dia
+           vende até 23:59. */
+        function lerDia(texto, fimDoDia) {
             var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(texto || '');
-            // meia-noite no fuso de quem está vendo, igual à contagem regressiva
-            return p ? new Date(+p[1], +p[2] - 1, +p[3]) : null;
-        }
-
-        function diaMes(data) {
-            return ('0' + data.getDate()).slice(-2) + '/' + ('0' + (data.getMonth() + 1)).slice(-2);
+            if (!p) return null;
+            return fimDoDia
+                ? new Date(Date.UTC(+p[1], +p[2] - 1, +p[3], 26, 59, 59, 999))
+                : new Date(Date.UTC(+p[1], +p[2] - 1, +p[3], 3));
         }
     }
 

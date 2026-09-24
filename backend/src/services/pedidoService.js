@@ -54,8 +54,12 @@ async function criarPedido(entrada) {
 
        Só vale no ar: no computador, rodar com gateway de verdade e sem
        planilha é justamente como se testa. */
-    if (config.ambiente === 'production' && !provedor.simulado && pedidos().tipo === 'memoria') {
-        console.error('[pedido] RECUSANDO VENDAS: gateway de verdade sem planilha configurada (GOOGLE_*).');
+    /* E o pagamento simulado no ar (PAYMENT_PROVIDER apagado cai nele) daria
+       ingresso a quem clicasse em "simular aprovação". */
+    if (config.ambiente === 'production' && (provedor.simulado || pedidos().tipo === 'memoria')) {
+        console.error('[pedido] RECUSANDO VENDAS: ' + (provedor.simulado
+            ? 'pagamento SIMULADO em produção (PAYMENT_PROVIDER).'
+            : 'gateway de verdade sem planilha configurada (GOOGLE_*).'));
         throw erroPublico(503, 'As vendas on-line estão fora do ar por instantes. Tente de novo em alguns minutos.');
     }
 
@@ -189,8 +193,11 @@ async function processarNotificacao(aviso) {
 async function consultarPedido(pedidoId) {
     const pedido = await pedidos().buscarPorId(pedidoId);
     if (!pedido) return null;
-    // pago mas sem e-mail tentado = a confirmação caiu no meio; termina agora
-    if (STATUS_FINAIS.includes(pedido.status) && !(pedido.status === 'PAGO' && faltaEmail(pedido))) return pedido;
+    // pago mas sem e-mail tentado = a confirmação caiu no meio; termina agora.
+    // RECUSADO não encerra: no cartão ela pode pagar com outro cartão na mesma
+    // página do Mercado Pago, e se esse webhook se perder só a consulta descobre.
+    const encerrado = STATUS_FINAIS.includes(pedido.status) && pedido.status !== 'RECUSADO';
+    if (encerrado && !(pedido.status === 'PAGO' && faltaEmail(pedido))) return pedido;
 
     try {
         const status = pedido.status === 'PAGO' ? 'PAGO' : await pagamento().consultarStatus(pedido.transacaoId, pedido);

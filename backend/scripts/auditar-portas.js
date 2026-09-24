@@ -51,6 +51,7 @@ async function main() {
     ok(String(semPlanilha.corpo.erro).length > 10, 'com mensagem para a compradora', semPlanilha.corpo.erro);
     const saude = await chamar('/api/saude');
     ok(saude.corpo.planilha === 'memoria', '/api/saude denuncia o problema: planilha = memoria', saude.corpo.planilha);
+    ok(saude.corpo.ok === false, '/api/saude devolve ok:false', saude.corpo.ok);
 
     console.log('\n=== Portas que precisam estar fechadas ===');
     const simular = await chamar('/api/dev/simular-pagamento/MPaaaaaaaaaaaaaaaa', { method: 'POST' });

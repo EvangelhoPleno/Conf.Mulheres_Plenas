@@ -18,7 +18,7 @@ const pedido = {
     email: destino,
     produto: '1º Lote — Conferência Mulheres Plenas',
     quantidade: 1,
-    valorTotal: 55,
+    valorTotal: 5500,   // centavos
     codigos: ['MP26-TEST-0001'],
     transacaoId: 'mock_teste_dominio'
 };

@@ -250,6 +250,40 @@ devolve o campo `vagas`. Dá para ligar contando os pedidos PAGOS da planilha.
 
 ---
 
+## Auditoria de 24/09 (depois do Mercado Pago no ar)
+
+`npm test` 36 verdes (eram 32) e `auditar-portas` 16/16. **Nada disto foi ao ar
+ainda:** está no working tree, esperando commit e push.
+
+### Corrigido
+
+| Achado | Risco | Correção |
+|---|---|---|
+| Cartão recusado e depois aprovado, com o webhook do aprovado perdido | `consultarPedido` tratava RECUSADO como final e não perguntava mais ao Mercado Pago: a página dizia "não aprovado" para quem **pagou**, e ela comprava de novo (cobrança dobrada) | RECUSADO não encerra a consulta. Teste novo em `mercadopago.test.js` falhava antes (`RECUSADO`) e passa agora |
+| `PAYMENT_PROVIDER` ausente em produção cai no `mock` | o `/api/dev/simular-pagamento` abria ao público: ingresso PAGO na planilha e no e-mail sem dinheiro nenhum | em produção o mock não vende (503) e o simulador é 404. `test/producao.test.js` provou 201/200 antes, 503/404 depois |
+| `/api/saude` dizia `ok:true` com planilha em memória, e-mail desligado ou pagamento simulado em produção | monitoração cega para as três falhas que mais custam | nesses casos `ok:false` (e o `auditar-portas` confere) |
+| Landing decidia o lote pelo fuso de quem vê | em Manaus/Acre/fora do Brasil o link do lote vencido ficava aceso e o do aberto, apagado, na hora da virada | `script.js` usa UTC-3 fixo como o `catalogo.js`; comparados 86.400 minutos (20/09–20/10) em UTC e UTC-3: 0 divergências |
+| Domínio de venda servia `ESTADO.md`, runbooks, testes e scripts | exposição desnecessária (Gmail, ID da conta MP, mapa dos tokens) | `.vercelignore` exclui `*.md`, `backend/test`, `backend/scripts`, `.env.example`. `backend/src/` continua público: a função precisa dele no pacote |
+| Sem cabeçalhos de segurança nas páginas | checkout (com CPF) podia ser embutido em iframe de terceiros | `vercel.json`: `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy` |
+| `testar-email.js` com `valorTotal: 55` | o e-mail de teste mostrava R$ 0,55 (o valor é em centavos) | `5500` |
+| `SITE_URL` padrão apontava para o GitHub Pages desligado | sem a variável, links de e-mail e retorno do cartão iam para um 404 | padrão = domínio próprio (também no `.env.example`) |
+| `req.corpoBruto` guardado em todo JSON | sobra da assinatura do Asaas; ninguém lia | removido |
+
+### Depois do deploy, conferir
+
+- `/ESTADO.md` e `/backend/scripts/auditar-portas.js` devolvem **404**; `/api/saude` segue `ok:true`
+  (se a API cair, o `.vercelignore` é o primeiro suspeito — reverter só ele)
+- cabeçalho `x-frame-options: DENY` em `/checkout.html`
+
+### Não mexido, de propósito
+
+- `/api/ingressos/:codigo/qr.png`: parece morto, mas os e-mails enviados **antes** de `e9ccd28`
+  (incluindo a compra real de 24/09) carregam a imagem por essa rota.
+- `AUDITORIA.md` descreve o estado de antes (GitHub Pages, PDF da Sipag): documento, não apago sem perguntar.
+- `backend/tmp/`: prévias de e-mail de teste, fora do Git e do deploy.
+
+---
+
 ## Auditoria completa de 23/09 (PROMPT-AUDITORIA.md)
 
 `npm test` (26) e `npm run auditar` (61) verdes antes e depois.
@@ -322,7 +356,7 @@ chave de idempotência do Resend impede o e-mail dobrado.
 ## Comandos (rodam na RAIZ do repositório, não em `backend/`)
 
 ```bash
-npm test                 # 32 testes (o Mercado Pago simulado no processo)
+npm test                 # 36 testes (o Mercado Pago simulado no processo)
 npm run auditar          # com credencial de TESTE: checkout, webhook assinado + portas fechadas
 npm run mercadopago:testar          # fala com a API de verdade (Pix só em produção, e cancela)
 npm run mercadopago:ensaio-cartao   # compra no cartão pelo Checkout Pro, paga à mão

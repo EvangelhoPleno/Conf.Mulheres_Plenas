@@ -19,11 +19,7 @@ function criarApp() {
         maxAge: 600
     }));
 
-    app.use(express.json({
-        limit: '100kb',
-        // guarda o corpo original: alguns gateways assinam o webhook sobre ele
-        verify: function (req, res, buffer) { req.corpoBruto = buffer; }
-    }));
+    app.use(express.json({ limit: '100kb' }));
     app.use(express.urlencoded({ extended: false, limit: '100kb' }));
 
     app.get('/', function (req, res) {

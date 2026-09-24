@@ -44,6 +44,12 @@ router.get('/saude', function (req, res) {
         if (!config.mercadoPago.configurado || !config.mercadoPago.webhookSecret) saude.ok = false;
     }
 
+    /* No ar, venda simulada ou pedido em memória fecham o checkout, e sem
+       e-mail o ingresso nunca chega: nenhum deles pode passar por "ok". */
+    if (config.ambiente === 'production' && (saude.simulado || saude.planilha === 'memoria' || !config.email.configurado)) {
+        saude.ok = false;
+    }
+
     res.json(saude);
 });
 
