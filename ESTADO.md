@@ -252,8 +252,11 @@ devolve o campo `vagas`. Dá para ligar contando os pedidos PAGOS da planilha.
 
 ## Auditoria de 24/09 (depois do Mercado Pago no ar)
 
-`npm test` 36 verdes (eram 32) e `auditar-portas` 16/16. **Nada disto foi ao ar
-ainda:** está no working tree, esperando commit e push.
+`npm test` 36 verdes (eram 32) e `auditar-portas` 16/16. **No ar desde 24/09,
+12:58 (deploy `235b4d4` READY).** Conferido no ar: `/api/saude` `ok:true`, as 4
+páginas 200, `ESTADO.md`/runbooks/testes/scripts 404, os três cabeçalhos
+presentes, simulador 404, admin e webhook 401, CORS estranho sem permissão,
+checkout com dado inválido 422 e o `script.js` novo servido.
 
 ### Corrigido
 
@@ -269,11 +272,8 @@ ainda:** está no working tree, esperando commit e push.
 | `SITE_URL` padrão apontava para o GitHub Pages desligado | sem a variável, links de e-mail e retorno do cartão iam para um 404 | padrão = domínio próprio (também no `.env.example`) |
 | `req.corpoBruto` guardado em todo JSON | sobra da assinatura do Asaas; ninguém lia | removido |
 
-### Depois do deploy, conferir
-
-- `/ESTADO.md` e `/backend/scripts/auditar-portas.js` devolvem **404**; `/api/saude` segue `ok:true`
-  (se a API cair, o `.vercelignore` é o primeiro suspeito — reverter só ele)
-- cabeçalho `x-frame-options: DENY` em `/checkout.html`
+Se a API cair num deploy futuro, o `.vercelignore` é o primeiro suspeito:
+a função só precisa de `api/` e `backend/src/`.
 
 ### Não mexido, de propósito
 
