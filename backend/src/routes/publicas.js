@@ -65,7 +65,20 @@ router.get('/produtos', function (req, res) {
     });
 });
 
-router.post('/checkout', limitar({ janelaMs: 10 * 60 * 1000, maximo: 12 }), async function (req, res) {
+/* Limites pensados para o culto em que o link é divulgado: 20–30 mulheres
+   comprando juntas, todas atrás do MESMO IP do Wi-Fi da igreja (ou da mesma
+   operadora). O checkout conta por IP, com folga para o salão inteiro; a
+   consulta de status conta por IP + pedido — cada página consulta a cada 5 s
+   (12/min) e uma não pode gastar a cota da vizinha. */
+const limiteCheckout = limitar({ janelaMs: 10 * 60 * 1000, maximo: 60 });
+const limiteConsultaPorPedido = limitar({
+    janelaMs: 60 * 1000,
+    maximo: 40,
+    chave: function (req) { return req.ip + ' ' + req.params.pedidoId; }
+});
+const limiteConsultaPorIp = limitar({ janelaMs: 60 * 1000, maximo: 900 });
+
+router.post('/checkout', limiteCheckout, async function (req, res) {
     const corpo = req.body || {};
     const { pedido } = await pedidoService.criarPedido({
         produto: corpo.produto,
@@ -85,7 +98,7 @@ router.post('/checkout', limitar({ janelaMs: 10 * 60 * 1000, maximo: 12 }), asyn
     }));
 });
 
-router.get('/pedidos/:pedidoId', limitar({ janelaMs: 60 * 1000, maximo: 40 }), async function (req, res) {
+router.get('/pedidos/:pedidoId', limiteConsultaPorIp, limiteConsultaPorPedido, async function (req, res) {
     if (!PADRAO_PEDIDO.test(req.params.pedidoId)) return res.status(404).json({ erro: 'Pedido não encontrado.' });
     const pedido = await pedidoService.consultarPedido(req.params.pedidoId);
     if (!pedido) return res.status(404).json({ erro: 'Pedido não encontrado.' });

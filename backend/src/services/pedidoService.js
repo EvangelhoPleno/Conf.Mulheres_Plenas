@@ -124,19 +124,29 @@ const emAndamento = new Map();
 function confirmarPagamento(pedidoId) {
     if (emAndamento.has(pedidoId)) return emAndamento.get(pedidoId);
     const tarefa = (async function () {
-        let pedido = await pedidos().buscarPorId(pedidoId);
+        // lida agora: uma cópia velha ainda PENDENTE faria gravar de novo o que
+        // outra instância já confirmou (e cada gravação gasta a cota do Google)
+        let pedido = await pedidos().buscarPorId(pedidoId, { fresca: true });
         if (!pedido) throw new Error('Pedido não encontrado: ' + pedidoId);
 
         if (pedido.status !== 'PAGO') {
             const codigos = pedido.codigos.length
                 ? pedido.codigos
                 : codigosDoPedido(pedidoId, pedido.quantidade);
-            pedido = await pedidos().atualizar(pedidoId, {
+            const pago = {
                 status: 'PAGO',
                 codigos,
                 pixCopiaECola: '',
                 atualizadoEm: dataHoraBrasil()
-            });
+            };
+            /* E-mail primeiro, e PAGO + resultado do e-mail numa gravação só:
+               cada pagamento gasta 1 escrita na planilha em vez de 2 — o que
+               importa quando 30 caem no mesmo minuto (limite: 60/min). Se a
+               gravação falhar depois do e-mail, o webhook responde 500, o
+               Mercado Pago reenvia, e a chave de idempotência do Resend não
+               deixa o e-mail sair duas vezes. */
+            const email = await tentarEmail(Object.assign({}, pedido, pago));
+            return pedidos().atualizar(pedidoId, Object.assign(pago, { emailEnviado: email }));
         }
 
         if (faltaEmail(pedido)) pedido = await enviarEmailDoPedido(pedido);
@@ -147,18 +157,21 @@ function confirmarPagamento(pedidoId) {
     return tarefa;
 }
 
-async function enviarEmailDoPedido(pedido, opcoes) {
+// Envia o ingresso e diz o que escrever em Email_Enviado. Nunca lança: o
+// pagamento vale mesmo sem e-mail, e o ERRO fica para nova tentativa.
+async function tentarEmail(pedido, opcoes) {
     try {
         const resultado = await enviarIngresso(pedido, opcoes);
-        return await pedidos().atualizar(pedido.pedidoId, {
-            emailEnviado: resultado.enviado ? 'SIM' : 'SIMULADO',
-            atualizadoEm: dataHoraBrasil()
-        });
+        return resultado.enviado ? 'SIM' : 'SIMULADO';
     } catch (erro) {
-        // o pagamento já está registrado; o e-mail pode ser reenviado pelo admin
         console.error('[email] falha ao enviar pedido', pedido.pedidoId, erro.message);
-        return pedidos().atualizar(pedido.pedidoId, { emailEnviado: 'ERRO', atualizadoEm: dataHoraBrasil() });
+        return 'ERRO';
     }
+}
+
+async function enviarEmailDoPedido(pedido, opcoes) {
+    const email = await tentarEmail(pedido, opcoes);
+    return pedidos().atualizar(pedido.pedidoId, { emailEnviado: email, atualizadoEm: dataHoraBrasil() });
 }
 
 // Aplica um status vindo do gateway. Nunca "despaga" um pedido já pago,

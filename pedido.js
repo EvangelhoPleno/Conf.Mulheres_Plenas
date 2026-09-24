@@ -243,6 +243,7 @@
         var inicio = Date.now();
         var timer = null;
         var montado = false;
+        var falhas = 0;  // consultas seguidas que falharam
 
         function irParaConfirmacao() {
             location.replace('confirmacao.html?pedido=' + encodeURIComponent(pedidoId));
@@ -302,6 +303,7 @@
             if (pedido.status === 'PAGO') return irParaConfirmacao();
             if (pedido.status !== 'PENDENTE') return falhou(pedido.status);
             if (!montado) montar(pedido);
+            falhas = 0;
             agendar();
         }
 
@@ -311,14 +313,16 @@
                 .then(function (pedido) { pedido.simulado = saude.simulado; tratar(pedido); })
                 .catch(function (erro) {
                     if (erro.status === 404 && !montado) return mostrar('erro');
-                    agendar();  // falha passageira: tenta de novo
+                    falhas++;
+                    agendar();  // falha passageira: tenta de novo, com mais calma
                 });
         }
 
         function agendar() {
             clearTimeout(timer);
             if (Date.now() - inicio > LIMITE) return;
-            timer = setTimeout(consultar, INTERVALO);
+            // servidor apertado (muitas comprando juntas): 5 s, 10 s, 15 s, até 20 s
+            timer = setTimeout(consultar, INTERVALO * Math.min(4, 1 + falhas));
         }
 
         document.addEventListener('visibilitychange', function () {

@@ -81,7 +81,8 @@ const config = {
         email: credencial.email,
         chave: credencial.chave,
         origemCredencial: credencial.origem,
-        aba: 'Pedidos'
+        // outra aba só para o teste de carga (npm run carga), nunca no ar
+        aba: (process.env.GOOGLE_SHEET_TAB || '').trim() || 'Pedidos'
     },
 
     email: {

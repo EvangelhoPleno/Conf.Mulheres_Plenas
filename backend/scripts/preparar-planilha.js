@@ -28,6 +28,52 @@ async function lerCabecalho(aba) {
     }
 }
 
+/* O cabeçalho marrom é uma regra de formatação CONDICIONAL, não formato da
+   célula. A API grava cada venda INSERINDO uma linha (vendas simultâneas se
+   apagavam no outro modo), e a linha inserida copia o formato da de cima: com
+   o marrom direto na célula, a 1ª venda nascia marrom e as seguintes também.
+   A regra condicional vale só para o intervalo da linha 1 e não é copiada. */
+async function pintarCabecalho(doc, aba) {
+    const ate = CABECALHO.length;
+    await aba.repeatCell(
+        { startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: ate },
+        { userEnteredFormat: { backgroundColor: BRANCO, textFormat: { bold: false, foregroundColor: PRETO } } },
+        'userEnteredFormat.backgroundColor,userEnteredFormat.textFormat.bold,userEnteredFormat.textFormat.foregroundColor'
+    );
+
+    /* O Google estica o intervalo da regra quando insere linha logo abaixo
+       dele (A1:Q1 vira A1:Q31). Por isso a condição é ROW()=1: esticada ou
+       não, só a linha 1 pinta. */
+    // tira a regra de uma rodada anterior antes de pôr de novo (roda sem duplicar)
+    const info = await doc.sheetsApi.get('', {
+        searchParams: { fields: 'sheets(properties.sheetId,conditionalFormats(ranges,booleanRule.condition))' }
+    }).json();
+    const daAba = (info.sheets || []).find(function (s) { return s.properties.sheetId === aba.sheetId; }) || {};
+    const antigas = [];
+    (daAba.conditionalFormats || []).forEach(function (regra, i) {
+        const doCabecalho = (regra.ranges || []).some(function (r) { return (r.startRowIndex || 0) === 0; });
+        const formula = ((((regra.booleanRule || {}).condition || {}).values || [])[0] || {}).userEnteredValue;
+        if (doCabecalho && (formula === '=TRUE' || formula === '=ROW()=1')) antigas.push(i);
+    });
+
+    const pedidos = antigas.reverse().map(function (index) {
+        return { deleteConditionalFormatRule: { sheetId: aba.sheetId, index } };
+    });
+    pedidos.push({
+        addConditionalFormatRule: {
+            index: 0,
+            rule: {
+                ranges: [{ sheetId: aba.sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: ate }],
+                booleanRule: {
+                    condition: { type: 'CUSTOM_FORMULA', values: [{ userEnteredValue: '=ROW()=1' }] },
+                    format: { backgroundColor: TIJOLO, textFormat: { bold: true, foregroundColor: ROSADO } }
+                }
+            }
+        }
+    });
+    await doc.sheetsApi.post(':batchUpdate', { json: { requests: pedidos } });
+}
+
 async function prepararPedidos(doc) {
     const nome = config.google.aba;
     let aba = doc.sheetsByTitle[nome];
@@ -66,13 +112,7 @@ async function prepararPedidos(doc) {
     }
 
     await aba.updateProperties({ gridProperties: { frozenRowCount: 1 } });
-    await aba.loadCells('A1:' + letra(CABECALHO.length - 1) + '1');
-    CABECALHO.forEach(function (_, i) {
-        const celula = aba.getCell(0, i);
-        celula.textFormat = { bold: true, foregroundColor: ROSADO };
-        celula.backgroundColor = TIJOLO;
-    });
-    await aba.saveUpdatedCells();
+    await pintarCabecalho(doc, aba);
 
     // as linhas de pedido ficam brancas, com texto comum — mesmo as que já
     // herdaram o marrom do cabeçalho quando a API ainda inseria linhas
@@ -85,7 +125,18 @@ async function prepararPedidos(doc) {
     return aba;
 }
 
+/* Nas localidades com vírgula decimal (pt_BR, es, fr, de...) o Google Sheets
+   separa os argumentos da fórmula com ";" — a vírgula dá "Formula parse error"
+   (#ERROR!). A API grava a fórmula como se fosse digitada, na localidade da
+   planilha, então o separador tem de acompanhá-la. */
+function separadorDeArgumentos(locale) {
+    const decimal = (0.5).toLocaleString(String(locale || 'en_US').replace('_', '-')).charAt(1);
+    return decimal === ',' ? ';' : ',';
+}
+
 async function prepararResumo(doc) {
+    const sep = separadorDeArgumentos(doc.locale);
+    const f = function (formula) { return formula.replace(/,(?=(?:[^"']*["'][^"']*["'])*[^"']*$)/g, sep); };
     const pedidos = "'" + config.google.aba + "'";
     const col = function (nomeColuna) {
         const l = letra(CABECALHO.indexOf(nomeColuna));
@@ -132,7 +183,7 @@ async function prepararResumo(doc) {
         for (let c = 0; c < 3; c++) {
             const celula = resumo.getCell(r, c);
             const valor = linhas[r] ? linhas[r][c] : '';
-            if (String(valor).startsWith('=')) celula.formula = valor;
+            if (String(valor).startsWith('=')) celula.formula = f(valor);
             else if (celula.value !== null || valor !== '') celula.value = valor;
 
             if (r === 0) celula.textFormat = { bold: true, fontSize: 14, foregroundColor: TIJOLO };
@@ -149,7 +200,7 @@ async function prepararResumo(doc) {
         }
     }
     await resumo.saveUpdatedCells();
-    console.log('✓ Aba "Resumo" com os totais (' + listarProdutos().length + ' tipos de ingresso)');
+    console.log('✓ Aba "Resumo" com os totais (' + listarProdutos().length + ' tipos de ingresso, localidade ' + doc.locale + ')');
 }
 
 async function main() {
@@ -163,4 +214,6 @@ async function main() {
     console.log('Próximo passo: npm run planilha:testar');
 }
 
-main().catch(explicarErro);
+if (require.main === module) main().catch(explicarErro);
+
+module.exports = { pintarCabecalho };

@@ -75,6 +75,31 @@ nenhum. **Não estornar de novo.**
 E-mail com logo e tema testado em 24/09 (`npm run email:testar`): chegou na
 **caixa de entrada** do Gmail, logo carregando.
 
+**Aba Resumo com #ERROR! (corrigido em 24/09):** a planilha está em **pt_BR**, onde
+os argumentos das fórmulas se separam com `;`. O `planilha:preparar` agora lê
+a localidade e escolhe o separador; se a localidade mudar, é só rodá-lo de novo.
+
+**Carga simultânea (24/09) — `npm run carga`:** simula N compradoras juntas no
+mesmo Wi-Fi, com a planilha de verdade numa aba temporária "Teste carga"
+(apagada no fim), pagamento simulado e e-mail desligado.
+- **Código antigo, 30 compradoras: só 4 de 30 pedidos ficaram na planilha.**
+  `addRow` com `insert:false` (OVERWRITE) faz gravações simultâneas mirarem a
+  mesma linha vazia e se apagarem; as outras 26 recebiam um Pix de pedido
+  inexistente. Além disso, o limite de 40 consultas/min **por IP** barrava quem
+  estava no mesmo Wi-Fi (254 respostas 429).
+- Corrigido: `insert:true` (INSERT_ROWS); cabeçalho marrom virou formatação
+  condicional `=ROW()=1` (a linha inserida copiaria o formato da de cima);
+  limites por IP+pedido; novas tentativas com espera quando o Google responde
+  429; uma gravação por pagamento; e-mail repete se o Resend limitar;
+  `maxDuration` 60 s na Vercel.
+- **Código novo: 30 de 30 ok, zero erros.** Com 50 no mesmo segundo: 49 ok e 1
+  "tente de novo" antes do Pix (nada cobrado).
+- O teto é a cota do Google: **60 leituras e 60 escritas por minuto** para a
+  conta de serviço, a MESMA que o site usa. **Um teste de carga esgota a
+  cota do site no ar por ~1 minuto** — não rodar com vendas acontecendo.
+  Dá para pedir aumento no Google Cloud (projeto `zinc-night-506714-m7`,
+  Sheets API → Cotas).
+
 **Falta:** divulgar o link no domingo, 27/09. Opcional: uma compra real no
 **cartão** (o único caminho ainda não provado com dinheiro de verdade) e o estorno.
 

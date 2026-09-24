@@ -1,11 +1,13 @@
 /* Limite simples de requisições por IP, em memória. Em serverless cada
-   instância conta separado, então é um freio contra abuso, não uma garantia. */
-function limitar({ janelaMs, maximo }) {
+   instância conta separado, então é um freio contra abuso, não uma garantia.
+   `chave` troca o "por IP" por outra coisa: várias compradoras no mesmo Wi-Fi
+   saem com o MESMO IP, e contar todas juntas barrava a 13ª. */
+function limitar({ janelaMs, maximo, chave: chaveDe }) {
     const contagem = new Map();
 
     return function (req, res, next) {
         const agora = Date.now();
-        const chave = req.ip;
+        const chave = chaveDe ? chaveDe(req) : req.ip;
         const registro = contagem.get(chave);
 
         if (!registro || agora > registro.reinicia) {

@@ -74,6 +74,51 @@ function daLinha(row) {
     return pedido;
 }
 
+/* ---------- limite de uso do Google ----------
+   A conta de serviço é UM usuário para o Google: 60 leituras e 60 escritas
+   por minuto. Numa leva de 20–30 compras juntas (o link divulgado no culto,
+   todas no Wi-Fi da igreja) isso estoura por alguns segundos e o Google
+   responde 429. Não é falha de verdade: é "espere um pouco". Então esperamos,
+   com espera crescente e um sorteio para as instâncias não voltarem todas no
+   mesmo instante. O total fica abaixo de ~20 s, dentro dos 25 s que a página
+   espera pela resposta. */
+const ESPERAS_MS = [700, 1400, 2800, 5000, 7000];
+
+function esperaComSorteio(tentativa) {
+    const base = ESPERAS_MS[Math.min(tentativa, ESPERAS_MS.length) - 1];
+    return Math.round(base * (0.6 + Math.random() * 0.8));
+}
+
+// leituras (GET) e a gravação da linha (PUT) repetem sozinhas no ky
+const REPETICAO = {
+    limit: ESPERAS_MS.length,
+    methods: ['get', 'put'],
+    statusCodes: [408, 429, 500, 502, 503, 504],
+    afterStatusCodes: [429, 503],
+    maxRetryAfter: 8000,
+    delay: esperaComSorteio,
+    retryOnTimeout: true
+};
+
+function statusDoErro(erro) {
+    return (erro && erro.response && erro.response.status) || 0;
+}
+
+/* O acréscimo de linha é POST, que o ky não repete: repetir às cegas depois
+   de um 500 podia gravar o pedido duas vezes. Só o 429 é certeza de que o
+   Google recusou sem gravar nada — esse, repetimos. */
+async function repetindoSeOcupado(acao) {
+    for (let tentativa = 1; ; tentativa++) {
+        try {
+            return await acao();
+        } catch (erro) {
+            if (statusDoErro(erro) !== 429 || tentativa > ESPERAS_MS.length) throw erro;
+            console.warn('[planilha] Google ocupado (429), nova tentativa', tentativa);
+            await new Promise(function (r) { setTimeout(r, esperaComSorteio(tentativa)); });
+        }
+    }
+}
+
 /* ---------- implementação Google Sheets ---------- */
 function criarRepositorioPlanilha() {
     let docPromessa = null;
@@ -92,7 +137,7 @@ function criarRepositorioPlanilha() {
                     key: config.google.chave,
                     scopes: ['https://www.googleapis.com/auth/spreadsheets']
                 });
-                return new GoogleSpreadsheet(config.google.planilhaId, auth);
+                return new GoogleSpreadsheet(config.google.planilhaId, auth, { retryConfig: REPETICAO });
             })().catch(function (erro) {
                 docPromessa = null;   // tenta de novo na próxima chamada
                 throw erro;
@@ -103,7 +148,14 @@ function criarRepositorioPlanilha() {
 
     let abaPromessa = null;
     let cache = { em: 0, linhas: null };
-    const CACHE_MS = 2000;  // a página de pagamento consulta o status a cada poucos segundos
+    /* A página de pagamento consulta o status a cada 5 s. Com 30 compradoras
+       esperando o Pix, seriam 360 leituras por minuto — seis vezes o limite.
+       Numa mesma instância, as consultas desses segundos dividem uma leitura
+       só. Não atrasa a confirmação: quem descobre o pagamento é a consulta ao
+       Mercado Pago, e a gravação relê a linha antes (atualizar). */
+    const CACHE_MS = 8000;
+    const FRESCA_MS = 3000;  // "fresca" para gravar: lida há no máximo 3 s
+    let lendo = null;  // leitura em andamento: quem chega junto espera a mesma
 
     function aba() {
         if (!abaPromessa) {
@@ -132,33 +184,57 @@ function criarRepositorioPlanilha() {
         return abaPromessa;
     }
 
-    async function linhas() {
-        if (cache.linhas && Date.now() - cache.em < CACHE_MS) return cache.linhas;
-        const sheet = await aba();
-        cache = { em: Date.now(), linhas: await sheet.getRows() };
-        return cache.linhas;
+    async function linhas(idadeMax) {
+        if (cache.linhas && Date.now() - cache.em < (idadeMax || CACHE_MS)) return cache.linhas;
+        if (!lendo) {
+            lendo = (async function () {
+                const sheet = await aba();
+                const todas = await sheet.getRows();
+                cache = { em: Date.now(), linhas: todas };
+                return todas;
+            })().finally(function () { lendo = null; });
+        }
+        return lendo;
     }
 
-    async function acharLinha(campo, valor) {
+    async function acharLinha(campo, valor, fresca) {
         if (!valor) return null;
         const coluna = COLUNAS.find(function (c) { return c[0] === campo; })[1];
-        const todas = await linhas();
-        return todas.find(function (row) { return String(row.get(coluna)) === String(valor); }) || null;
+        const achar = function (todas) {
+            return todas.find(function (row) { return String(row.get(coluna)) === String(valor); }) || null;
+        };
+        const idadeMax = fresca ? FRESCA_MS : CACHE_MS;
+        const row = achar(await linhas(idadeMax));
+        if (row || Date.now() - cache.em < 1000) return row;
+        /* Não achou numa cópia de segundos atrás: o pedido pode ter nascido
+           noutra instância depois dela. Sem esta releitura a página de
+           pagamento dizia "pedido não encontrado" à compradora que acabou de
+           receber o Pix. Pedido inexistente de verdade é raro (o ID é longo e
+           aleatório), então o custo é pequeno. */
+        return achar(await linhas(1000));
     }
 
     return {
         tipo: 'google-sheets',
         async criar(pedido) {
             const sheet = await aba();
-            /* insert:false = a venda ocupa a próxima linha vazia. Com insert:true
-               o Google INSERE uma linha copiando o formato da de cima — e a
-               primeira venda herdava o cabeçalho marrom, e as seguintes, dela. */
-            await sheet.addRow(paraLinha(pedido), { raw: true, insert: false });
-            cache.linhas = null;
+            /* insert:true (INSERT_ROWS) é obrigatório. Com insert:false
+               (OVERWRITE) o Google escreve na "próxima linha vazia" — e vendas
+               simultâneas miram a MESMA linha e se apagam: no teste de carga,
+               25 gravações juntas deixaram 3 linhas. A compradora recebia o
+               Pix de um pedido que não existia mais. Inserindo, cada venda
+               ganha a sua linha. (A linha inserida copia o formato da de cima;
+               por isso o marrom do cabeçalho é formatação CONDICIONAL, que não
+               se copia — ver scripts/preparar-planilha.js.) */
+            await repetindoSeOcupado(function () {
+                return sheet.addRow(paraLinha(pedido), { raw: true, insert: true });
+            });
+            // sem apagar a cópia em memória: quem procurar o pedido novo e não
+            // achar força a releitura (acharLinha)
             return pedido;
         },
-        async buscarPorId(pedidoId) {
-            const row = await acharLinha('pedidoId', pedidoId);
+        async buscarPorId(pedidoId, opcoes) {
+            const row = await acharLinha('pedidoId', pedidoId, opcoes && opcoes.fresca);
             return row ? daLinha(row) : null;
         },
         async buscarPorTransacao(transacaoId) {
@@ -166,12 +242,11 @@ function criarRepositorioPlanilha() {
             return row ? daLinha(row) : null;
         },
         async atualizar(pedidoId, campos) {
-            cache.linhas = null;  // lê de novo: outra instância pode ter mexido
-            const row = await acharLinha('pedidoId', pedidoId);
+            // linha lida há no máximo 3 s: outra instância pode ter mexido
+            const row = await acharLinha('pedidoId', pedidoId, true);
             if (!row) throw new Error('Pedido não encontrado na planilha: ' + pedidoId);
             prepararLinha(row, campos);
             await row.save({ raw: true });
-            cache.linhas = null;
             return daLinha(row);
         }
     };
@@ -220,4 +295,4 @@ function pedidos() {
     return repositorio;
 }
 
-module.exports = { pedidos, CABECALHO, COLUNAS_NUMERICAS, prepararLinha };
+module.exports = { pedidos, CABECALHO, COLUNAS_NUMERICAS, prepararLinha, repetindoSeOcupado };
