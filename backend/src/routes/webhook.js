@@ -13,7 +13,14 @@ router.post('/webhook', async function (req, res) {
         return res.status(401).json({ ok: false });
     }
 
-    const aviso = provedor.lerWebhook(req);
+    let aviso;
+    try {
+        // no Mercado Pago, ler o aviso já é uma consulta à API dele
+        aviso = await provedor.lerWebhook(req);
+    } catch (erro) {
+        console.error('[webhook] não consegui ler o aviso', erro.message);
+        return res.status(500).json({ ok: false });
+    }
     if (!aviso) {
         // formato que não conhecemos: 200 para o gateway não ficar reenviando
         console.warn('[webhook] corpo sem ID de transação:', JSON.stringify(req.body).slice(0, 500));
@@ -21,7 +28,7 @@ router.post('/webhook', async function (req, res) {
     }
 
     try {
-        const resultado = await pedidoService.processarNotificacao(aviso.transacaoId);
+        const resultado = await pedidoService.processarNotificacao(aviso);
         console.log('[webhook]', aviso.transacaoId, resultado);
         res.status(200).json({ ok: true });
     } catch (erro) {

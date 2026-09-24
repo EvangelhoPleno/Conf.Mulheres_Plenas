@@ -1,5 +1,5 @@
 /* Parte 2: portas fechadas, CORS e a trava de producao. */
-process.env.PAYMENT_PROVIDER = 'asaas';
+process.env.PAYMENT_PROVIDER = 'mercadopago';
 process.env.GOOGLE_SHEET_ID = '';
 process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL = '';
 process.env.GOOGLE_CREDENTIALS_FILE = 'nao-existe.json';
@@ -62,6 +62,9 @@ async function main() {
     ok(adminErrado.status === 401, 'rota de admin com token errado devolve 401', 'HTTP ' + adminErrado.status);
     const adminCerto = await chamar('/api/admin/pedidos/MPaaaaaaaaaaaaaaaa', { headers: { authorization: 'Bearer token-de-auditoria' } });
     ok(adminCerto.status === 404, 'com o token certo, passa da porta (404 = pedido inexistente)', 'HTTP ' + adminCerto.status);
+
+    const webhook = await chamar('/api/webhook?data.id=123', { method: 'POST', corpo: { type: 'payment', data: { id: '123' } } });
+    ok(webhook.status === 401, 'webhook sem assinatura do Mercado Pago devolve 401', 'HTTP ' + webhook.status);
 
     const inventada = await chamar('/api/nao-existe');
     ok(inventada.status === 404, 'rota inventada devolve 404 em JSON', 'HTTP ' + inventada.status);

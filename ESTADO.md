@@ -1,7 +1,48 @@
-# Estado do projeto — 23/09/2026
+# Estado do projeto — 24/09/2026
 
 Resumo para retomar o trabalho sem reler o histórico. Evento: **Conferência
 Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
+
+---
+
+## Pagamento: Mercado Pago (desde 24/09)
+
+O Mercado Pago é o **único** gateway. O Asaas e o esqueleto da Sipag foram
+**removidos por inteiro** em 24/09: código, testes, scripts, variáveis do
+`.env` e documentação. Fora o Mercado Pago, só existe o `mock` (pagamento
+simulado, para `npm test` e desenvolvimento local).
+
+| Peça | Estado |
+|---|---|
+| `mercadoPagoProvider.js` | Pix (`/v1/payments`) e cartão (Checkout Pro), webhook com assinatura HMAC |
+| Webhook e `pedidoService` | acham o pedido pelo `external_reference` (= `Pedido_ID`): no cartão o pagamento nasce depois do pedido |
+| `/api/saude` | bloco `mercadopago`, `ok:false` sem token ou sem assinatura secreta |
+| Conta | produção: `JADISON_S_RIBEIRO` (id 310993389), chave Pix cadastrada |
+| Webhook no painel | modo de produção, `https://evangelhoplenoparagominas.com.br/api/webhook`, só o evento **Pagamentos (legacy)** |
+| Testes | `npm test` 32 verdes (14 do Mercado Pago, com a API simulada no processo) |
+| Site | no cartão, "página segura do Mercado Pago" |
+
+**Provado em 24/09 com o Mercado Pago de TESTE (usuário de teste, sem dinheiro real):**
+cartão de ponta a ponta — `npm run mercadopago:ensaio-cartao` → Checkout Pro
+logado como compradora de teste → Visa 4235 6477 2802 5682 titular APRO →
+aprovado (operação 179631320501) → consulta achou pelo `external_reference` →
+PAGO → ingresso `MP26-PFMR-GM76` → e-mail montado.
+
+Descoberto no teste (não redescobrir):
+- **Usuário de teste não tem Pix** e **não aceita `/v1/payments` pela API**
+  ("Unauthorized use of live credentials", 401) — com qualquer pagador. Só o
+  Checkout Pro funciona no teste. **O Pix só se prova com credencial de produção.**
+- Com a credencial de teste, o Access Token começa com `APP_USR-` (não `TEST-`);
+  é o `/users/me` com a tag `test_user` que diz que é teste. O `/api/saude`
+  mostra `ambiente: producao` nesse caso — ele só olha o prefixo.
+- O Mastercard 5031 4332 1540 6351 foi recusado pela página ("não aceita este
+  meio"); o Visa passou.
+- A página do Checkout Pro também oferece saldo em conta e Débito Virtual CAIXA
+  (só boleto e Pix foram excluídos). Pagam na hora; deixado assim.
+
+**Falta, em ordem:** provar o Pix com a credencial de produção (gera e
+cancela) → variáveis na Vercel → push/redeploy → `/api/saude` → "Simular" do
+webhook no painel → compra real de R$ 55 no Pix e estorno.
 
 ---
 
@@ -14,8 +55,8 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 |---|---|
 | Vercel | projeto `conf-mulheres-plenas`, implanta da branch `main`, Root Directory na raiz |
 | API | `api/index.js` acorda o Express de `backend/`; `vercel.json` manda `/api/...` para ele |
-| Pagamento | Asaas **SANDBOX** (`PAYMENT_PROVIDER=asaas`) |
-| Webhook | cadastrado no Asaas e **testado no ar: status 200** |
+| Pagamento | Mercado Pago — ver a seção acima |
+| Webhook | cadastrado no painel do Mercado Pago (modo de produção) |
 | Planilha | Google Sheets gravando (`/api/saude` mostra `planilha: google-sheets`) |
 | E-mail | Resend no domínio próprio, **Verified** (sa-east-1). Teste no Gmail em 23/09: SPF, DKIM e DMARC **PASS** nos três |
 | Variáveis | as 12 + `EMAIL_REPLY_TO`. Atenção: `EMAIL_FROM` e `EMAIL_REPLY_TO` foram criadas **só em Production** |
@@ -26,14 +67,14 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 | `www` | responde com **308** para a raiz |
 
 **Ensaio completo feito em 22/09 e depois limpo:** compra pelo site → cobrança
-no Asaas → Pix com QR → pedido na planilha → pagamento → webhook 200 → ingresso
+no gateway anterior → Pix com QR → pedido na planilha → pagamento → webhook 200 → ingresso
 `MP26-XXXX-XXXX` → e-mail entregue → aba Resumo somando certo.
 
 ### Lotes (as datas moram em TRÊS lugares e têm que andar juntas)
 
 | Lote | Janela | Preço |
 |---|---|---|
-| 1º | 27/09 a 06/10 | R$ 55,00 |
+| 1º | **24/09** a 06/10 (card anuncia 27/09, texto fixo na linha ~470 do `index.html`) | R$ 55,00 |
 | 2º | 07/10 a 15/10 | R$ 65,00 |
 
 - `backend/src/catalogo.js`, linha ~31 — o que a API vende (e recusa)
@@ -93,7 +134,7 @@ Quando o DMARC tiver alguns dias de relatório limpo, dá para apertar o
 | Verificação | Resultado |
 |---|---|
 | `config.js` servido | aponta para o domínio próprio |
-| `/api/saude` | Asaas, Google Sheets e Resend de pé |
+| `/api/saude` | gateway, Google Sheets e Resend de pé |
 | Trava de janela | `POST /api/checkout` devolve **409**, "abre em 27/09" |
 | Acentuação | UTF-8 correto ponta a ponta |
 | Certificado | emitido pela Vercel alguns minutos depois do `A` |
@@ -153,68 +194,19 @@ salvar, o serial do SOA ainda é o antigo e o registro novo não existe. Não é
 erro, é fila — esperar alguns minutos. E conferir sempre em `d.sec.dns.br`,
 nunca em `a.auto.dns.br`.
 
-### 4. Asaas de produção — DUAS etapas pendentes, não uma
+### 4. Mercado Pago em produção
 
-**Situação em 23/09** (conferida no painel):
+1. Na Vercel: `PAYMENT_PROVIDER=mercadopago`, `MERCADOPAGO_ACCESS_TOKEN`
+   (produção) e `MERCADOPAGO_WEBHOOK_SECRET` — **e redeployar**. Apagar as
+   `ASAAS_*` de lá.
+2. `/api/saude` tem que dizer `"pagamento": "mercadopago"` e
+   `"mercadopago": { "credencial": true, "webhookAssinado": true }`, com `ok:true`.
+3. No painel, Webhooks → **Simular**: tem que voltar 200 (ID inexistente é
+   ignorado de propósito).
+4. Compra real no Pix pelo site, R$ 55, e estorno pelo painel — é ela que
+   prova o Pix, o webhook assinado e o e-mail de ponta a ponta.
 
-| Etapa | Estado |
-|---|---|
-| Preenchimento dos Dados Comerciais | **Aprovado** |
-| Envio de documentos | **Em análise** |
-| Aprovação geral | **Pendente** — só começa depois das anteriores |
-| Chave Pix | bloqueada, depende da mesma fila |
-
-**Decisão tomada em 23/09: manter a abertura em 27/09 e reavaliar no sábado,
-26/09.** O endereço ainda não foi divulgado, então a exposição é pequena.
-
-**Isto não é "quando der": em 27/09 a janela do 1º lote abre sozinha, pelo
-relógio.** Se a conta não estiver aprovada até lá, a compradora recebe um QR
-de **sandbox**, que o banco dela não reconhece: ela não consegue pagar, o
-pedido fica pendente na planilha e o ingresso não sai.
-
-#### O que fazer no sábado, 26/09
-
-Se a aprovação geral **não** tiver saído, adiar a abertura. Mudança sugerida:
-1º lote de `2026-10-01` a `2026-10-06`, 2º lote intacto. São os três lugares
-da seção "Lotes" acima, e depois `npm test`.
-
-Se tiver saído:
-
-1. Gerar a chave de produção **sem permissão de saque** e sem expiração curta
-   (chargeback chega até ~90 dias depois)
-2. Na Vercel: `ASAAS_API_URL=https://api.asaas.com/v3` e a chave `$aact_prod_`
-   — **e redeployar**, senão a função continua com a de sandbox. Depois do
-   deploy, conferir em `/api/saude`: tem que dizer
-   `"asaas": { "ambiente": "producao", "chaveCombina": true }`. Se vier
-   `chaveCombina: false` (e `ok:false`), a chave e a URL estão trocadas —
-   corrija antes de qualquer divulgação, senão toda compra dá 502
-3. Cadastrar o webhook na conta de produção — mesma URL
-   (`https://evangelhoplenoparagominas.com.br/api/webhook`), mesmo
-   `ASAAS_WEBHOOK_TOKEN`, mesmos 6 eventos, v3, não sequencial
-4. Conferir se a **chave Pix** está ativa (sem ela o primeiro QR falha com 400)
-5. Cobrança real de teste de **R$ 5,00 ou mais** (o Asaas recusa R$ 1,00) —
-   e é ela que finalmente prova de que endereço o e-mail de ingresso chega
-
-### 5. Teste com os pastores — decidido: NÃO antes do Asaas
-
-Perguntado em 23/09 se dava para os pastores testarem o fluxo inteiro até o
-e-mail chegar. **Dá**, e sem quebrar nada: eles compram, recebem o QR, e a
-cobrança é marcada como paga pela API do sandbox (o mesmo `receiveInCash` da
-auditoria), o que dispara o webhook real, emite o ingresso e manda o e-mail
-de verdade. O único passo impossível é pagar — QR de sandbox não é aceito
-por banco nenhum.
-
-**O custo:** a janela de venda teria que ficar aberta durante o teste, e aí
-o site fica genuinamente comprável por qualquer um com o endereço. Além
-disso o e-mail deles **não** viria marcado como teste (o `[TESTE]` no
-assunto só sai quando a transação começa com `mock_`; pelo sandbox do Asaas
-ela começa com `pay_`), e os pedidos entrariam na planilha real.
-
-**Decisão: não fazer.** O mesmo teste sai mais fiel e sem exposição nenhuma
-depois da aprovação do Asaas, com uma cobrança real de R$ 5,00 que se estorna
-— e é ele que também vai provar de que endereço o e-mail de ingresso chega.
-
-### 6. Varredura de segurança de 23/09 (tudo passou)
+### 5. Varredura de segurança de 23/09 (tudo passou)
 
 Conferido **em produção**, no domínio novo:
 
@@ -232,7 +224,7 @@ URL, os 4 registros de e-mail no ar.
 
 Tudo o que estava pendente aqui foi feito no mesmo dia — ver item 2.
 
-### 7. Opcional
+### 6. Opcional
 
 O contador "X de 350 vendidos" da landing nunca aparece: `/api/produtos` não
 devolve o campo `vagas`. Dá para ligar contando os pedidos PAGOS da planilha.
@@ -266,13 +258,12 @@ contra o código antigo e passa contra o corrigido. **No ar desde 23/09** (deplo
 | Os 7 registros de DNS | consultados em `d.sec.dns.br` (200.160.0.14); todos intactos, SOA serial 2026266003 |
 | Resend | API `/domains`: `verified`, `sa-east-1`, domínio próprio |
 | `EMAIL_FROM` em produção | `Ingressos Conferência <ingressos@evangelhoplenoparagominas.com.br>` — o remetente **está** no domínio próprio |
-| Asaas em produção | chave e URL **os dois em sandbox**, combinando (sem a armadilha do 401) |
 | As 14 variáveis | todas presentes em Production; nenhuma que o código lê está faltando |
 | `ALLOWED_ORIGINS` | `conf-mulheres-plenas.vercel.app` + `www...`; mais a origem do `SITE_URL`, somada pelo código |
 | Portas fechadas | `/api/dev/simular-pagamento` 404, admin e webhook 401 sem token e com token errado, `/backend/.env` 404, CORS estranho sem permissão |
 | Trava de janela no ar | `POST /api/checkout` devolve 409 |
 | Segredo no Git | nenhum, nem no histórico: só `.env.example` |
-| Código morto | procurado e **não encontrado**: as 8 dependências são usadas, as 12 imagens são referenciadas, e `sipagProvider` é citado pelo `README` e por `fluxo.test.js` |
+| Código morto | procurado e **não encontrado**: as 8 dependências são usadas, as 12 imagens são referenciadas |
 
 ### Pendente, e é o mais urgente
 
@@ -293,11 +284,6 @@ Deploy `7ce2305` **READY** em 23/09, com a correção do fuso. Verificado no ar:
 `/api/saude` de pé, checkout devolvendo 409, as 4 páginas em 200 e as 6 portas
 fechadas.
 
-**2. O 1º lote abre em 27/09 com o Asaas ainda em sandbox.** Confirmado nesta
-auditoria: a chave e a URL em produção são as duas de sandbox. Se a aprovação
-não sair até sábado, a compradora recebe um QR que o banco dela não reconhece.
-A decisão do item 4 continua de pé — reavaliar no sábado, 26/09.
-
 **3. Dois ingressos podiam sair com códigos diferentes — CORRIGIDO.** Os
 códigos eram sorteados, e o webhook e a consulta da página de pagamento podem
 cair em instâncias diferentes: se as duas lessem o pedido ainda `PENDENTE`,
@@ -312,25 +298,15 @@ ficava parado esperando alguém reparar na coluna da planilha, com o dinheiro
 já dentro. Agora `ERRO` conta como pendente e cada consulta tenta de novo; a
 chave de idempotência do Resend impede o e-mail dobrado.
 
-**5. `/api/saude` agora denuncia o par do Asaas.** Chave trocada com a URL dá
-401 mudo, que vira 502 na cara da compradora, e antes isso só aparecia num
-`console.warn` que ninguém lê a tempo. A resposta agora traz
-`asaas: { ambiente, chaveCombina }` e devolve `ok:false` se não combinarem —
-**é assim que se confere a virada para produção no domingo, sem comprar nada.**
-A chave nunca aparece na resposta. Hoje em produção:
-
-```json
-"asaas": { "ambiente": "sandbox", "chaveCombina": true }
-```
-
 ---
 
 ## Comandos (rodam na RAIZ do repositório, não em `backend/`)
 
 ```bash
-npm test                 # 26 testes de unidade
-npm run auditar          # 61 verificações: compra inteira no sandbox + portas fechadas
-npm run asaas:testar     # só o Asaas, ponta a ponta
+npm test                 # 32 testes (o Mercado Pago simulado no processo)
+npm run auditar          # com credencial de TESTE: checkout, webhook assinado + portas fechadas
+npm run mercadopago:testar          # fala com a API de verdade (Pix só em produção, e cancela)
+npm run mercadopago:ensaio-cartao   # compra no cartão pelo Checkout Pro, paga à mão
 npm run planilha:testar  # acesso e permissão na planilha
 npm run email:testar -- voce@gmail.com   # dispara um ingresso falso ([TESTE] no assunto)
 npm run dev              # API local em http://localhost:3000
@@ -345,16 +321,12 @@ O `.env` fica em `backend/.env` (o `config.js` aponta o caminho na mão).
 | O quê | Por quê |
 |---|---|
 | `google-spreadsheet` só com `import()` | é ESM; o carregador da Vercel não aceita `require()` e a API morria inteira |
-| Cobrança mínima do Asaas: **R$ 5,00** | R$ 1,00 é recusado — o teste em produção precisa ser maior |
-| Chave Pix na conta | sem ela o primeiro QR do Pix falha com 400 |
-| Celular "implausível" (11 dígitos iguais) | o Asaas recusa com `invalid_mobilePhone` e derrubava a compra; agora o cadastro é refeito sem telefone |
-| Prefixo da chave × URL | `$aact_hmlg_` só com sandbox, `$aact_prod_` só com produção; trocado dá 401 sem explicação |
+| Chave Pix na conta | sem ela o Pix não gera QR |
 | Sem `GOOGLE_*` em produção | o checkout recusa com 503 de propósito: pedido em memória na Vercel = dinheiro cobrado e ingresso nenhum |
 | `onboarding@resend.dev` | só entrega para o dono da conta Resend, e mesmo assim no spam (resolvido em 23/09) |
 | `a.auto.dns.br` responde pelo domínio | e responde **errado** — a delegação real é `d.sec`/`f.sec`. Conferir DNS por ele dá diagnóstico falso |
 | Variável nova na Vercel sem redeploy | fica gravada e a função continua com a antiga até o próximo deploy |
 | Previews da Vercel | têm proteção de login e devolvem 302; só a URL de produção é aberta |
-| Data cravada no `receiveInCash` | a auditoria tinha `paymentDate: '2026-09-22'` fixo e passou a falhar com 400 no dia seguinte ao ensaio; o Asaas exige data entre a criação da cobrança e hoje |
 | Fuso do servidor na janela de venda | `new Date(ano, mes, dia)` usa o fuso de quem roda. A Vercel roda em UTC e a máquina de desenvolvimento está em UTC-3, igual a Paragominas: o erro passava despercebido no teste e deslocava a venda em 3 h no ar. Corrigido em 23/09 — as bordas agora são instantes absolutos |
 | `TZ=` no Windows | o Node desta máquina só respeita `TZ=UTC`; `TZ=America/Belem`, `Asia/Tokyo` etc. caem silenciosamente no fuso da máquina. Conferir com `getTimezoneOffset()` antes de confiar num teste "em outro fuso" |
 | Ler variável da Vercel pela API | `/v9/projects/.../env` devolve o valor **cifrado** mesmo com `decrypt=true`; quem devolve texto claro é `/v1/projects/.../env/<id>`, um id por vez. E variável do tipo `sensitive` (hoje só `EMAIL_REPLY_TO`) **nunca** devolve valor — `undefined` ali significa "não revelado", não "vazio" |
@@ -383,6 +355,6 @@ novo-evento/
     src/config.js            lê o .env e valida
     src/routes/              publicas, webhook, admin
     src/services/            pagamento/, sheetsService, emailService, pedidoService
-    scripts/                 auditar-fluxo, auditar-portas, testar-asaas, testar-email, planilha
+    scripts/                 auditar-mercadopago, auditar-portas, testar-mercadopago, ensaio-cartao, testar-email, planilha
     test/                    26 testes
 ```

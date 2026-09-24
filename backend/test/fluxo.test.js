@@ -12,7 +12,6 @@ const assert = require('node:assert/strict');
 const { criarApp } = require('../src/app');
 const { cpfValido } = require('../src/utils/validacao');
 const { buscarProduto, situacaoDoLote } = require('../src/catalogo');
-const sipag = require('../src/services/pagamento/sipagProvider');
 
 let servidor;
 let base;
@@ -58,7 +57,7 @@ test('janela de venda de cada lote', function () {
     const dois = buscarProduto('lote-2');
 
     // as datas precisam ser as mesmas dos data-inicio/data-fim do index.html
-    assert.equal(um.vendaDe, '2026-09-27');
+    assert.equal(um.vendaDe, '2026-09-24');
     assert.equal(um.vendaAte, '2026-10-06');
     assert.equal(dois.vendaDe, '2026-10-07');
     assert.equal(dois.vendaAte, '2026-10-15');
@@ -69,15 +68,15 @@ test('janela de venda de cada lote', function () {
        que roda em UTC. Cada linha traz o horario de Paragominas ao lado. */
     const emBelem = function (utc) { return new Date(utc); };
 
-    assert.equal(situacaoDoLote(um, emBelem('2026-09-27T02:59:00Z')), 'espera', '26/09 23:59 em Paragominas: vespera');
-    assert.equal(situacaoDoLote(um, emBelem('2026-09-27T03:00:00Z')), 'aberto', '27/09 00:00 em Paragominas: abre');
+    assert.equal(situacaoDoLote(um, emBelem('2026-09-24T02:59:00Z')), 'espera', '23/09 23:59 em Paragominas: vespera');
+    assert.equal(situacaoDoLote(um, emBelem('2026-09-24T03:00:00Z')), 'aberto', '24/09 00:00 em Paragominas: abre');
     assert.equal(situacaoDoLote(um, emBelem('2026-10-07T02:59:00Z')), 'aberto', '06/10 23:59 em Paragominas: ultimo dia vende');
     assert.equal(situacaoDoLote(um, emBelem('2026-10-07T03:00:00Z')), 'encerrado', '07/10 00:00 em Paragominas: fechou');
 
     /* As bordas que o fuso do servidor estragava: as 21:00 de Paragominas o
        relogio em UTC ja virou o dia. Se a venda abrir ou fechar aqui, o
        servidor esta decidindo pelo fuso dele. */
-    assert.equal(situacaoDoLote(um, emBelem('2026-09-27T00:00:00Z')), 'espera', '26/09 21:00 em Paragominas: ainda nao abriu');
+    assert.equal(situacaoDoLote(um, emBelem('2026-09-24T00:00:00Z')), 'espera', '23/09 21:00 em Paragominas: ainda nao abriu');
     assert.equal(situacaoDoLote(um, emBelem('2026-10-07T00:00:00Z')), 'aberto', '06/10 21:00 em Paragominas: ainda vende');
     assert.equal(situacaoDoLote(dois, emBelem('2026-10-07T00:00:00Z')), 'espera', '06/10 21:00 em Paragominas: o 2o ainda nao abriu');
     assert.equal(situacaoDoLote(dois, emBelem('2026-10-16T02:59:00Z')), 'aberto', '15/10 23:59 em Paragominas: ultimo dia vende');
@@ -160,13 +159,6 @@ test('CORS libera o site e bloqueia outras origens', async function () {
     assert.equal(outro.headers.get('access-control-allow-origin'), null);
 });
 
-test('mapeia status da Sipag', function () {
-    assert.equal(sipag._mapearStatus('APPROVED'), 'PAGO');
-    assert.equal(sipag._mapearStatus('pago'), 'PAGO');
-    assert.equal(sipag._mapearStatus('DECLINED'), 'RECUSADO');
-    assert.equal(sipag._mapearStatus('???'), null);
-});
-
 /* ---------- códigos derivados do Pedido_ID (corrida entre instâncias) ---------- */
 const { codigosDoPedido, PADRAO_INGRESSO, novoPedidoId } = require('../src/utils/codigos');
 
@@ -197,27 +189,10 @@ test('codigos de pedidos diferentes nao colidem e respeitam o formato', function
     assert.equal(new Set(doMesmoPedido).size, 5);
 });
 
-test('/saude denuncia se a chave do Asaas nao combina com a URL', async function () {
+test('/saude no modo simulado nao traz o bloco do Mercado Pago', async function () {
     const saude = await (await fetch(base + '/saude')).json();
-    // neste teste o provedor e o mock, entao o bloco do asaas nao aparece
-    assert.equal(saude.asaas, undefined);
+    assert.equal(saude.pagamento, 'mock');
+    assert.equal(saude.simulado, true);
+    assert.equal(saude.mercadopago, undefined);
     assert.equal(saude.ok, true);
-
-    // e o config classifica os pares corretamente
-    const caminho = require.resolve('../src/config');
-    const salvo = { ...process.env };
-    for (const [url, chave, esperado] of [
-        ['https://api-sandbox.asaas.com/v3', '$aact_hmlg_abc', true],
-        ['https://api.asaas.com/v3', '$aact_prod_abc', true],
-        ['https://api.asaas.com/v3', '$aact_hmlg_abc', false],
-        ['https://api-sandbox.asaas.com/v3', '$aact_prod_abc', false]
-    ]) {
-        delete require.cache[caminho];
-        process.env.ASAAS_API_URL = url;
-        process.env.ASAAS_API_KEY = chave;
-        const cfg = require('../src/config');
-        assert.equal(cfg.asaas.chaveCombina, esperado, url + ' + ' + chave.slice(0, 11));
-    }
-    delete require.cache[caminho];
-    process.env = salvo;
 });

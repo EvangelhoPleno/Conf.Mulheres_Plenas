@@ -66,17 +66,14 @@ const config = {
         provedor: (process.env.PAYMENT_PROVIDER || 'mock').trim().toLowerCase()
     },
 
-    asaas: {
-        apiUrl: semBarraFinal(process.env.ASAAS_API_URL, 'https://api-sandbox.asaas.com/v3'),
-        apiKey: (process.env.ASAAS_API_KEY || '').trim(),
-        webhookToken: (process.env.ASAAS_WEBHOOK_TOKEN || '').trim()
-    },
-
-    sipag: {
-        apiUrl: semBarraFinal(process.env.SIPAG_API_URL, 'https://api.sipag.com.br/v1'),
-        clientId: process.env.SIPAG_CLIENT_ID || '',
-        clientSecret: process.env.SIPAG_CLIENT_SECRET || '',
-        webhookSecret: process.env.SIPAG_WEBHOOK_SECRET || ''
+    mercadoPago: {
+        accessToken: (process.env.MERCADOPAGO_ACCESS_TOKEN || '').trim(),
+        // "Assinatura secreta" do webhook, no painel Suas integrações
+        webhookSecret: (process.env.MERCADOPAGO_WEBHOOK_SECRET || '').trim(),
+        // só a auditoria usa: gera o token de um cartão de teste
+        publicKey: (process.env.MERCADOPAGO_PUBLIC_KEY || '').trim(),
+        // máximo de parcelas oferecidas no cartão (1 = só à vista)
+        parcelasMax: Math.max(1, Math.min(12, Number(process.env.MERCADOPAGO_PARCELAS_MAX) || 1))
     },
 
     google: {
@@ -103,23 +100,11 @@ if (config.ambiente !== 'production') {
     });
 }
 
-/* Chave de sandbox em URL de produção (ou o contrário) devolve 401 sem
-   explicar por quê. O Asaas prefixa as chaves: $aact_hmlg_ e $aact_prod_. */
-const asaasEmProducao = /\/\/api\.asaas\.com/.test(config.asaas.apiUrl);
-config.asaas.ambiente = asaasEmProducao ? 'producao' : 'sandbox';
-config.asaas.configurado = Boolean(config.asaas.apiKey);
-/* O aviso no console não basta: na Vercel ninguém lê o log antes da primeira
-   compradora. Guardado aqui, o /api/saude denuncia o par errado sem expor a
-   chave — é como se confere a virada para produção sem precisar comprar. */
-config.asaas.chaveCombina = null;
-if (config.asaas.apiKey) {
-    const chaveDeProducao = config.asaas.apiKey.includes('_prod_');
-    config.asaas.chaveCombina = chaveDeProducao === asaasEmProducao;
-    if (!config.asaas.chaveCombina) {
-        console.warn('[asaas] ATENÇÃO: a chave é de ' + (chaveDeProducao ? 'PRODUÇÃO' : 'SANDBOX') +
-            ' e a URL é de ' + (asaasEmProducao ? 'PRODUÇÃO' : 'SANDBOX') + '. Ajuste ASAAS_API_URL ou ASAAS_API_KEY.');
-    }
-}
+/* O Mercado Pago tem uma URL só; quem diz o ambiente é a credencial.
+   TEST-... é de teste; APP_USR-... é de produção (ou de um usuário de teste,
+   que o Mercado Pago também trata como teste do lado dele). */
+config.mercadoPago.ambiente = config.mercadoPago.accessToken.startsWith('TEST-') ? 'teste' : 'producao';
+config.mercadoPago.configurado = Boolean(config.mercadoPago.accessToken);
 
 config.google.configurado = Boolean(config.google.planilhaId && config.google.email && config.google.chave);
 config.email.configurado = Boolean(config.email.resendApiKey);

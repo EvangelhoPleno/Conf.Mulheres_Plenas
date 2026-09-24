@@ -11,7 +11,7 @@ function novoPedidoId() {
 
 /* Os códigos do pedido são DERIVADOS do Pedido_ID, não sorteados.
 
-   O webhook do Asaas e a consulta da página de pagamento podem chegar juntos e
+   O webhook do Mercado Pago e a consulta da página de pagamento podem chegar juntos e
    cair em instâncias diferentes da Vercel. Se as duas lerem o pedido ainda
    PENDENTE, as duas emitem: com sorteio, cada uma gerava um par diferente, o
    e-mail saía com o da primeira (a idempotência do Resend segura o segundo) e a

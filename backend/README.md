@@ -23,7 +23,8 @@ npm install
 cp backend/.env.example backend/.env   # pode deixar como está para testar
 npm run dev                            # API em http://localhost:3000
 npm test                               # testes do fluxo completo
-npm run asaas:testar                   # compra de ponta a ponta no sandbox do Asaas
+npm run mercadopago:testar             # Pix e link do cartão contra o Mercado Pago de teste
+npm run auditar                        # compra inteira com o Mercado Pago de teste + portas fechadas
 ```
 
 Em outro terminal, sirva o site pela raiz do repositório (ex.: `python -m http.server 5500`) e abra `http://localhost:5500`. O `config.js` já aponta para a API local quando o endereço é `localhost`. Os e-mails de teste são salvos em `backend/tmp/` para abrir no navegador.
@@ -83,18 +84,17 @@ Na Vercel não existe o arquivo JSON: cadastre `GOOGLE_SERVICE_ACCOUNT_EMAIL` (`
 3. Verificar o domínio no Resend e trocar `EMAIL_FROM`.
 4. Atualizar a URL do webhook no painel do gateway.
 
-## Quando a conta de pagamento for definida
+## Mercado Pago (gateway em uso)
 
-Toda a integração fica em `src/services/pagamento/`. O restante do sistema não muda.
+`src/services/pagamento/mercadoPagoProvider.js`, com `PAYMENT_PROVIDER=mercadopago`.
 
-**Se for Sipag:** o arquivo `sipagProvider.js` já tem a estrutura (autenticação, cobrança, consulta, webhook), mas os nomes de rotas e campos estão marcados com `CONFIRMAR`, porque dependem da documentação da conta. Com a documentação em mãos:
-1. Ajustar `autenticar`, `montarPayload`, `criarCobranca`, `consultarStatus`, `mapearStatus` e `validarWebhook`.
-2. Mudar `INTEGRACAO_REVISADA` para `true`. Enquanto estiver `false`, o checkout responde "vendas indisponíveis" e não manda nada ao banco.
-3. `PAYMENT_PROVIDER=sipag` e as chaves `SIPAG_*`.
-4. Cadastrar o webhook no painel: `https://<api>/api/webhook?token=<SIPAG_WEBHOOK_SECRET>`.
-5. Fazer uma compra real de valor baixo antes de divulgar.
+- **Pix:** `POST /v1/payments` devolve o copia-e-cola na hora; o QR é desenhado na nossa página. Vence às 23:59 do dia seguinte.
+- **Cartão:** Checkout Pro (`POST /checkout/preferences`). A compradora digita o cartão na página do Mercado Pago e volta para `pagamento.html`. Só cartão: boleto e Pix ficam de fora da página deles.
+- **O elo é o `external_reference` = `Pedido_ID`.** No cartão, o pagamento só nasce quando ela paga (e pode haver mais de uma tentativa), então o webhook acha o pedido por ele, e a consulta soma as tentativas: uma aprovada basta.
+- **Webhook:** configurado no painel (*Suas integrações → a aplicação → Webhooks*), evento **Pagamentos**, URL `https://<site>/api/webhook`. Cada aviso vem assinado (`x-signature`, HMAC-SHA256 com a *assinatura secreta*); sem assinatura válida, 401. Mesmo assinado, o status é reconsultado na API.
+- **Ambiente:** a URL é uma só; quem decide é a credencial (`TEST-...` teste, `APP_USR-...` produção). O `/api/saude` mostra `mercadopago: { ambiente, credencial, webhookAssinado, parcelasMax }` e dá `ok:false` se faltar o token ou a assinatura.
 
-**Se for outro gateway** (Mercado Pago, Asaas, Efí, PagSeguro...): criar `outroProvider.js` com a mesma interface (descrita em `pagamento/index.js`) e registrar em `PROVEDORES`.
+Variáveis: `MERCADOPAGO_ACCESS_TOKEN`, `MERCADOPAGO_WEBHOOK_SECRET`, `MERCADOPAGO_PARCELAS_MAX` (padrão 1) e, só para a auditoria local, `MERCADOPAGO_PUBLIC_KEY`.
 
 ## Segurança
 

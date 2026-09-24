@@ -31,13 +31,17 @@ router.get('/saude', function (req, res) {
         email: config.email.configurado ? 'resend' : 'desligado'
     };
 
-    /* Chave de sandbox com URL de produção (ou o contrário) devolve 401 sem
-       explicar, e vira 502 na cara de toda compradora. Aqui dá para conferir a
-       virada para produção sem fazer uma compra. Só o ambiente e o veredito —
-       a chave nunca sai daqui. */
-    if (provedor.nome === 'asaas') {
-        saude.asaas = { ambiente: config.asaas.ambiente, chaveCombina: config.asaas.chaveCombina };
-        if (config.asaas.chaveCombina === false) saude.ok = false;
+    /* Sem o Access Token toda compra dá 503; sem a assinatura secreta todo
+       webhook dá 401 e o ingresso só sai quando ela abre a página de pagamento.
+       Os dois derrubam o ok — e nenhum segredo sai daqui. */
+    if (provedor.nome === 'mercadopago') {
+        saude.mercadopago = {
+            ambiente: config.mercadoPago.ambiente,
+            credencial: config.mercadoPago.configurado,
+            webhookAssinado: Boolean(config.mercadoPago.webhookSecret),
+            parcelasMax: config.mercadoPago.parcelasMax
+        };
+        if (!config.mercadoPago.configurado || !config.mercadoPago.webhookSecret) saude.ok = false;
     }
 
     res.json(saude);

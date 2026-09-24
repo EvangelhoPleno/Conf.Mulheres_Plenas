@@ -171,10 +171,15 @@ async function aplicarStatus(pedido, novoStatus) {
 }
 
 // Chamado pelo webhook: sempre reconsulta o gateway em vez de confiar no corpo recebido.
-async function processarNotificacao(transacaoId) {
-    const pedido = await pedidos().buscarPorTransacao(transacaoId);
+// O aviso traz o ID da transação e, quando o gateway sabe, o Pedido_ID — no
+// cartão do Mercado Pago o pagamento nasce depois do pedido, e só o Pedido_ID
+// (external_reference) liga um ao outro.
+async function processarNotificacao(aviso) {
+    if (typeof aviso === 'string') aviso = { transacaoId: aviso };
+    const pedido = (aviso.pedidoId && await pedidos().buscarPorId(aviso.pedidoId)) ||
+        await pedidos().buscarPorTransacao(aviso.transacaoId);
     if (!pedido) return { ignorado: true, motivo: 'transação desconhecida' };
-    const status = await pagamento().consultarStatus(transacaoId);
+    const status = await pagamento().consultarStatus(pedido.transacaoId, pedido);
     const atualizado = await aplicarStatus(pedido, status);
     return { ignorado: false, status: atualizado.status };
 }
@@ -188,7 +193,7 @@ async function consultarPedido(pedidoId) {
     if (STATUS_FINAIS.includes(pedido.status) && !(pedido.status === 'PAGO' && faltaEmail(pedido))) return pedido;
 
     try {
-        const status = pedido.status === 'PAGO' ? 'PAGO' : await pagamento().consultarStatus(pedido.transacaoId);
+        const status = pedido.status === 'PAGO' ? 'PAGO' : await pagamento().consultarStatus(pedido.transacaoId, pedido);
         return await aplicarStatus(pedido, status);
     } catch (erro) {
         console.error('[pedido] falha ao consultar gateway', pedidoId, erro.message);

@@ -27,7 +27,9 @@ const QTD_MAX = 5;
 // abertas/encerrado") e o servidor usa as daqui para recusar de verdade uma
 // compra fora do período. O último dia vende até 23:59.
 const lotes = [
-    { id: 'lote-1', lote: '1º lote', preco: 5500, de: '2026-09-27', ate: '2026-10-06' },
+    // aberto de verdade em 24/09 para o ensaio em produção; o card da landing
+    // continua anunciando 27/09 (texto fixo), que é quando o link é divulgado
+    { id: 'lote-1', lote: '1º lote', preco: 5500, de: '2026-09-24', ate: '2026-10-06' },
     { id: 'lote-2', lote: '2º lote', preco: 6500, de: '2026-10-07', ate: '2026-10-15' }
 ];
 

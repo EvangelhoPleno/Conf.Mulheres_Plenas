@@ -1,23 +1,21 @@
 /* =============================================================
-   Escolhe o gateway de pagamento pela variável PAYMENT_PROVIDER.
-   Para plugar outro banco/gateway (Sipag, Mercado Pago, Asaas, Efí...),
-   crie um arquivo nesta pasta com a mesma interface do mockProvider.js
-   e registre abaixo. Nada fora desta pasta precisa mudar.
+   Escolhe o gateway de pagamento pela variável PAYMENT_PROVIDER:
+     mercadopago   Mercado Pago, o gateway da venda (Pix e cartão)
+     mock          pagamento simulado, para testes e desenvolvimento
 
    Interface de um provedor:
      nome                     string
      metodos                  ['pix', 'cartao']
      criarCobranca(dados)     -> { transacaoId, pix?: { copiaECola, expiraEm }, linkPagamento? }
-     consultarStatus(id)      -> 'PENDENTE' | 'PAGO' | 'RECUSADO' | 'EXPIRADO' | 'CANCELADO' | 'REEMBOLSADO' | null
+     consultarStatus(id, pedido) -> 'PENDENTE' | 'PAGO' | 'RECUSADO' | 'EXPIRADO' | 'CANCELADO' | 'REEMBOLSADO' | null
      validarWebhook(req)      -> boolean (assinatura/token do gateway)
-     lerWebhook(req)          -> { transacaoId } | null
+     lerWebhook(req)          -> { transacaoId, pedidoId? } | null   (pode ser async)
    ============================================================= */
 const config = require('../../config');
 
 const PROVEDORES = {
     mock: function () { return require('./mockProvider'); },
-    asaas: function () { return require('./asaasProvider'); },
-    sipag: function () { return require('./sipagProvider'); }
+    mercadopago: function () { return require('./mercadoPagoProvider'); }
 };
 
 let provedor = null;

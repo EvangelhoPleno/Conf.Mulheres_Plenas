@@ -13,9 +13,10 @@
     "test": "node --test \"backend/test/**/*.test.js\"",
     "planilha:testar": "node backend/scripts/testar-planilha.js",
     "planilha:preparar": "node backend/scripts/preparar-planilha.js",
-    "asaas:testar": "node backend/scripts/testar-asaas.js",
+    "mercadopago:testar": "node backend/scripts/testar-mercadopago.js",
+    "mercadopago:ensaio-cartao": "node backend/scripts/ensaio-cartao.js",
     "email:testar": "node backend/scripts/testar-email.js",
-    "auditar": "node backend/scripts/auditar-fluxo.js && node backend/scripts/auditar-portas.js"
+    "auditar": "node backend/scripts/auditar-mercadopago.js && node backend/scripts/auditar-portas.js"
   },
   "dependencies": {
     "axios": "^1.20.0",

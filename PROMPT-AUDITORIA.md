@@ -16,7 +16,7 @@ Leia este documento inteiro antes de rodar o primeiro comando.
 
 Landing page estática + API Express na Vercel, no mesmo domínio
 (`evangelhoplenoparagominas.com.br`). A compradora escolhe um lote, preenche
-os dados, paga por Pix ou cartão no Asaas, e recebe um ingresso por e-mail.
+os dados, paga por Pix ou cartão no Mercado Pago, e recebe um ingresso por e-mail.
 O pedido é gravado numa planilha do Google.
 
 O evento é **16 e 17 de outubro de 2026**. A venda do 1º lote abre em
@@ -71,7 +71,7 @@ Leia **todo** o código de `backend/src/`, mais `script.js`, `pedido.js` e
 
 Em cada um, procure:
 
-- **Caminho de erro sem tratamento.** O que acontece se o Asaas responder
+- **Caminho de erro sem tratamento.** O que acontece se o Mercado Pago responder
   500? Se a planilha der timeout? Se o Resend recusar? A compradora vê o quê?
 - **Estado parcial.** Existe ponto onde o dinheiro entra e o pedido não é
   gravado, ou o contrário? Liste cada um.
@@ -88,19 +88,27 @@ Em cada um, procure:
 Aqui é onde um erro custa dinheiro. Para **cada** integração, descreva o
 contrato e depois procure onde ele se rompe.
 
-### Asaas (pagamento)
+### Mercado Pago (pagamento)
 
-- A chave e a URL combinam? `$aact_hmlg_` só com `api-sandbox.asaas.com`,
-  `$aact_prod_` só com `api.asaas.com`. Trocado dá **401 sem explicação**.
-- O webhook valida o token? Rejeita corpo sem ID de transação **com 200**?
-  Se devolver erro, o Asaas suspende a fila inteira.
+- A credencial é a certa? A URL é uma só; quem decide é o token. Usuário de
+  teste também começa com `APP_USR-`: confira em `/users/me` (tag
+  `test_user`). `/api/saude` precisa mostrar `mercadopago.credencial: true` e
+  `webhookAssinado: true`, senão `ok:false`.
+- O webhook confere a assinatura (`x-signature`, HMAC-SHA256 com a
+  assinatura secreta sobre `id:<data.id>;request-id:<x-request-id>;ts:<ts>;`)?
+  Sem ela, 401. Aviso de outro tipo ou de pagamento inexistente (o "Simular"
+  do painel) tem que voltar **200**, senão o Mercado Pago fica reenviando.
+- **O elo é o `external_reference` = `Pedido_ID`.** No cartão (Checkout Pro)
+  o pagamento nasce depois do pedido, e pode haver várias tentativas: o
+  webhook acha o pedido pelo `external_reference` e a consulta soma as
+  tentativas (uma aprovada basta). Sem isso, cartão pago nunca vira PAGO.
 - **Idempotência:** o webhook e a consulta de status podem chegar juntos. O
   ingresso pode ser emitido duas vezes? O e-mail pode sair duas vezes? Onde
-  está a trava, e ela funciona?
-- A cobrança carrega o `Pedido_ID` em `externalReference`? Sem isso o webhook
-  não sabe qual pedido confirmar.
-- Cobrança mínima é **R$ 5,00** — R$ 1,00 é recusado.
-- Sem chave Pix ativa na conta, o primeiro QR falha com 400.
+  está a trava, e ela funciona? O Pix manda `X-Idempotency-Key` = `Pedido_ID`.
+- Sem chave Pix ativa na conta, o Pix não gera QR.
+- Usuário de teste não tem Pix e não aceita `/v1/payments` pela API: o Pix
+  só se prova com credencial de produção; o cartão, com
+  `npm run mercadopago:ensaio-cartao`.
 
 ### Google Sheets (planilha)
 
@@ -135,7 +143,7 @@ contrato e depois procure onde ele se rompe.
 ### Ponta a ponta
 
 Percorra o fluxo inteiro e desenhe onde cada peça entra:
-`site → /api/checkout → Asaas → QR/link → webhook → planilha → e-mail →
+`site → /api/checkout → Mercado Pago → QR/link → webhook → planilha → e-mail →
 página de confirmação`. Em cada seta, responda: **o que acontece se falhar
 aqui?** Entregue essa lista.
 
