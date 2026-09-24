@@ -14,7 +14,9 @@ const evento = {
     nome: 'Conferência Mulheres Plenas 2026',
     data: '16 e 17 de outubro de 2026',
     local: 'Paragominas – PA',
-    realizacao: 'Igreja Evangelho Pleno'
+    realizacao: 'Igreja Evangelho Pleno',
+    // o mesmo do .recap-tema do index.html
+    tema: 'Moldadas pelo Espírito. Movidas pelo Propósito.'
 };
 
 // quantos ingressos cabem num mesmo pedido (uma pessoa comprando para amigas)

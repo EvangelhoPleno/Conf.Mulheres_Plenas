@@ -12,6 +12,8 @@ const { listarProdutos, descreverProduto } = require('../src/catalogo');
 const TIJOLO = { red: 0x85 / 255, green: 0x35 / 255, blue: 0x1e / 255 };
 const TERRACOTA = { red: 0xb8 / 255, green: 0x68 / 255, blue: 0x4f / 255 };
 const ROSADO = { red: 0xf5 / 255, green: 0xe8 / 255, blue: 0xe2 / 255 };
+const BRANCO = { red: 1, green: 1, blue: 1 };
+const PRETO = { red: 0, green: 0, blue: 0 };
 
 function letra(indice) {
     return String.fromCharCode(65 + indice);
@@ -71,7 +73,15 @@ async function prepararPedidos(doc) {
         celula.backgroundColor = TIJOLO;
     });
     await aba.saveUpdatedCells();
-    console.log('✓ Aba "' + nome + '" com as ' + CABECALHO.length + ' colunas');
+
+    // as linhas de pedido ficam brancas, com texto comum — mesmo as que já
+    // herdaram o marrom do cabeçalho quando a API ainda inseria linhas
+    await aba.repeatCell(
+        { startRowIndex: 1, endRowIndex: aba.rowCount, startColumnIndex: 0, endColumnIndex: CABECALHO.length },
+        { userEnteredFormat: { backgroundColor: BRANCO, textFormat: { bold: false, foregroundColor: PRETO } } },
+        'userEnteredFormat.backgroundColor,userEnteredFormat.textFormat.bold,userEnteredFormat.textFormat.foregroundColor'
+    );
+    console.log('✓ Aba "' + nome + '" com as ' + CABECALHO.length + ' colunas (pedidos em fundo branco)');
     return aba;
 }
 

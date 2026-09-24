@@ -42,7 +42,7 @@ async function main() {
         'ID_Transação': 'TESTE-CONEXAO',
         'Nome_Cliente': 'Linha de teste (será apagada)',
         'Status': 'TESTE'
-    }, { raw: true, insert: true });
+    }, { raw: true, insert: false });   // igual à API: ver sheetsService.criar()
     await teste.delete();
     console.log('✓ Permissão de editor (linha de teste gravada e apagada)');
 

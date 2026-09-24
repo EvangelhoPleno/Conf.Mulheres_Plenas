@@ -5,6 +5,10 @@ const config = require('../config');
 const { evento, formatarReais } = require('../catalogo');
 const { escapar } = require('../utils/html');
 
+// PNG, não SVG: o Gmail não mostra SVG. Endereço absoluto porque o e-mail não
+// tem "página" em volta; se a imagem for bloqueada, o alt mostra o nome.
+const LOGO = { arquivo: '/assets/imagens/marca/mp-horizontal-claro.png', largura: 240, altura: 43 };
+
 const COR = { tijolo: '#85351E', terracota: '#B8684F', nude: '#DFB9A6', rosado: '#F5E8E2', papel: '#FBF5F2', texto: '#4A2116' };
 
 /* Sem QR Code: não há leitor na portaria, e o QR só repetia o código.
@@ -15,7 +19,7 @@ function blocoIngresso(codigo, indice, total) {
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border:2px dashed ${COR.nude};border-radius:14px">
                 <tr><td style="padding:18px;text-align:center">
                     <p style="margin:0 0 4px;font:700 12px/1.3 Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:${COR.terracota}">Ingresso ${indice + 1} de ${total}</p>
-                    <p style="margin:10px 0 2px;font:700 28px/1.2 'Courier New',monospace;letter-spacing:3px;color:${COR.tijolo}">${escapar(codigo)}</p>
+                    <p style="margin:10px 0 2px;font:700 24px/1.2 'Courier New',monospace;letter-spacing:2px;white-space:nowrap;color:${COR.tijolo}">${escapar(codigo)}</p>
                 </td></tr>
             </table>
         </td></tr>`;
@@ -38,9 +42,11 @@ function emailIngresso(pedido) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COR.rosado}">
 <tr><td align="center" style="padding:24px 12px">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:${COR.papel};border-radius:18px;overflow:hidden">
-        <tr><td style="background:${COR.tijolo};padding:28px 24px;text-align:center">
-            <p style="margin:0;font:700 12px/1.3 Arial,sans-serif;letter-spacing:3px;text-transform:uppercase;color:${COR.nude}">${escapar(evento.nome)}</p>
-            <h1 style="margin:10px 0 0;font:700 30px/1.15 Georgia,serif;color:${COR.rosado}">Seu ingresso está confirmado!</h1>
+        <tr><td style="background:${COR.tijolo};padding:30px 24px 28px;text-align:center">
+            <img src="${config.siteUrl + LOGO.arquivo}" width="${LOGO.largura}" height="${LOGO.altura}" alt="Mulheres Plenas" style="display:block;margin:0 auto;width:${LOGO.largura}px;max-width:80%;height:auto;border:0;outline:none;text-decoration:none;font:700 24px Georgia,serif;color:${COR.rosado}">
+            <p style="margin:14px 0 0;font:700 11px/1.3 Arial,sans-serif;letter-spacing:3px;text-transform:uppercase;color:${COR.nude}">${escapar(evento.data)}</p>
+            <h1 style="margin:16px 0 0;font:700 30px/1.15 Georgia,serif;color:${COR.rosado}">Seu ingresso está confirmado!</h1>
+            <p style="margin:12px 0 0;font:italic 17px/1.4 Georgia,serif;color:${COR.nude}">${escapar(evento.tema).replace('. ', '.<br>')}</p>
         </td></tr>
 
         <tr><td style="padding:28px 24px 8px;font:16px/1.6 Arial,sans-serif;color:${COR.texto}">
@@ -86,6 +92,7 @@ function emailIngresso(pedido) {
         'Olá, ' + primeiroNome + '!',
         '',
         'Seu ingresso para a ' + evento.nome + ' está confirmado.',
+        evento.tema,
         'Apresente este e-mail na portaria.',
         '',
         'Participante: ' + pedido.nome,

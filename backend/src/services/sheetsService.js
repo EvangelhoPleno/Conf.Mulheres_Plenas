@@ -150,7 +150,10 @@ function criarRepositorioPlanilha() {
         tipo: 'google-sheets',
         async criar(pedido) {
             const sheet = await aba();
-            await sheet.addRow(paraLinha(pedido), { raw: true, insert: true });
+            /* insert:false = a venda ocupa a próxima linha vazia. Com insert:true
+               o Google INSERE uma linha copiando o formato da de cima — e a
+               primeira venda herdava o cabeçalho marrom, e as seguintes, dela. */
+            await sheet.addRow(paraLinha(pedido), { raw: true, insert: false });
             cache.linhas = null;
             return pedido;
         },
