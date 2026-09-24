@@ -492,6 +492,12 @@ button.btn-cta {
     text-align: center;
 }
 
+.pix-recebedor {
+    width: 100%;
+    margin: 0;
+    text-align: left;
+}
+
 .pix-qr {
     width: min(260px, 70vw);
     aspect-ratio: 1;
