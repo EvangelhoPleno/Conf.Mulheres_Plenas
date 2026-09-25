@@ -14,7 +14,7 @@ do site). `npm test`: 51 verdes (eram 42 antes desta rodada).
 | Achado | Correção |
 |---|---|
 | `GET /api/pedidos/<ID inventado>` forçava uma releitura da planilha por chamada: ~1 req/s esgotava as leituras | releitura forçada com teto de 1 a cada 5 s por instância **só para o navegador** (`busca.publica`); passando dele, **503 + Retry-After**, não 404 (a página não desiste). Webhook e gravações relêem sem teto. + limite de 30 respostas 404 por IP em 10 min |
-| Checkout sem anti-robô: cada POST cria um Pix real e gasta 1 escrita | **Cloudflare Turnstile**, pronto mas **DESLIGADO** até ter as chaves (ver abaixo). Cloudflare fora do ar deixa passar |
+| Checkout sem anti-robô: cada POST cria um Pix real e gasta 1 escrita | **Cloudflare Turnstile**, **LIGADO desde 25/09** (ver abaixo). Cloudflare fora do ar deixa passar |
 | `api/index.js` devolvia mensagem e stack quando a API não subia | só a mensagem genérica; o motivo fica no log |
 | webhook lia primeiro o ID do corpo (não assinado) | usa o `data.id` da URL, que a assinatura cobre |
 | `approved` virava PAGO sem olhar o valor | só vira PAGO se `currency_id` = BRL e `transaction_amount` ≥ valor do pedido; senão fica PENDENTE e o log pede conferência manual |
@@ -28,10 +28,32 @@ Janela de validade do `ts` do webhook **não** foi posta de propósito: não se
 sabe se as novas tentativas do Mercado Pago reaproveitam a assinatura, e
 reenviar um aviso capturado não faz nada (o status é sempre reconsultado).
 
-**Turnstile desligado por decisão (25/09):** para um evento de igreja o
-ataque é improvável e o estrago seria só pedido PENDENTE falso e venda
-travada por minutos (nunca ingresso sem pagar). Sinal para ligar: muitas
-linhas PENDENTES estranhas na aba Pedidos, ou 429 do Google no log.
+**Turnstile LIGADO (25/09, à tarde):** widget "Checkout Mulheres Plenas"
+na conta Cloudflare, modo Gerenciado, hostnames
+`evangelhoplenoparagominas.com.br` e `conf-mulheres-plenas.vercel.app`.
+Site Key no `config.js`; `TURNSTILE_SECRET_KEY` na Vercel (só Production).
+Conferido no ar: `/api/saude` com `antiRobo: true`; checkout sem token ou
+com token inventado → 403 antes de criar Pix; compra de teste no celular
+chegou ao QR do Pix (não paga). **Para desligar na hora:** apagar
+`TURNSTILE_SECRET_KEY` na Vercel e fazer Redeploy.
+
+**DNS na Cloudflare (25/09):** ao configurar o Turnstile, os servidores de
+nomes do domínio foram trocados no Registro.br para `cloe`/`ganz.ns.cloudflare.com`
+(o Registro.br não deixa desfazer durante a transição). Os 6 registros foram
+copiados e conferidos um a um contra o Registro.br, todos **Somente DNS**
+(nuvem cinza):
+
+| Nome | Tipo | Valor |
+|---|---|---|
+| `@` | A | `64.29.17.1` e `216.198.79.1` (Vercel) |
+| `www` | CNAME | `dc089d8ac3330511.vercel-dns-017.com` |
+| `send` | CNAME | `send.forge.rmta.net` (Resend) |
+| `resend._domainkey` | TXT | chave DKIM do Resend |
+| `_dmarc` | TXT | `v=DMARC1; p=none; rua=mailto:...` |
+
+**Nunca ligar o proxy (nuvem laranja):** atrapalha o certificado da Vercel,
+faz a API ver o IP da Cloudflare (todas as compradoras contariam como uma
+nos limites por IP) e, no `send`, quebra o e-mail dos ingressos.
 
 **Para ligar o Turnstile** (painel da Cloudflare > Turnstile > Add widget,
 domínio `evangelhoplenoparagominas.com.br`, modo Managed):
