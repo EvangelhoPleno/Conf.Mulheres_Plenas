@@ -28,6 +28,26 @@ Janela de validade do `ts` do webhook **não** foi posta de propósito: não se
 sabe se as novas tentativas do Mercado Pago reaproveitam a assinatura, e
 reenviar um aviso capturado não faz nada (o status é sempre reconsultado).
 
+**Reauditoria (25/09, fim da tarde) — nota geral ≈ 8,5/10:**
+- **Line-up com fotos:** recortes (fundo transparente) da Pra. Débora e do
+  Salmista Diorgenis em `assets/imagens/lineup/N-480.webp`, `N-800.webp` e
+  `N-480.png` (reserva para navegador sem WebP), todos 4:5 com a cabeça a 7%
+  do topo; a da Débora cortada no quadril para os rostos terem escala
+  parecida. Fundo do card: degradê da marca + símbolo das pétalas apagado.
+  Os PNGs originais (`debora.png`, `diogenes.png` na raiz) não vão para o Git.
+  As **bios** (`<template id="bio-1/2">`) ainda são texto provisório.
+- **Capa do vídeo** copiada do YouTube para `assets/imagens/recap-{640,960,1280}.jpg`
+  com `srcset` (era 220 KB em qualquer tela; agora 25–96 KB).
+- **SRI** nos três scripts do jsDelivr (GSAP, ScrollTrigger, Lenis). Trocou a
+  versão? Gere o hash de novo (comando no comentário do `index.html`).
+- **CSP e Permissions-Policy** no `vercel.json`. Testado nas 4 páginas com
+  vídeo, Turnstile e fontes: zero violações. **Toda origem externa nova**
+  (outro script, fonte, iframe, imagem de fora) **precisa entrar no CSP**, ou
+  o navegador bloqueia em silêncio.
+- **Pendente:** um dos IPs da Vercel (`64.29.17.1`) não responde a partir da
+  operadora do Jadison (responde de 40 pontos do mundo): quem estiver nessa
+  rota espera ~21 s. Opção: deixar só o A `216.198.79.1`. Aguarda teste no 4G.
+
 **Turnstile LIGADO (25/09, à tarde):** widget "Checkout Mulheres Plenas"
 na conta Cloudflare, modo Gerenciado, hostnames
 `evangelhoplenoparagominas.com.br` e `conf-mulheres-plenas.vercel.app`.

@@ -29,9 +29,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@500;700&family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500..900,100,1;1,9..144,500..900,100,1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js" defer></script>
+    <!-- integrity: se a CDN servir um arquivo diferente deste, o navegador não roda.
+         Ao trocar a versão, gere o hash de novo:
+         curl -s URL | openssl dgst -sha384 -binary | openssl base64 -A -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js" integrity="sha384-O55L/6rhHr9CFvrxqv5luxOCcmVaBmETbZbJDP+Do8T0pztTACsFBD/IXCNkj7DV" crossorigin="anonymous" defer></script>
     <!-- sem defer e antes do script.js: o configurarVagas() lê window.MP_CONFIG -->
     <script src="config.js"></script>
     <script src="script.js" defer></script>
@@ -250,9 +253,10 @@
 
             <button class="recap-thumb" id="recapBtn" type="button" aria-label="Assistir ao vídeo da conferência">
                 <span class="recap-foto midia" data-rotulo="thumb do vídeo">
-                    <!-- EDITAR: capa do vídeo. Hoje e a capa do proprio YouTube; para
-                         usar uma arte propria, troque por assets/imagens/recap-thumb.jpg -->
-                    <img src="https://i.ytimg.com/vi/otVnNDNmVEk/maxresdefault.jpg" alt="" loading="lazy">
+                    <!-- EDITAR: capa do vídeo. É a capa do YouTube, copiada para
+                         assets/imagens/recap-{640,960,1280}.jpg (a do YouTube pesava 220 KB
+                         em qualquer tela). Trocou o vídeo? Gere as três de novo. -->
+                    <img src="assets/imagens/recap-960.jpg" srcset="assets/imagens/recap-640.jpg 640w, assets/imagens/recap-960.jpg 960w, assets/imagens/recap-1280.jpg 1280w" sizes="(min-width: 1024px) 960px, 92vw" alt="" width="1280" height="720" loading="lazy">
                     <span class="recap-play" aria-hidden="true"></span>
                 </span>
                 <span class="recap-legenda script">Mulheres Plenas 2026</span>
@@ -357,11 +361,11 @@
             </h2>
 
             <div class="lineup-carrossel">
-                <!-- EDITAR: fotos em assets/imagens/lineup/. A bio de cada pessoa fica no <template> logo abaixo do cartão. -->
+                <!-- EDITAR: fotos em assets/imagens/lineup/ (N-480.webp, N-800.webp e N-480.png, recorte com fundo transparente em 4:5). A bio de cada pessoa fica no <template> logo abaixo do cartão. -->
                 <ul class="lineup-trilho">
                     <li class="lineup-item">
                         <button class="lineup-card" type="button" data-bio="bio-1">
-                            <span class="lineup-foto midia" data-rotulo="foto"><img src="assets/imagens/lineup/1.jpg" alt="" loading="lazy"></span>
+                            <span class="lineup-foto midia" data-rotulo="foto"><picture><source type="image/webp" srcset="assets/imagens/lineup/1-480.webp 480w, assets/imagens/lineup/1-800.webp 800w" sizes="(min-width: 1024px) 300px, 45vw"><img src="assets/imagens/lineup/1-480.png" alt="" width="480" height="600" loading="lazy"></picture></span>
                             <span class="lineup-nome">Pra. Débora Cordeiro</span>
                             <span class="lineup-tag">pastora</span>
                         </button>
@@ -369,7 +373,7 @@
                     </li>
                     <li class="lineup-item">
                         <button class="lineup-card" type="button" data-bio="bio-2">
-                            <span class="lineup-foto midia" data-rotulo="foto"><img src="assets/imagens/lineup/2.jpg" alt="" loading="lazy"></span>
+                            <span class="lineup-foto midia" data-rotulo="foto"><picture><source type="image/webp" srcset="assets/imagens/lineup/2-480.webp 480w, assets/imagens/lineup/2-800.webp 800w" sizes="(min-width: 1024px) 300px, 45vw"><img src="assets/imagens/lineup/2-480.png" alt="" width="480" height="600" loading="lazy"></picture></span>
                             <span class="lineup-nome">Salmista Diorgenis Martinez</span>
                             <span class="lineup-tag">louvor</span>
                         </button>

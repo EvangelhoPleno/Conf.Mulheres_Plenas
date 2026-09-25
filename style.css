@@ -1803,21 +1803,69 @@ html.entrada-ativa .entrada.is-dissolvendo {
     transform: translateY(-6px);
 }
 
+/* As fotos são recortes com fundo transparente, todas no mesmo enquadramento
+   (4:5, cabeça a 7% do topo). O fundo é da marca: luz rosada atrás da
+   cabeça, o símbolo das pétalas bem apagado e o tom alternando de card
+   para card, como o giro. */
 .lineup-foto {
+    --fundo-luz: var(--rosado);
+    --fundo-borda: var(--terracota);
     width: 100%;
     aspect-ratio: 4 / 5;
+    background:
+        radial-gradient(120% 90% at 50% 30%, var(--fundo-luz) 0%, var(--nude) 55%, var(--fundo-borda) 100%);
+}
+
+.lineup-item:nth-child(even) .lineup-foto {
+    --fundo-luz: var(--papel);
+    --fundo-borda: var(--tijolo);
+}
+
+.lineup-foto::before {
+    content: '';
+    position: absolute;
+    inset: 8% 6% auto;
+    aspect-ratio: 1;
+    background: url('assets/imagens/marca/simbolo.png') center / contain no-repeat;
+    opacity: 0.16;
+    rotate: -8deg;
+    transition: opacity 0.4s, rotate 0.6s var(--ease-saida);
+}
+
+.lineup-item:nth-child(even) .lineup-foto::before {
+    rotate: 8deg;
+}
+
+.lineup-foto picture {
+    position: absolute;
+    inset: 0;
+}
+
+.lineup-foto.is-missing picture {
+    display: none;
 }
 
 .lineup-foto img {
-    object-position: top center;
-    filter: sepia(0.18) saturate(0.92);
+    position: relative;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: bottom center;
+    transform-origin: bottom center;
+    filter: sepia(0.12) saturate(0.95) drop-shadow(0 10px 14px rgba(62, 26, 16, 0.28));
     transition: transform 0.6s var(--ease-saida), filter 0.4s;
 }
 
 .lineup-card:hover .lineup-foto img,
 .lineup-card:focus-visible .lineup-foto img {
     transform: scale(1.05);
-    filter: none;
+    filter: drop-shadow(0 14px 18px rgba(62, 26, 16, 0.32));
+}
+
+.lineup-card:hover .lineup-foto::before,
+.lineup-card:focus-visible .lineup-foto::before {
+    opacity: 0.26;
+    rotate: 0deg;
 }
 
 .lineup-nome {
