@@ -79,6 +79,14 @@ copiados e conferidos um a um contra o Registro.br, todos **Somente DNS**
 | `send` | CNAME | `send.forge.rmta.net` (Resend) |
 | `resend._domainkey` | TXT | chave DKIM do Resend |
 | `_dmarc` | TXT | `v=DMARC1; p=none; rua=mailto:...` |
+| `rsend` | CNAME | `rsend-sae1.forge.rmta.net` (Resend) |
+
+**Conferência de 25/09 (tarde):** os 7 registros respondem certo nos dois
+servidores da Cloudflare e no 1.1.1.1/8.8.8.8, com os IPs reais (proxy
+desligado; o site responde `Server: Vercel`). O `rsend` tinha ficado de fora
+da cópia e foi recriado no mesmo dia, Somente DNS; Resend segue **Verified**.
+O selo laranja "Registros DNS proxy" no painel é só a Cloudflare sugerindo
+ligar o proxy; não é erro.
 
 **Nunca ligar o proxy (nuvem laranja):** atrapalha o certificado da Vercel,
 faz a API ver o IP da Cloudflare (todas as compradoras contariam como uma
