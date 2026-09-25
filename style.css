@@ -1756,7 +1756,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: clamp(32px, 5vw, 64px);
+    margin-bottom: clamp(4px, 1vw, 12px);
     filter: drop-shadow(3px 5px 0 rgba(62, 26, 16, 0.2));
 }
 
@@ -1793,8 +1793,8 @@ html.entrada-ativa .entrada.is-dissolvendo {
     gap: clamp(14px, 2.4vw, 40px);
     max-width: 1300px;
     margin-inline: auto;
-    /* folga no topo para a cabeça (e a mão da Débora) que saem do card */
-    padding: clamp(84px, 25vw, 170px) var(--lateral) 20px;
+    /* folga no topo só para a cabeça que sai do card */
+    padding: clamp(40px, 12vw, 84px) var(--lateral) 20px;
 }
 
 .lineup-card {
@@ -3373,7 +3373,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     }
 
     .lineup-trilho {
-        padding: clamp(84px, 25vw, 170px) 0 16px;
+        padding: clamp(40px, 12vw, 84px) 0 16px;
     }
 
     .ticket-topo {
