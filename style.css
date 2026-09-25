@@ -3039,26 +3039,6 @@ html.entrada-ativa .entrada.is-dissolvendo {
     color: var(--rosado);
 }
 
-.rodape-social {
-    display: flex;
-    gap: 22px;
-}
-
-.rodape-social a {
-    color: var(--nude);
-    transition: color 0.2s, transform 0.2s;
-}
-
-.rodape-social a:hover {
-    color: var(--rosado);
-    transform: translateY(-2px);
-}
-
-.rodape-social svg {
-    width: 28px;
-    height: 28px;
-}
-
 .rodape-realizacao {
     position: relative;
     display: flex;
@@ -3257,7 +3237,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     }
 
     .rodape-grid {
-        grid-template-columns: 1.4fr 1fr auto;
+        grid-template-columns: 1.4fr 1fr;
         align-items: center;
         justify-items: start;
         text-align: left;
