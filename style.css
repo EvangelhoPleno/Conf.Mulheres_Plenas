@@ -1724,16 +1724,19 @@ html.entrada-ativa .entrada.is-dissolvendo {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 88px 0 72px;
+    /* topo curto: a mancha do alto é do mesmo branco da seção de cima e as
+       duas se emendam, então um respiro grande aqui virava um vão vazio */
+    padding: clamp(28px, 4vw, 44px) 0 72px;
     overflow: hidden;
-    /* grade de palco com um ponto em cada cruzamento, por cima de manchas
-       rosadas em blocos (como pixel de tela "corroído"), soltas pelo alto e
-       pelas laterais; o centro, onde ficam os cards, fica mais livre */
+    /* manchas brancas em blocos (como pixel de tela "corroído"), soltas pelo
+       alto e pelas laterais, POR CIMA da grade: o branco fica igual ao
+       --papel da seção anterior e a grade de pontos só aparece no terracota.
+       O centro, onde ficam os cards, fica mais livre. */
     background:
+        url('assets/imagens/lineup/fundo-manchas.svg') center top / cover no-repeat,
         radial-gradient(circle, rgba(62, 26, 16, 0.22) 1.5px, transparent 2px) -1px -1px / 64px 64px,
         linear-gradient(rgba(62, 26, 16, 0.07) 1px, transparent 1px) 0 0 / 64px 64px,
         linear-gradient(90deg, rgba(62, 26, 16, 0.07) 1px, transparent 1px) 0 0 / 64px 64px,
-        url('assets/imagens/lineup/fundo-manchas.svg') center top / cover no-repeat,
         var(--terracota);
 }
 
