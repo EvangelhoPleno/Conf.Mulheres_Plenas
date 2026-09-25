@@ -1862,7 +1862,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     /* um card por vez, grande: os dois ficam um embaixo do outro e cada um
        ocupa a largura da tela (sem passar da altura dela) */
     .lineup-trilho {
-        --card-max: min(460px, calc((100svh - 110px) * 2 / 3));
+        --card-max: min(420px, 84vw, calc((100svh - 130px) * 2 / 3));
         grid-template-columns: minmax(0, var(--card-max));
         row-gap: 48px;
     }
@@ -1891,6 +1891,22 @@ html.entrada-ativa .entrada.is-dissolvendo {
         position: sticky;
         /* a cabeça sai uns 14% da largura acima do card: a folga é para ela */
         top: calc(14px + var(--card-max) * 0.16);
+    }
+
+    /* o script mexe no transform do card a cada quadro da rolagem: sem a
+       transição do hover (que atrasava cada passo e fazia o card tremer) e
+       numa camada própria, o celular só recompõe, sem repintar a foto */
+    .lineup-trilho .lineup-card,
+    .lineup-trilho .lineup-card:hover,
+    .lineup-trilho .lineup-card:focus-visible {
+        transition: none;
+        transform: none;
+        will-change: transform, opacity;
+    }
+
+    .lineup-trilho .lineup-card:hover .lineup-foto img,
+    .lineup-trilho .lineup-card:focus-visible .lineup-foto img {
+        transform: none;
     }
 }
 

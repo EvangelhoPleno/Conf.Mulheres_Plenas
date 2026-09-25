@@ -1061,9 +1061,12 @@
             '(max-width: 767.98px)': function () {
                 var itens = gsap.utils.toArray('.lineup-item');
                 if (itens.length < 2) return;
+                // recua pouco e a partir do topo, para não descer enquanto some
                 gsap.fromTo(itens[0].querySelector('.lineup-card'), { scale: 1, opacity: 1 }, {
-                    scale: 0.9,
+                    scale: 0.94,
                     opacity: 0,
+                    transformOrigin: '50% 0%',
+                    force3D: true,
                     ease: 'none',
                     immediateRender: false,
                     scrollTrigger: { trigger: itens[1], start: 'top 75%', end: 'top 25%', scrub: true }
