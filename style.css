@@ -1858,6 +1858,40 @@ html.entrada-ativa .entrada.is-dissolvendo {
     .lineup-item:nth-child(2)::after {
         display: none;
     }
+
+    /* um card por vez, grande: os dois ficam um embaixo do outro e cada um
+       ocupa a largura da tela (sem passar da altura dela) */
+    .lineup-trilho {
+        --card-max: min(460px, calc((100svh - 110px) * 2 / 3));
+        grid-template-columns: minmax(0, var(--card-max));
+        row-gap: 48px;
+    }
+}
+
+/* ...e, com movimento liberado, o da Débora para no alto da tela e o do
+   Diorgenis sobe por cima dele (o script apaga o de baixo enquanto isso).
+   O line-up usa overflow: clip, e não hidden, senão o sticky não prende. */
+@media (max-width: 767.98px) and (prefers-reduced-motion: no-preference) {
+    .lineup {
+        overflow: clip;
+    }
+
+    .lineup-trilho {
+        row-gap: 22svh;
+    }
+
+    /* folga depois do último card: sem ela o do Diorgenis não chega a
+       parar, porque o sticky solta quando o trilho acaba */
+    .lineup-trilho::after {
+        content: '';
+        height: 12svh;
+    }
+
+    .lineup-item {
+        position: sticky;
+        /* a cabeça sai uns 14% da largura acima do card: a folga é para ela */
+        top: calc(14px + var(--card-max) * 0.16);
+    }
 }
 
 .lineup-card:hover,

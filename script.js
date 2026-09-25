@@ -1054,6 +1054,23 @@
             scrollTrigger: { trigger: '.lineup-trilho', start: 'top 85%' }
         });
 
+        // no celular os cards se empilham (sticky no CSS): o da Débora recua
+        // e some enquanto o do Diorgenis sobe por cima, senão a cabeça dela
+        // continuaria aparecendo acima do card novo
+        ScrollTrigger.matchMedia({
+            '(max-width: 767.98px)': function () {
+                var itens = gsap.utils.toArray('.lineup-item');
+                if (itens.length < 2) return;
+                gsap.fromTo(itens[0].querySelector('.lineup-card'), { scale: 1, opacity: 1 }, {
+                    scale: 0.9,
+                    opacity: 0,
+                    ease: 'none',
+                    immediateRender: false,
+                    scrollTrigger: { trigger: itens[1], start: 'top 75%', end: 'top 25%', scrub: true }
+                });
+            }
+        });
+
         gsap.utils.toArray('.setor-cards').forEach(function (lista) {
             gsap.from(lista.children, {
                 y: 40,
