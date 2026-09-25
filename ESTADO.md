@@ -84,6 +84,19 @@ lotes, Pix x cartão, dias e pedidos; só fórmulas, 1ª aba) e `Pedidos`. O
 `Resumo` foi absorvido e apagado. Fuso da planilha corrigido de Los Angeles
 para `America/Belem`. Tudo pelo `planilha:preparar`; ver `backend/PLANILHA.md`.
 
+**Resultado líquido no painel (25/09):** o Acompanhamento ganhou o bloco
+"Resultado líquido · taxas do Mercado Pago" (linhas 19–23: bruto, taxa %,
+taxa R$ e líquido por Pix e cartão) e o cartão "Arrecadado (bruto)" mostra o
+líquido; a tabela de pedidos desceu para a linha 27. Taxas em `TAXA_PIX` /
+`TAXA_CARTAO` no `preparar-planilha.js`. A aba Pedidos está **oculta**: o
+script agora cria o Acompanhamento novo antes de apagar o antigo (o Google
+não deixa apagar a única aba visível).
+Também em 25/09: gráfico de colunas "Ingressos vendidos por dia" (com a data
+embaixo e o número em cima) nas linhas 13–14, e o cartão do mini-gráfico virou
+"Ingressos hoje". Blocos descem para 16/22/28 (pedidos a partir da 30). O
+Google descarta cor e rótulos do gráfico no addChart: o script reaplica
+com updateChartSpec. Validado com 350 pedidos de teste, já apagados.
+
 **Dois defeitos achados em 24/09 à tarde (corrigidos):**
 - **Valor zerado ao atualizar pedido:** o `getRows()` devolve o valor
   formatado ("R$ 55,00") e o `comoNumero` antigo dava 0 — todo pedido pago ou

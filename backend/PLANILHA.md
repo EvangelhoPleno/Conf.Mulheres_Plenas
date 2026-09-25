@@ -90,15 +90,25 @@ aba** — não escreva nada nela.
 - **Faixa do topo:** logo (na primeira vez o Google pede um clique em
   "Permitir acesso" para carregar a imagem do site), evento e hora da última
   atualização.
-- **Cartões:** arrecadado (e ticket médio), ingressos vendidos (e % das 350
+- **Cartões:** arrecadado bruto (com o líquido e a taxa do Mercado Pago embaixo), ingressos vendidos (e % das 350
   vagas), pessoas únicas por CPF, aguardando pagamento, conversão (pagos ÷
-  todos os pedidos) e um mini-gráfico de ingressos por dia.
+  todos os pedidos) e ingressos vendidos hoje (com o de ontem embaixo).
 - **Números menores:** pedidos pagos, pedidos no total, não concluídos
   (recusados, expirados, cancelados), reembolsados, **e-mails com erro** (fica
   vermelho se passar de zero: reenviar pelo admin) e o melhor dia.
 - **Vendas por lote:** ingressos e valor de cada lote do catálogo, com total.
   Mudou os lotes em `src/catalogo.js`? Rode o comando de novo.
-- **Forma de pagamento:** Pix x cartão (pagos), com barra de participação.
+- **Gráfico "Ingressos vendidos por dia":** uma coluna por dia com venda paga, a data embaixo e o número em cima. A fonte são as colunas O:P, ocultas.
+- **Forma de pagamento:** Pix x cartão (pagos), com barra de participação (Pix em tijolo, cartão em nude).
+- **Resultado líquido · taxas do Mercado Pago:** para Pix e cartão, a taxa
+  (%), o bruto, a taxa em R$ e o líquido, com total e a taxa média. A taxa é
+  calculada pedido a pedido e arredondada no centavo, como o Mercado Pago
+  faz (R$ 55 no Pix = R$ 0,54). As porcentagens ficam em `TAXA_PIX` e
+  `TAXA_CARTAO`, no topo de `scripts/preparar-planilha.js` (hoje 0,99% e
+  4,98%, recebimento na hora, cartão à vista). Mudou a tarifa, o prazo ou
+  liberou parcelamento? Troque lá e rode o comando de novo. É uma
+  **estimativa pela tabela**: o valor exato de cada venda está no painel do
+  Mercado Pago. Reembolsados não entram (a devolução total devolve a taxa).
 - **Vendas por dia:** pedidos, ingressos e valor de cada dia com venda paga.
 - **Pedidos, mais recentes primeiro:** data e hora, nome, e-mail, status
   colorido, Pix/cartão, quantidade, valor, código do ingresso e **"Pedido da

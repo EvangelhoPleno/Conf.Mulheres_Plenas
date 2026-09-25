@@ -43,12 +43,21 @@ const VERMELHO_TEXTO = cor('#A12A1A');
 
 const REAIS = { type: 'CURRENCY', pattern: '"R$" #,##0.00' };
 const PORCENTO = { type: 'PERCENT', pattern: '0%' };
+const PORCENTO_FINO = { type: 'PERCENT', pattern: '0.00%' };
 
 const FONTE = 'DM Sans';       // a do texto do site
 const FONTE_TITULO = 'Fraunces';  // a dos títulos do site
 const LOGO = 'https://evangelhoplenoparagominas.com.br/assets/imagens/marca/mp-horizontal-claro.png';
 const FUSO = 'America/Belem';  // Paragominas; a planilha nasceu em Los Angeles
 const VAGAS = 350;  // as mesmas "apenas 350 vagas" da landing (index.html)
+
+/* Tarifas do Mercado Pago (Checkout, recebimento "na hora"), conferidas no
+   painel em 25/09/2026 — Seu negócio > Taxas e parcelas > Checkout.
+   Cartão só à vista (MERCADOPAGO_PARCELAS_MAX = 1): 2,49% de processamento +
+   2,49% de recebimento. Mudou a tarifa ou o prazo? Troque aqui e rode o
+   comando de novo. Reembolso total devolve a tarifa: só pedido PAGO conta. */
+const TAXA_PIX = 0.0099;
+const TAXA_CARTAO = 0.0498;
 
 function letra(indice) {
     return String.fromCharCode(65 + indice);
@@ -86,6 +95,11 @@ function opcoesDoGrafico(doc, pares) {
     return '{' + pares.map(function (par) {
         return par.map(function (v) { return typeof v === 'number' ? v : '"' + v + '"'; }).join(coluna);
     }).join(';') + '}';
+}
+
+// 0.0498 -> "4,98%"
+function formatarPorcento(taxa) {
+    return (taxa * 100).toFixed(2).replace('.', ',') + '%';
 }
 
 function paraHex(c) {
@@ -277,12 +291,18 @@ async function prepararPedidos(doc) {
      1–4    faixa tijolo: logo, título, data do evento, "atualizado em"
      6–8    cartões principais (rótulo, número, detalhe)
      10–11  números secundários
-     13–17  por lote · por forma de pagamento · por dia (este desce)
-     19–20  título e cabeçalho da tabela de pedidos
-     21+    pedidos, mais recentes primeiro
+     13–14  gráfico de ingressos por dia (flutua sobre a linha 14)
+     16–20  por lote · por forma de pagamento · por dia (este desce, em K:N)
+     22–26  resultado líquido: bruto, taxa do Mercado Pago e líquido
+     28–29  título e cabeçalho da tabela de pedidos
+     30+    pedidos, mais recentes primeiro
+     O:P    ocultas: dias em ordem crescente, a fonte do gráfico
    ============================================================= */
-const TABELA = 21;
-const DADOS = 15;  // primeira linha dos blocos por lote / pagamento / dia
+const GRAFICO = 14;  // linha onde o gráfico de ingressos por dia fica
+const DADOS = 18;  // primeira linha dos blocos por lote / pagamento / dia
+const LIQUIDO = 24;  // primeira linha (Pix) do bloco de resultado líquido
+const TABELA = 30;
+const ALTURA_GRAFICO = 240;
 
 // grupos de colunas (índice 0 = A) de cada cartão; J fica de respiro
 const CARTOES = [[0, 1], [2, 2], [3, 4], [5, 7], [8, 8], [10, 13]];
@@ -348,18 +368,18 @@ async function prepararAcompanhamento(doc) {
         ['Melhor dia', '=IFERROR(TEXT(INDEX(SORT(FILTER(K' + D + ':K,K' + D + ':K<>""),FILTER(M' + D + ':M,K' + D + ':K<>""),FALSE),1),"dd/mm")&"  ·  "&MAX(M' + D + ':M)&" ingressos","—")']
     ];
     const hoje = 'SUMIFS(' + c('Quantidade') + ',' + status + ',"PAGO",' + c('Data_Hora') + ',TEXT(TODAY(),"dd/mm/yyyy")&"*")';
-    // dias em ordem crescente, para o gráfico
-    const diasCrescente = 'SORT(FILTER(M' + D + ':M,K' + D + ':K<>""),FILTER(K' + D + ':K,K' + D + ':K<>""),TRUE)';
+    const ontem = 'SUMIFS(' + c('Quantidade') + ',' + status + ',"PAGO",' + c('Data_Hora') + ',TEXT(TODAY()-1,"dd/mm/yyyy")&"*")';
     const principais = [
-        ['Arrecadado', '=SUMIF(' + status + ',"PAGO",' + c('Valor_Total') + ')', '="ticket médio  "&TEXT(IFERROR(A7/A11,0),"R$ #,##0.00")', REAIS],
+        ['Arrecadado (bruto)', '=SUMIF(' + status + ',"PAGO",' + c('Valor_Total') + ')',
+            '="líquido  "&TEXT(E' + (LIQUIDO + 2) + ',"R$ #,##0.00")&"  ·  taxa  "&TEXT(D' + (LIQUIDO + 2) + ',"R$ #,##0.00")', REAIS],
         ['Ingressos vendidos', '=SUMIF(' + status + ',"PAGO",' + c('Quantidade') + ')', '="de ' + VAGAS + ' vagas  ·  "&TEXT(C7/' + VAGAS + ',"0%")'],
         // sem nenhum pago o FILTER dá erro, e o COUNTUNIQUE contaria o erro como 1
         ['Pessoas', '=IF(A11=0,0,COUNTUNIQUE(FILTER(' + c('CPF') + ',' + pago + ')))', 'que já pagaram (por CPF)'],
         ['Aguardando pagamento', '=COUNTIF(' + status + ',"PENDENTE")', 'Pix ou cartão em aberto'],
         ['Conversão', '=IFERROR(A11/C11,0)', 'dos pedidos', PORCENTO],
-        ['Ingressos por dia', '=IFERROR(SPARKLINE(' + diasCrescente + ',' +
-            opcoesDoGrafico(doc, [['charttype', 'column'], ['color', paraHex(TERRACOTA)], ['highcolor', paraHex(TIJOLO)], ['ymin', 0]]) +
-            '),"sem vendas ainda")', '="hoje: "&' + hoje + '&IF(' + hoje + '=1," ingresso"," ingressos")']
+        /* era um mini-gráfico (SPARKLINE), que não mostra o dia de cada coluna:
+           o gráfico com os dias fica logo abaixo dos cartões */
+        ['Ingressos hoje', '=' + hoje, '="ontem: "&' + ontem + '&IF(' + ontem + '=1," ingresso"," ingressos")']
     ];
 
     CARTOES.forEach(function (grupo, i) {
@@ -410,9 +430,9 @@ async function prepararAcompanhamento(doc) {
     /* por lote (o que era a aba Resumo) — só em A:C. A coluna D fica vazia de
        propósito: colada na forma de pagamento, as duas faixas de cabeçalho
        viravam uma tabela só. */
-    juntar(13, 0, 13, 2);
-    por('A13', 'Vendas por lote', tituloDeBloco);
-    por('A14', 'Lote', cabecalho); por('B14', 'Ingressos', cabecalho); por('C14', 'Valor', cabecalho);
+    juntar(D - 2, 0, D - 2, 2);
+    por('A' + (D - 2), 'Vendas por lote', tituloDeBloco);
+    por('A' + (D - 1), 'Lote', cabecalho); por('B' + (D - 1), 'Ingressos', cabecalho); por('C' + (D - 1), 'Valor', cabecalho);
     const produtos = listarProdutos();
     produtos.forEach(function (produto, k) {
         const r = D + k;
@@ -428,9 +448,9 @@ async function prepararAcompanhamento(doc) {
     por('C' + total, '=SUM(C' + D + ':C' + (total - 1) + ')', Object.assign({ numberFormat: REAIS }, linhaTotal));
 
     // por forma de pagamento
-    juntar(13, 4, 13, 8);
-    por('E13', 'Forma de pagamento', tituloDeBloco);
-    ['Forma', 'Pedidos', 'Valor', 'Participação', '%'].forEach(function (t, i) { por(letra(4 + i) + '14', t, cabecalho); });
+    juntar(D - 2, 4, D - 2, 8);
+    por('E' + (D - 2), 'Forma de pagamento', tituloDeBloco);
+    ['Forma', 'Pedidos', 'Valor', 'Participação', '%'].forEach(function (t, i) { por(letra(4 + i) + (D - 1), t, cabecalho); });
     [['Pix', 'pix'], ['Cartão', 'cartao']].forEach(function (m, k) {
         const r = D + k;
         const metodo = status + ',"PAGO",' + c('Metodo') + ',"' + m[1] + '"';
@@ -438,15 +458,24 @@ async function prepararAcompanhamento(doc) {
         por('F' + r, '=COUNTIFS(' + metodo + ')', celulaDeDado({ horizontalAlignment: 'CENTER' }));
         por('G' + r, '=SUMIFS(' + c('Valor_Total') + ',' + metodo + ')', celulaDeDado({ numberFormat: REAIS }));
         por('H' + r, '=SPARKLINE(I' + r + ',' +
-            opcoesDoGrafico(doc, [['charttype', 'bar'], ['max', 1], ['color1', paraHex(k === 0 ? TERRACOTA : TIJOLO)]]) + ')', celulaDeDado({}));
+            opcoesDoGrafico(doc, [['charttype', 'bar'], ['max', 1], ['color1', paraHex(k === 0 ? TIJOLO : NUDE)]]) + ')', celulaDeDado({}));
         por('I' + r, '=IFERROR(G' + r + '/SUM(G$' + D + ':G$' + (D + 1) + '),0)',
             celulaDeDado({ horizontalAlignment: 'CENTER', numberFormat: PORCENTO, textFormat: texto({ bold: true, foregroundColor: TIJOLO }) }));
     });
 
     // por dia (desce ao lado da tabela de pedidos)
-    juntar(13, 10, 13, 13);
-    por('K13', 'Vendas por dia', tituloDeBloco);
-    ['Dia', 'Pedidos', 'Ingressos', 'Valor'].forEach(function (t, i) { por(letra(10 + i) + '14', t, cabecalho); });
+    juntar(D - 2, 10, D - 2, 13);
+    por('K' + (D - 2), 'Vendas por dia', tituloDeBloco);
+    ['Dia', 'Pedidos', 'Ingressos', 'Valor'].forEach(function (t, i) { por(letra(10 + i) + (D - 1), t, cabecalho); });
+
+    /* ---------- gráfico de ingressos por dia ----------
+       Fonte nas colunas O:P, ocultas: o dia como texto "dd/mm" (vira o rótulo
+       embaixo da coluna) e os ingressos, do dia mais antigo para o mais novo. */
+    juntar(GRAFICO - 1, 0, GRAFICO - 1, 13);
+    por('A' + (GRAFICO - 1), 'Ingressos vendidos por dia', tituloDeBloco);
+    const temDia = 'K' + D + ':K<>""';
+    por('O' + D, '=IFERROR(ARRAYFORMULA(TEXT(SORT(FILTER(K' + D + ':K,' + temDia + ')),"dd/mm")),"")');
+    por('P' + D, '=IFERROR(SORT(FILTER(M' + D + ':M,' + temDia + '),FILTER(K' + D + ':K,' + temDia + '),TRUE),"")');
     por('K' + D, '=IFERROR(LET(d,UNIQUE(FILTER(LEFT(' + c('Data_Hora') + ',10),' + pago + ')),' +
         'SORT(ARRAYFORMULA(DATE(RIGHT(d,4),MID(d,4,2),LEFT(d,2))),1,FALSE)),"")');
     /* MAP e não ARRAYFORMULA: dentro de ARRAYFORMULA o SUMIFS não vai linha a
@@ -456,6 +485,43 @@ async function prepararAcompanhamento(doc) {
     por('L' + D, porDia('COUNTIFS(' + doDia + ')'));
     por('M' + D, porDia('SUMIFS(' + c('Quantidade') + ',' + doDia + ')'));
     por('N' + D, porDia('SUMIFS(' + c('Valor_Total') + ',' + doDia + ')'));
+
+    /* ---------- resultado líquido: o que o Mercado Pago fica ----------
+       A tarifa é calculada pedido a pedido e arredondada no centavo, como o
+       Mercado Pago faz (R$ 55 no Pix = R$ 0,54 de tarifa, não R$ 0,5445).
+       A porcentagem fica numa célula e a conta a referencia: escrever 0.0099
+       dentro da fórmula quebraria na planilha em pt_BR (vírgula decimal). */
+    const L = LIQUIDO;
+    juntar(L - 2, 0, L - 2, 8);
+    por('A' + (L - 2), 'Resultado líquido  ·  taxas do Mercado Pago', tituloDeBloco);
+    ['Forma', 'Taxa do Mercado Pago', 'Bruto (vendido)', 'Taxa (R$)', 'Líquido'].forEach(function (t, i) { por(letra(i) + (L - 1), t, cabecalho); });
+    juntar(L - 1, 5, L - 1, 8);
+    por('F' + (L - 1), 'Como ler', cabecalho);
+    [['Pix', 'pix', TAXA_PIX], ['Cartão (à vista)', 'cartao', TAXA_CARTAO]].forEach(function (m, k) {
+        const r = L + k;
+        const doMetodo = status + '="PAGO",' + c('Metodo') + '="' + m[1] + '"';
+        por('A' + r, m[0], celulaDeDado({ horizontalAlignment: 'CENTER', textFormat: texto({ bold: true }) }));
+        por('B' + r, m[2], celulaDeDado({ horizontalAlignment: 'CENTER', numberFormat: PORCENTO_FINO, textFormat: texto({ bold: true, foregroundColor: TIJOLO }) }));
+        por('C' + r, '=SUMIFS(' + c('Valor_Total') + ',' + status + ',"PAGO",' + c('Metodo') + ',"' + m[1] + '")', celulaDeDado({ horizontalAlignment: 'CENTER', numberFormat: REAIS }));
+        por('D' + r, '=IFERROR(SUM(FILTER(ROUND(' + c('Valor_Total') + '*B' + r + ',2),' + doMetodo + ')),0)',
+            celulaDeDado({ horizontalAlignment: 'CENTER', numberFormat: REAIS, textFormat: texto({ foregroundColor: VERMELHO_TEXTO }) }));
+        por('E' + r, '=C' + r + '-D' + r, celulaDeDado({ horizontalAlignment: 'CENTER', numberFormat: REAIS, textFormat: texto({ bold: true, foregroundColor: VERDE_TEXTO }) }));
+    });
+    const tl = L + 2;
+    por('A' + tl, 'Total', linhaTotal);
+    // no total, a taxa que de fato saiu sobre tudo o que foi vendido (Pix e cartão juntos)
+    por('B' + tl, '=IFERROR(D' + tl + '/C' + tl + ',0)', Object.assign({ numberFormat: PORCENTO_FINO }, linhaTotal));
+    por('C' + tl, '=C' + L + '+C' + (L + 1), Object.assign({ numberFormat: REAIS }, linhaTotal));
+    por('D' + tl, '=D' + L + '+D' + (L + 1), Object.assign({ numberFormat: REAIS }, linhaTotal));
+    por('E' + tl, '=C' + tl + '-D' + tl, Object.assign({ numberFormat: REAIS }, linhaTotal));
+    juntar(L, 5, tl, 8);
+    por('F' + L, 'Bruto é o que as pessoas pagaram. O Mercado Pago desconta a taxa de cada venda ' +
+        '(Pix ' + formatarPorcento(TAXA_PIX) + ', cartão à vista ' + formatarPorcento(TAXA_CARTAO) + ', dinheiro na hora) ' +
+        'e o Líquido é o que cai na conta. Na linha Total, a porcentagem é a taxa média sobre tudo o que foi vendido. ' +
+        'Pedido reembolsado não entra: na devolução total o Mercado Pago devolve a taxa.', {
+        verticalAlignment: 'MIDDLE', wrapStrategy: 'WRAP', backgroundColor: ROSADO_CLARO,
+        textFormat: texto({ fontSize: 9, italic: true, foregroundColor: ROTULO })
+    });
 
     /* ---------- tabela de pedidos ---------- */
     juntar(T - 2, 0, T - 2, 8);
@@ -483,14 +549,19 @@ async function prepararAcompanhamento(doc) {
         'COUNTIFS(C' + T + ':C,e,A' + T + ':A,"<="&quando)&" de "&COUNTIF(C' + T + ':C,e))))');
 
     /* ---------- monta a aba ---------- */
-    let aba = doc.sheetsByTitle.Acompanhamento;
-    if (aba) await aba.delete();
-    aba = await doc.addSheet({
-        title: 'Acompanhamento',
+    /* A nova nasce ANTES de a antiga sair: com a aba Pedidos oculta, o
+       Acompanhamento é a única aba visível e o Google recusa apagá-la. */
+    const antiga = doc.sheetsByTitle.Acompanhamento;
+    let aba = await doc.addSheet({
+        title: antiga ? 'Acompanhamento (novo)' : 'Acompanhamento',
         index: 0,  // é a primeira coisa que se vê ao abrir a planilha
-        gridProperties: { rowCount: 2000, columnCount: 14, hideGridlines: true },
+        gridProperties: { rowCount: 2000, columnCount: 16, hideGridlines: true },
         tabColor: TIJOLO
     });
+    if (antiga) {
+        await antiga.delete();
+        await aba.updateProperties({ title: 'Acompanhamento', index: 0 });
+    }
 
     const antes = [];  // estrutura: vai antes de escrever as células
     antes.push({
@@ -526,7 +597,24 @@ async function prepararAcompanhamento(doc) {
             }
         });
     });
-    const alturas = { 1: 12, 2: 46, 3: 30, 4: 12, 5: 16, 6: 26, 7: 46, 8: 24, 9: 10, 10: 20, 11: 26, 12: 14, 13: 30, 14: 26, 18: 16, 19: 30, 20: 26 };
+    const alturas = { 1: 12, 2: 46, 3: 30, 4: 12, 5: 16, 6: 26, 7: 46, 8: 24, 9: 10, 10: 20, 11: 26, 12: 14 };
+    alturas[GRAFICO - 1] = 30;
+    alturas[GRAFICO] = ALTURA_GRAFICO;
+    alturas[GRAFICO + 1] = 10;
+    [D, LIQUIDO, TABELA].forEach(function (r) {
+        alturas[r - 3] = 16;  // respiro
+        alturas[r - 2] = 30;  // título do bloco
+        alturas[r - 1] = 26;  // cabeçalho
+    });
+    [0, 1, 2].forEach(function (k) { alturas[LIQUIDO + k] = 30; });
+    // as colunas O:P só alimentam o gráfico
+    antes.push({
+        updateDimensionProperties: {
+            range: { sheetId: aba.sheetId, dimension: 'COLUMNS', startIndex: 14, endIndex: 16 },
+            properties: { hiddenByUser: true },
+            fields: 'hiddenByUser'
+        }
+    });
     Object.keys(alturas).forEach(function (r) {
         antes.push({
             updateDimensionProperties: {
@@ -559,7 +647,8 @@ async function prepararAcompanhamento(doc) {
         const valor = celulas[a1];
         const celula = {};
         if (valor !== undefined) {
-            celula.userEnteredValue = String(valor).startsWith('=') ? { formulaValue: f(valor) } : { stringValue: valor };
+            celula.userEnteredValue = typeof valor === 'number' ? { numberValue: valor }
+                : String(valor).startsWith('=') ? { formulaValue: f(valor) } : { stringValue: valor };
         }
         if (formatos[a1]) celula.userEnteredFormat = formatos[a1];
         return {
@@ -634,9 +723,57 @@ async function prepararAcompanhamento(doc) {
         });
     });
 
-    await doc.sheetsApi.post(':batchUpdate', { json: { requests: dados } });
+    // o gráfico: colunas tijolo, o dia embaixo e o número em cima de cada coluna
+    const fonteDoGrafico = function (colunaIdx) {
+        return { sourceRange: { sources: [{ sheetId: aba.sheetId, startRowIndex: D - 1, endRowIndex: aba.rowCount, startColumnIndex: colunaIdx, endColumnIndex: colunaIdx + 1 }] } };
+    };
+    const rotuloDoEixo = { fontFamily: FONTE, fontSize: 9, foregroundColorStyle: { rgbColor: ROTULO } };
+    const specDoGrafico = {
+        hiddenDimensionStrategy: 'SHOW_ALL',  // a fonte está em colunas ocultas
+        fontName: FONTE,
+        backgroundColorStyle: { rgbColor: BRANCO },
+        basicChart: {
+            chartType: 'COLUMN',
+            legendPosition: 'NO_LEGEND',
+            axis: [{ position: 'BOTTOM_AXIS', format: rotuloDoEixo }, { position: 'LEFT_AXIS', format: rotuloDoEixo }],
+            domains: [{ domain: fonteDoGrafico(14) }],
+            series: [{
+                series: fonteDoGrafico(15),
+                targetAxis: 'LEFT_AXIS',
+                colorStyle: { rgbColor: TIJOLO },
+                dataLabel: { type: 'DATA', placement: 'OUTSIDE_END', textFormat: { fontFamily: FONTE, fontSize: 9, bold: true, foregroundColorStyle: { rgbColor: TIJOLO } } }
+            }],
+            headerCount: 0
+        }
+    };
+    dados.push({
+        addChart: {
+            chart: {
+                spec: specDoGrafico,
+                position: {
+                    overlayPosition: {
+                        anchorCell: { sheetId: aba.sheetId, rowIndex: GRAFICO - 1, columnIndex: 0 },
+                        offsetXPixels: 0,
+                        offsetYPixels: 4,
+                        widthPixels: larguras.reduce(function (s, px) { return s + px; }, 0),
+                        heightPixels: ALTURA_GRAFICO - 8
+                    }
+                }
+            }
+        }
+    });
 
-    console.log('✓ Aba "Acompanhamento": painel com logo, indicadores, lotes, Pix x cartão, dias e pedidos');
+    const resposta = await doc.sheetsApi.post(':batchUpdate', { json: { requests: dados } }).json();
+
+    /* No addChart o Google aceita o gráfico mas descarta cor, rótulos e fonte
+       dos eixos (as colunas saíam azuis, sem número). No updateChartSpec,
+       com o gráfico já criado, eles ficam. */
+    const criado = (resposta.replies || []).find(function (r) { return r && r.addChart; });
+    await doc.sheetsApi.post(':batchUpdate', {
+        json: { requests: [{ updateChartSpec: { chartId: criado.addChart.chart.chartId, spec: specDoGrafico } }] }
+    });
+
+    console.log('✓ Aba "Acompanhamento": painel com logo, indicadores, gráfico por dia, lotes, Pix x cartão, resultado líquido, dias e pedidos');
 }
 
 async function main() {
