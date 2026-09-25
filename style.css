@@ -1947,24 +1947,26 @@ html.entrada-ativa .entrada.is-dissolvendo {
     translate: -50% 0;
 }
 
+/* "+ bio" discreto, embaixo à direita, na linha do logo: só texto, com um
+   sublinhado pontilhado; ganha força quando o card é tocado/apontado */
 .lineup-bio {
     position: absolute;
-    top: 12cqi;
-    left: 12cqi;
+    right: 9cqi;
+    bottom: 10cqi;
     z-index: 3;
-    padding: 1.4cqi 3cqi;
-    border-radius: 999px;
-    background: var(--tijolo);
-    color: var(--rosado);
-    font: 700 max(9px, 3.2cqi)/1 var(--fonte-texto);
-    letter-spacing: 0.08em;
+    padding: 0.6cqi 0;
+    border-bottom: 1px dotted currentColor;
+    color: var(--tijolo);
+    font: 700 max(9px, 2.8cqi)/1 var(--fonte-texto);
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    transition: background 0.3s, color 0.3s;
+    opacity: 0.7;
+    transition: opacity 0.3s;
 }
 
 .lineup-card:hover .lineup-bio,
 .lineup-card:focus-visible .lineup-bio {
-    background: var(--texto);
+    opacity: 1;
 }
 
 /* =============================================
