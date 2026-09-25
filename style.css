@@ -1726,11 +1726,14 @@ html.entrada-ativa .entrada.is-dissolvendo {
     align-items: center;
     padding: 88px 0 72px;
     overflow: hidden;
-    /* grade de palco, bem apagada, com um "+" em cada cruzamento */
+    /* grade de palco com um ponto em cada cruzamento, por cima de manchas
+       rosadas em blocos (como pixel de tela "corroído"), soltas pelo alto e
+       pelas laterais; o centro, onde ficam os cards, fica mais livre */
     background:
-        radial-gradient(circle, rgba(245, 232, 226, 0.22) 1.5px, transparent 2px) -1px -1px / 64px 64px,
-        linear-gradient(rgba(245, 232, 226, 0.07) 1px, transparent 1px) 0 0 / 64px 64px,
-        linear-gradient(90deg, rgba(245, 232, 226, 0.07) 1px, transparent 1px) 0 0 / 64px 64px,
+        radial-gradient(circle, rgba(62, 26, 16, 0.22) 1.5px, transparent 2px) -1px -1px / 64px 64px,
+        linear-gradient(rgba(62, 26, 16, 0.07) 1px, transparent 1px) 0 0 / 64px 64px,
+        linear-gradient(90deg, rgba(62, 26, 16, 0.07) 1px, transparent 1px) 0 0 / 64px 64px,
+        url('assets/imagens/lineup/fundo-manchas.svg') center top / cover no-repeat,
         var(--terracota);
 }
 
@@ -1756,7 +1759,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
 
 .lineup-kicker {
     font-size: clamp(1.8rem, 7vw, 3rem);
-    color: var(--papel);
+    color: var(--tijolo);   /* sobre a mancha rosada que o fundo sempre põe atrás do título */
     rotate: -4deg;
     margin-bottom: 4px;
 }
@@ -1781,14 +1784,22 @@ html.entrada-ativa .entrada.is-dissolvendo {
     list-style: none;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(14px, 4vw, 56px);
-    max-width: 800px;
+    gap: clamp(20px, 7vw, 120px);
+    max-width: 920px;
     margin-inline: auto;
     /* folga no topo para a cabeça (e a mão da Débora) que saem do card */
     padding: clamp(72px, 19vw, 120px) var(--lateral) 20px;
 }
 
 .lineup-card {
+    /* o recorte do card: degraus pequenos no alto à esquerda, embaixo à
+       esquerda e na lateral direita (usado no palco e no véu do nome) */
+    --recorte: polygon(
+        0 6cqi, 4cqi 6cqi, 4cqi 0,
+        100% 0, 100% 70%,
+        97cqi 70%, 97cqi 86%, 100% 86%,
+        100% 100%, 7cqi 100%, 7cqi calc(100% - 4cqi), 0 calc(100% - 4cqi)
+    );
     --escuro: #3E1A10;
     --card: #FFFBF9;
     position: relative;
@@ -1816,17 +1827,8 @@ html.entrada-ativa .entrada.is-dissolvendo {
     outline-offset: 6px;
 }
 
-.lineup-item:nth-child(odd) .lineup-card {
-    --borda: url('assets/imagens/lineup/borda-1.svg');
-}
-
-.lineup-item:nth-child(even) .lineup-card {
-    --borda: url('assets/imagens/lineup/borda-2.svg');
-}
-
 /* o palco: branco-papel, luz rosada atrás da pessoa, o símbolo da marca
-   bem apagado ao fundo e a borda corroída em blocos — a mesma linguagem de
-   pixel da base da foto */
+   bem apagado ao fundo e cantos com um degrau discreto */
 .lineup-palco {
     position: absolute;
     inset: 0;
@@ -1834,10 +1836,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
         url('assets/imagens/marca/simbolo-marca-dagua.webp') 50% 22% / 86% auto no-repeat,
         radial-gradient(70% 55% at 50% 38%, var(--rosado), transparent 72%),
         var(--card);
-    /* borda "corroída" em blocos, como pixel de tela: a máscara é um SVG
-       de retângulos (nítido em qualquer tamanho), um desenho por card */
-    -webkit-mask: var(--borda) 0 0 / 100% 100% no-repeat;
-    mask: var(--borda) 0 0 / 100% 100% no-repeat;
+    clip-path: var(--recorte);
 }
 
 /* a foto ocupa a largura do card e é ancorada acima da faixa do nome: a
@@ -1894,15 +1893,13 @@ html.entrada-ativa .entrada.is-dissolvendo {
 }
 
 /* véu branco atrás do nome, para ele não brigar com a roupa dissolvida.
-   Ocupa o card inteiro e usa a mesma máscara do palco, então a borda
-   corroída continua igual por cima da foto. */
+   Ocupa o card inteiro com o mesmo recorte do palco. */
 .lineup-veu {
     position: absolute;
     inset: 0;
     z-index: 2;
     background: linear-gradient(to top, var(--card) 0 24%, rgba(255, 251, 249, 0.8) 33%, rgba(255, 251, 249, 0) 44%);
-    -webkit-mask: var(--borda) 0 0 / 100% 100% no-repeat;
-    mask: var(--borda) 0 0 / 100% 100% no-repeat;
+    clip-path: var(--recorte);
 }
 
 .lineup-nome-1,
