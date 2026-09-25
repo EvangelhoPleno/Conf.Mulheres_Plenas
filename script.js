@@ -1146,7 +1146,7 @@
             document.querySelectorAll('.lineup-card').forEach(function (cartao) {
                 cartao.addEventListener('click', function () {
                     var modelo = document.getElementById(cartao.dataset.bio);
-                    bioNome.textContent = cartao.querySelector('.lineup-nome').textContent;
+                    bioNome.textContent = cartao.dataset.nome || cartao.querySelector('.lineup-nome').textContent;
                     bioTexto.replaceChildren(modelo ? modelo.content.cloneNode(true) : '');
                     bioModal.querySelector('.bio-card').scrollTop = 0;
                     abrirModal(bioModal);
