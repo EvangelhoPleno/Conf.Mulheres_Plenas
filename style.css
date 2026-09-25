@@ -1804,7 +1804,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
         100% 100%, 7cqi 100%, 7cqi calc(100% - 4cqi), 0 calc(100% - 4cqi)
     );
     --escuro: #3E1A10;
-    --card: #FFFBF9;
+    --card: var(--papel);   /* o mesmo branco das manchas e da seção de cima */
     position: relative;
     display: block;
     width: 100%;
@@ -1830,14 +1830,13 @@ html.entrada-ativa .entrada.is-dissolvendo {
     outline-offset: 6px;
 }
 
-/* o palco: branco-papel, luz rosada atrás da pessoa, o símbolo da marca
-   bem apagado ao fundo e cantos com um degrau discreto */
+/* o palco: o mesmo branco-papel do resto da página, só com o símbolo da
+   marca bem apagado ao fundo e cantos com um degrau discreto */
 .lineup-palco {
     position: absolute;
     inset: 0;
     background:
         url('assets/imagens/marca/simbolo-marca-dagua.webp') 50% 22% / 86% auto no-repeat,
-        radial-gradient(70% 55% at 50% 38%, var(--rosado), transparent 72%),
         var(--card);
     clip-path: var(--recorte);
 }
@@ -1901,7 +1900,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     position: absolute;
     inset: 0;
     z-index: 2;
-    background: linear-gradient(to top, var(--card) 0 24%, rgba(255, 251, 249, 0.8) 33%, rgba(255, 251, 249, 0) 44%);
+    background: linear-gradient(to top, var(--card) 0 24%, rgba(251, 245, 242, 0.8) 33%, rgba(251, 245, 242, 0) 44%);
     clip-path: var(--recorte);
 }
 
