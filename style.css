@@ -1786,8 +1786,12 @@ html.entrada-ativa .entrada.is-dissolvendo {
 .lineup-trilho {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(20px, 7vw, 120px);
+    /* cada card tem no máximo 400 px e nunca passa da altura da tela
+       (2:3 + a cabeça que sai do topo): no notebook os dois cabem inteiros */
+    --card-max: min(400px, calc((100svh - 250px) * 2 / 3));
+    grid-template-columns: repeat(2, minmax(0, var(--card-max)));
+    justify-content: center;
+    gap: clamp(20px, 6vw, 96px);
     max-width: 920px;
     margin-inline: auto;
     /* folga no topo para a cabeça (e a mão da Débora) que saem do card */
