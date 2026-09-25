@@ -1827,12 +1827,36 @@ html.entrada-ativa .entrada.is-dissolvendo {
     transition: transform 0.4s var(--ease-saida);
 }
 
+/* mancha branca em blocos saindo da lateral direita do card da Salmista
+   Diorgenis, na parte de baixo: presa ao card (e não ao fundo), cai no
+   mesmo lugar em qualquer tela. Fica atrás do card, do mesmo branco. */
+.lineup-item {
+    position: relative;
+    isolation: isolate;
+}
+
+.lineup-item:nth-child(2)::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 94%;   /* por baixo do degrau da lateral do card: os dois se emendam */
+    top: 64%;
+    width: 72%;
+    aspect-ratio: 2 / 1;
+    background: url('assets/imagens/lineup/mancha-diorgenis.svg') left top / 100% 100% no-repeat;
+    pointer-events: none;
+}
+
 /* no celular a largura é o limite (não a altura): o card volta a ser alto
    (2:3) e a pessoa ocupa a largura dele, em vez de ficar pequena no meio */
 @media (max-width: 767.98px) {
     .lineup-card {
         aspect-ratio: 2 / 3;
         --u: 1cqi;
+    }
+
+    .lineup-item:nth-child(2)::after {
+        display: none;
     }
 }
 
