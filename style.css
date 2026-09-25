@@ -1900,7 +1900,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     position: absolute;
     inset: 0;
     z-index: 2;
-    background: linear-gradient(to top, var(--card) 0 24%, rgba(251, 245, 242, 0.8) 33%, rgba(251, 245, 242, 0) 44%);
+    background: linear-gradient(to top, var(--card) 0 40%, rgba(251, 245, 242, 0.85) 46%, rgba(251, 245, 242, 0) 56%);
     clip-path: var(--recorte);
 }
 
