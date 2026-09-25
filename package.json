@@ -5,7 +5,7 @@
   "description": "Site e backend de ingressos da Conferência Mulheres Plenas 2026",
   "type": "commonjs",
   "engines": {
-    "node": ">=20"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "node --watch backend/server.js",
