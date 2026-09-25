@@ -1099,33 +1099,6 @@
     }
 
     /* ---------------------------------------------------------
-       CARROSSEL DO LINE-UP (mobile e tablet)
-       --------------------------------------------------------- */
-    function configurarCarrossel() {
-        var trilho = document.querySelector('.lineup-trilho');
-        var anterior = document.querySelector('.lineup-anterior');
-        var proximo = document.querySelector('.lineup-proximo');
-        if (!trilho || !anterior || !proximo) return;
-
-        function passo() {
-            var item = trilho.querySelector('.lineup-item');
-            var gap = parseFloat(getComputedStyle(trilho).columnGap) || 0;
-            return item ? item.getBoundingClientRect().width + gap : trilho.clientWidth * 0.8;
-        }
-
-        function atualizar() {
-            anterior.disabled = trilho.scrollLeft < 4;
-            proximo.disabled = trilho.scrollLeft + trilho.clientWidth >= trilho.scrollWidth - 4;
-        }
-
-        anterior.addEventListener('click', function () { trilho.scrollBy({ left: -passo(), behavior: 'smooth' }); });
-        proximo.addEventListener('click', function () { trilho.scrollBy({ left: passo(), behavior: 'smooth' }); });
-        trilho.addEventListener('scroll', atualizar, { passive: true });
-        window.addEventListener('resize', atualizar);
-        atualizar();
-    }
-
-    /* ---------------------------------------------------------
        MODAIS (bio do line-up e vídeo)
        --------------------------------------------------------- */
     var modalAberto = null;
@@ -1459,7 +1432,6 @@
     configurarVagas();
     configurarLotes();
     configurarDithers();
-    configurarCarrossel();
     configurarModais();
     configurarRegressiva();
 

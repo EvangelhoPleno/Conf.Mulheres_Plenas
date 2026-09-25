@@ -1767,25 +1767,15 @@ html.entrada-ativa .entrada.is-dissolvendo {
     margin-bottom: 48px;
 }
 
+/* dois nomes: cabem lado a lado em qualquer largura, sem carrossel */
 .lineup-trilho {
     list-style: none;
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
+    max-width: 640px;
+    margin-inline: auto;
     padding: 16px var(--lateral) 20px;
-    scroll-padding-inline: var(--lateral);
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-}
-
-.lineup-trilho::-webkit-scrollbar {
-    display: none;
-}
-
-.lineup-item {
-    flex: 0 0 46%;
-    scroll-snap-align: start;
 }
 
 /* cartão polaroid, levemente torto, alternando o lado */
@@ -1858,36 +1848,6 @@ html.entrada-ativa .entrada.is-dissolvendo {
     border-radius: 999px;
     background: var(--tijolo);
     color: var(--rosado);
-}
-
-.lineup-nav {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 24px;
-}
-
-.lineup-btn {
-    width: 48px;
-    height: 48px;
-    border: 0;
-    border-radius: 50%;
-    background: var(--tijolo);
-    color: var(--rosado);
-    font-size: 1.2rem;
-    line-height: 1;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s, opacity 0.2s;
-}
-
-.lineup-btn:hover {
-    background: var(--rosado);
-    color: var(--tijolo);
-}
-
-.lineup-btn:disabled {
-    opacity: 0.35;
-    cursor: default;
 }
 
 /* =============================================
@@ -3057,10 +3017,6 @@ html.entrada-ativa .entrada.is-dissolvendo {
    TABLET (768px+)
    ============================================= */
 @media (min-width: 768px) {
-    .lineup-item {
-        flex-basis: 30%;
-    }
-
     .setor-cards {
         /* dois lotes lado a lado: a comparação de preço fica num olhar só */
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3281,15 +3237,8 @@ html.entrada-ativa .entrada.is-dissolvendo {
     }
 
     .lineup-trilho {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 44px 28px;
         padding: 16px 0;
-        overflow: visible;
-    }
-
-    .lineup-nav {
-        display: none;
     }
 
     .ticket-topo {
