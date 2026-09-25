@@ -29,12 +29,14 @@ sabe se as novas tentativas do Mercado Pago reaproveitam a assinatura, e
 reenviar um aviso capturado não faz nada (o status é sempre reconsultado).
 
 **Reauditoria (25/09, fim da tarde) — nota geral ≈ 8,5/10:**
-- **Line-up com fotos:** recortes (fundo transparente) da Pra. Débora e do
-  Salmista Diorgenis em `assets/imagens/lineup/N-480.webp`, `N-800.webp` e
-  `N-480.png` (reserva para navegador sem WebP), todos 4:5 com a cabeça a 7%
-  do topo; a da Débora cortada no quadril para os rostos terem escala
-  parecida. Fundo do card: degradê da marca + símbolo das pétalas apagado.
-  Os PNGs originais (`debora.png`, `diogenes.png` na raiz) não vão para o Git.
+- **Line-up estilo "palco" (commit 9ec110e):** card escuro da marca com cantos
+  em degrau e borda pontilhada; a pessoa sai pelo topo e se dissolve em pixels
+  na base (efeito GRAVADO nas imagens `assets/imagens/lineup/N-480.webp`,
+  `N-800.webp`, `N-480.png`, geradas dos recortes `debora.png`/`diogenes.png`,
+  que ficam fora do Git); nome em Bebas Neue gigante com etiqueta torta. Tudo
+  em `cqi`: o mesmo desenho do celular ao monitor. Trocou a foto? Gere as três
+  de novo e suba o `?v=` no `index.html` (o cache de `/assets` é de 1 dia).
+  Nome completo no `data-nome` do botão (é o que a janela da bio mostra).
   As **bios** (`<template id="bio-1/2">`) ainda são texto provisório.
 - **Capa do vídeo** copiada do YouTube para `assets/imagens/recap-{640,960,1280}.jpg`
   com `srcset` (era 220 KB em qualquer tela; agora 25–96 KB).
