@@ -1791,7 +1791,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     max-width: 920px;
     margin-inline: auto;
     /* folga no topo para a cabeça (e a mão da Débora) que saem do card */
-    padding: clamp(72px, 19vw, 120px) var(--lateral) 20px;
+    padding: clamp(84px, 25vw, 170px) var(--lateral) 20px;
 }
 
 .lineup-card {
@@ -1808,7 +1808,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     position: relative;
     display: block;
     width: 100%;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 2 / 3;   /* alto como os da referência: sobra espaço para o corpo acima do nome */
     padding: 0;
     border: 0;
     background: none;
@@ -1847,7 +1847,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     position: absolute;
     left: 2%;
     right: 2%;
-    bottom: 11%;
+    bottom: 30%;
     aspect-ratio: var(--proporcao, 4 / 5);
     overflow: visible;
     background: none;
@@ -1900,7 +1900,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     position: absolute;
     inset: 0;
     z-index: 2;
-    background: linear-gradient(to top, var(--card) 0 40%, rgba(251, 245, 242, 0.85) 46%, rgba(251, 245, 242, 0) 56%);
+    background: linear-gradient(to top, var(--card) 0 33%, rgba(251, 245, 242, 0.8) 37%, rgba(251, 245, 242, 0) 42%);
     clip-path: var(--recorte);
 }
 
@@ -3356,7 +3356,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     }
 
     .lineup-trilho {
-        padding: clamp(72px, 19vw, 120px) 0 16px;
+        padding: clamp(84px, 25vw, 170px) 0 16px;
     }
 
     .ticket-topo {
