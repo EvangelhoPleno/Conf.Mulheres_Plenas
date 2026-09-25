@@ -8,7 +8,7 @@ window.MP_CONFIG = {
     apiUrl: 'https://evangelhoplenoparagominas.com.br',
     // chave PÚBLICA do Cloudflare Turnstile (anti-robô no checkout); vazio = desligado.
     // Publique esta antes de pôr TURNSTILE_SECRET_KEY na Vercel (ver backend/.env.example).
-    turnstileSiteKey: ''
+    turnstileSiteKey: '0x4AAAAAAFDmt-6hJkeocl16'
 };
 
 // abrindo o site no próprio computador, usa o backend local (npm run dev)
