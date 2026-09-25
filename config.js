@@ -5,7 +5,10 @@
    Vazio = vendas on-line desligadas (as telas mostram "em breve").
    ============================================================= */
 window.MP_CONFIG = {
-    apiUrl: 'https://evangelhoplenoparagominas.com.br'
+    apiUrl: 'https://evangelhoplenoparagominas.com.br',
+    // chave PÚBLICA do Cloudflare Turnstile (anti-robô no checkout); vazio = desligado.
+    // Publique esta antes de pôr TURNSTILE_SECRET_KEY na Vercel (ver backend/.env.example).
+    turnstileSiteKey: ''
 };
 
 // abrindo o site no próprio computador, usa o backend local (npm run dev)

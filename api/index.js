@@ -8,7 +8,9 @@
 
    Se o acordar falhar, a Vercel sozinha devolve uma página de erro que não
    diz nada ("FUNCTION_INVOCATION_FAILED") e o motivo só existe num log que
-   nem sempre dá para ler. Então guardamos a falha e a contamos em JSON. */
+   nem sempre dá para ler. Então guardamos a falha e respondemos em JSON —
+   só a mensagem genérica: o motivo e o stack (caminhos de arquivo, linhas)
+   ficam no log da Vercel, nunca na resposta para quem visita. */
 let app = null;
 let falhaAoIniciar = null;
 
@@ -23,10 +25,9 @@ module.exports = function (req, res) {
     if (falhaAoIniciar) {
         res.statusCode = 500;
         res.setHeader('content-type', 'application/json; charset=utf-8');
+        console.error('[api] requisição recusada, a API não iniciou:', falhaAoIniciar.message);
         return res.end(JSON.stringify({
-            erro: 'A API não conseguiu iniciar.',
-            detalhe: String(falhaAoIniciar.message || falhaAoIniciar),
-            onde: String(falhaAoIniciar.stack || '').split('\n').slice(1, 6).map(function (l) { return l.trim(); })
+            erro: 'As vendas on-line estão fora do ar por instantes. Tente de novo em alguns minutos.'
         }));
     }
     return app(req, res);

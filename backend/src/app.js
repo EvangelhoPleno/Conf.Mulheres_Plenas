@@ -40,7 +40,8 @@ function criarApp() {
         if (erro.type === 'entity.parse.failed') return res.status(400).json({ erro: 'JSON inválido.' });
 
         const status = erro.status || 500;
-        if (status >= 500) console.error('[erro]', req.method, req.originalUrl, erro);
+        if (status >= 500 && !erro.silencioso) console.error('[erro]', req.method, req.originalUrl, erro);
+        if (erro.tenteEmSegundos) res.set('Retry-After', String(erro.tenteEmSegundos));
 
         res.status(status).json({
             erro: erro.publico || 'Não foi possível concluir agora. Tente novamente em instantes.',

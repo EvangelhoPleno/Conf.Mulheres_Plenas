@@ -8,14 +8,27 @@ const { pedidos } = require('../services/sheetsService');
 const pedidoService = require('../services/pedidoService');
 const { PADRAO_INGRESSO, PADRAO_PEDIDO } = require('../utils/codigos');
 const { limitar } = require('../utils/limite');
+const { pareceHumano } = require('../utils/antiRobo');
 
 const router = express.Router();
 
 const CORES_QR = { dark: '#3E1A10', light: '#FFFFFF' };
 
+/* A página de pagamento consulta a cada 5 s e cada resposta leva o QR do
+   Pix: gerar o PNG de novo toda vez era CPU jogada fora. O copia-e-cola não
+   muda durante a vida do pedido, então o QR fica guardado por ele. */
+const qrsDoPix = new Map();
+
 async function comQrDoPix(visao) {
     if (visao.pix && visao.pix.copiaECola) {
-        visao.pix.qrCode = await QRCode.toDataURL(visao.pix.copiaECola, { margin: 1, width: 320, color: CORES_QR });
+        const codigo = visao.pix.copiaECola;
+        let qr = qrsDoPix.get(codigo);
+        if (!qr) {
+            qr = await QRCode.toDataURL(codigo, { margin: 1, width: 320, color: CORES_QR });
+            if (qrsDoPix.size >= 500) qrsDoPix.delete(qrsDoPix.keys().next().value);  // o mais antigo sai
+            qrsDoPix.set(codigo, qr);
+        }
+        visao.pix.qrCode = qr;
     }
     return visao;
 }
@@ -28,7 +41,8 @@ router.get('/saude', function (req, res) {
         simulado: Boolean(provedor.simulado),
         metodos: provedor.metodos,
         planilha: pedidos().tipo,
-        email: config.email.configurado ? 'resend' : 'desligado'
+        email: config.email.configurado ? 'resend' : 'desligado',
+        antiRobo: Boolean(config.turnstile.segredo)
     };
 
     /* Sem o Access Token toda compra dá 503; sem a assinatura secreta todo
@@ -77,9 +91,20 @@ const limiteConsultaPorPedido = limitar({
     chave: function (req) { return req.ip + ' ' + req.params.pedidoId; }
 });
 const limiteConsultaPorIp = limitar({ janelaMs: 60 * 1000, maximo: 900 });
+/* Quem procura pedido que não existe está chutando IDs: a compradora de
+   verdade só abre o link que o checkout lhe deu. Cada chute custava uma
+   leitura do Google; 30 em 10 min por IP é folga até para o Wi-Fi da igreja. */
+const limiteNaoEncontrado = limitar({
+    janelaMs: 10 * 60 * 1000,
+    maximo: 30,
+    contar: function (res) { return res.statusCode === 404; }
+});
 
 router.post('/checkout', limiteCheckout, async function (req, res) {
     const corpo = req.body || {};
+    if (!(await pareceHumano(corpo.turnstile, req.ip))) {
+        return res.status(403).json({ erro: 'Não conseguimos concluir a verificação de segurança. Recarregue a página e tente de novo.' });
+    }
     const { pedido } = await pedidoService.criarPedido({
         produto: corpo.produto,
         quantidade: corpo.quantidade,
@@ -98,7 +123,7 @@ router.post('/checkout', limiteCheckout, async function (req, res) {
     }));
 });
 
-router.get('/pedidos/:pedidoId', limiteConsultaPorIp, limiteConsultaPorPedido, async function (req, res) {
+router.get('/pedidos/:pedidoId', limiteNaoEncontrado, limiteConsultaPorIp, limiteConsultaPorPedido, async function (req, res) {
     if (!PADRAO_PEDIDO.test(req.params.pedidoId)) return res.status(404).json({ erro: 'Pedido não encontrado.' });
     const pedido = await pedidoService.consultarPedido(req.params.pedidoId);
     if (!pedido) return res.status(404).json({ erro: 'Pedido não encontrado.' });
@@ -106,12 +131,18 @@ router.get('/pedidos/:pedidoId', limiteConsultaPorIp, limiteConsultaPorPedido, a
     res.json(await comQrDoPix(pedidoService.visaoPublica(pedido)));
 });
 
-// imagem do QR Code do ingresso (usada no e-mail e na página de confirmação)
-router.get('/ingressos/:codigo/qr.png', async function (req, res) {
+/* Imagem do QR Code do ingresso. Nenhuma tela usa mais (vale o código, desde
+   e9ccd28), mas os e-mails enviados antes disso carregam a imagem daqui.
+   Cada chamada gera um PNG: o limite por IP impede que isso vire um jeito
+   barato de ocupar a função. Quem abre o e-mail pede uma imagem por ingresso. */
+const limiteQrDoIngresso = limitar({ janelaMs: 60 * 1000, maximo: 30 });
+
+router.get('/ingressos/:codigo/qr.png', limiteQrDoIngresso, async function (req, res) {
     const codigo = String(req.params.codigo).toUpperCase();
     if (!PADRAO_INGRESSO.test(codigo)) return res.status(404).end();
     const png = await QRCode.toBuffer(codigo, { margin: 1, width: 360, color: CORES_QR, errorCorrectionLevel: 'M' });
-    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    // s-maxage: a borda da Vercel guarda a imagem e as repetições nem chegam à função
+    res.set('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable');
     res.type('png').send(png);
 });
 

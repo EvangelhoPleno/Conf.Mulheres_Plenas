@@ -91,6 +91,11 @@ const config = {
         responderPara: process.env.EMAIL_REPLY_TO || ''
     },
 
+    // Cloudflare Turnstile no checkout (ver utils/antiRobo.js); vazio = desligado
+    turnstile: {
+        segredo: (process.env.TURNSTILE_SECRET_KEY || '').trim()
+    },
+
     adminToken: process.env.ADMIN_TOKEN || ''
 };
 

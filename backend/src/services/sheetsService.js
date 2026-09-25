@@ -136,8 +136,28 @@ async function repetindoSeOcupado(acao) {
     }
 }
 
-/* ---------- implementação Google Sheets ---------- */
-function criarRepositorioPlanilha() {
+/* Quem pergunta de fora (a página de pagamento, ou alguém chutando IDs) só
+   força uma releitura da planilha a cada 5 s por instância. Sem esse teto,
+   IDs inventados no formato certo — cada um "não achado" — custavam uma
+   leitura por requisição: uma por segundo já esgotava as 60 leituras/min da
+   conta de serviço e derrubava o checkout de todo mundo. */
+const RELEITURA_PUBLICA_MS = 5000;
+
+function erroReleituraAdiada() {
+    const erro = new Error('Releitura da planilha adiada: limite de consultas públicas.');
+    erro.status = 503;
+    erro.publico = 'Ainda estamos localizando o pedido. Tente de novo em instantes.';
+    erro.tenteEmSegundos = Math.ceil(RELEITURA_PUBLICA_MS / 1000);
+    erro.silencioso = true;   // acontece aos montes num ataque: não enche o log
+    return erro;
+}
+
+/* ---------- implementação Google Sheets ----------
+   opcoes.abrirAba e opcoes.agora existem só para os testes: uma aba falsa
+   que conta leituras e um relógio que não depende de esperar de verdade. */
+function criarRepositorioPlanilha(opcoes) {
+    opcoes = opcoes || {};
+    const agora = opcoes.agora || Date.now;
     let docPromessa = null;
 
     /* O google-spreadsheet só existe como módulo ESM (ele puxa o ky). O Node
@@ -173,8 +193,10 @@ function criarRepositorioPlanilha() {
     const CACHE_MS = 8000;
     const FRESCA_MS = 3000;  // "fresca" para gravar: lida há no máximo 3 s
     let lendo = null;  // leitura em andamento: quem chega junto espera a mesma
+    let ultimaReleituraPublica = -Infinity;
 
     function aba() {
+        if (opcoes.abrirAba) return opcoes.abrirAba();
         if (!abaPromessa) {
             abaPromessa = (async function () {
                 const doc = await documento();
@@ -202,32 +224,41 @@ function criarRepositorioPlanilha() {
     }
 
     async function linhas(idadeMax) {
-        if (cache.linhas && Date.now() - cache.em < (idadeMax || CACHE_MS)) return cache.linhas;
+        if (cache.linhas && agora() - cache.em < (idadeMax || CACHE_MS)) return cache.linhas;
         if (!lendo) {
             lendo = (async function () {
                 const sheet = await aba();
                 const todas = await sheet.getRows();
-                cache = { em: Date.now(), linhas: todas };
+                cache = { em: agora(), linhas: todas };
                 return todas;
             })().finally(function () { lendo = null; });
         }
         return lendo;
     }
 
-    async function acharLinha(campo, valor, fresca) {
+    // busca.fresca: cópia de no máximo 3 s (para gravar)
+    // busca.publica: pedido vindo do navegador, releitura forçada com teto
+    async function acharLinha(campo, valor, busca) {
+        busca = busca || {};
         if (!valor) return null;
         const coluna = COLUNAS.find(function (c) { return c[0] === campo; })[1];
         const achar = function (todas) {
             return todas.find(function (row) { return String(row.get(coluna)) === String(valor); }) || null;
         };
-        const idadeMax = fresca ? FRESCA_MS : CACHE_MS;
+        const idadeMax = busca.fresca ? FRESCA_MS : CACHE_MS;
         const row = achar(await linhas(idadeMax));
-        if (row || Date.now() - cache.em < 1000) return row;
+        if (row || agora() - cache.em < 1000) return row;
         /* Não achou numa cópia de segundos atrás: o pedido pode ter nascido
            noutra instância depois dela. Sem esta releitura a página de
            pagamento dizia "pedido não encontrado" à compradora que acabou de
-           receber o Pix. Pedido inexistente de verdade é raro (o ID é longo e
-           aleatório), então o custo é pequeno. */
+           receber o Pix. Para o navegador ela tem teto (RELEITURA_PUBLICA_MS):
+           passando dele, responde "tente de novo" — e não "não existe", que
+           faria a página desistir. O webhook e as gravações não têm teto: um
+           pagamento de verdade nunca pode ser dado como desconhecido. */
+        if (busca.publica) {
+            if (agora() - ultimaReleituraPublica < RELEITURA_PUBLICA_MS) throw erroReleituraAdiada();
+            ultimaReleituraPublica = agora();
+        }
         return achar(await linhas(1000));
     }
 
@@ -251,7 +282,7 @@ function criarRepositorioPlanilha() {
             return pedido;
         },
         async buscarPorId(pedidoId, opcoes) {
-            const row = await acharLinha('pedidoId', pedidoId, opcoes && opcoes.fresca);
+            const row = await acharLinha('pedidoId', pedidoId, opcoes);
             return row ? daLinha(row) : null;
         },
         async buscarPorTransacao(transacaoId) {
@@ -260,7 +291,7 @@ function criarRepositorioPlanilha() {
         },
         async atualizar(pedidoId, campos) {
             // linha lida há no máximo 3 s: outra instância pode ter mexido
-            const row = await acharLinha('pedidoId', pedidoId, true);
+            const row = await acharLinha('pedidoId', pedidoId, { fresca: true });
             if (!row) throw new Error('Pedido não encontrado na planilha: ' + pedidoId);
             prepararLinha(row, campos);
             await row.save({ raw: true });
@@ -312,4 +343,4 @@ function pedidos() {
     return repositorio;
 }
 
-module.exports = { pedidos, CABECALHO, COLUNAS_NUMERICAS, prepararLinha, comoNumero, repetindoSeOcupado };
+module.exports = { pedidos, CABECALHO, COLUNAS_NUMERICAS, prepararLinha, comoNumero, repetindoSeOcupado, criarRepositorioPlanilha };

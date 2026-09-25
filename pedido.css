@@ -769,3 +769,6 @@ button.btn-cta {
         border: 1px solid #ccc;
     }
 }
+
+/* Cloudflare Turnstile (anti-robô): ocupa espaço só quando pede interação */
+.anti-robo { display: flex; justify-content: center; }

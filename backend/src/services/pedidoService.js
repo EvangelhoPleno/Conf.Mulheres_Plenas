@@ -204,7 +204,7 @@ async function processarNotificacao(aviso) {
 // Chamado pela página de pagamento: se o webhook atrasar ou se perder, a
 // própria consulta do cliente descobre que o pagamento caiu.
 async function consultarPedido(pedidoId) {
-    const pedido = await pedidos().buscarPorId(pedidoId);
+    const pedido = await pedidos().buscarPorId(pedidoId, { publica: true });
     if (!pedido) return null;
     // pago mas sem e-mail tentado = a confirmação caiu no meio; termina agora.
     // RECUSADO não encerra: no cartão ela pode pagar com outro cartão na mesma
@@ -237,9 +237,7 @@ function visaoPublica(pedido) {
         criadoEm: pedido.criadoEm,
         pix: !pago && pedido.pixCopiaECola ? { copiaECola: pedido.pixCopiaECola } : null,
         linkPagamento: !pago && pedido.linkPagamento ? pedido.linkPagamento : null,
-        ingressos: pago ? pedido.codigos.map(function (codigo) {
-            return { codigo, qr: config.apiUrl + '/api/ingressos/' + encodeURIComponent(codigo) + '/qr.png' };
-        }) : [],
+        ingressos: pago ? pedido.codigos.map(function (codigo) { return { codigo }; }) : [],
         emailEnviado: pedido.emailEnviado === 'SIM'
     };
 }

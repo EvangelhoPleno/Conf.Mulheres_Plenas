@@ -115,6 +115,7 @@ async function postFalso(url, corpo, opcoes) {
         const id = proximoId++;
         const pagamento = {
             id, status: 'pending', external_reference: corpo.external_reference,
+            transaction_amount: corpo.transaction_amount, currency_id: 'BRL',
             date_of_expiration: corpo.date_of_expiration,
             point_of_interaction: { transaction_data: { qr_code: '00020126PIX-FALSO-' + id, ticket_url: 'https://mp.test/pix/' + id } }
         };
@@ -248,7 +249,7 @@ test('cartão: link do Checkout Pro; o pagamento que nasce depois acha o pedido'
     assert.equal((await avisar(recusado.id)).status, 200);
     assert.equal((await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json()).status, 'RECUSADO');
 
-    const aprovado = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId };
+    const aprovado = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId, transaction_amount: pedido.valorTotal / 100, currency_id: 'BRL' };
     falso.pagamentos.set(String(aprovado.id), aprovado);
     assert.equal((await avisar(aprovado.id)).status, 200);
     const pago = await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json();
@@ -258,7 +259,7 @@ test('cartão: link do Checkout Pro; o pagamento que nasce depois acha o pedido'
 
 test('cartão: se o webhook se perder, a página de pagamento descobre sozinha', async function () {
     const pedido = await (await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 1, metodo: 'cartao' }, COMPRADORA))).json();
-    const aprovado = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId };
+    const aprovado = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId, transaction_amount: pedido.valorTotal / 100, currency_id: 'BRL' };
     falso.pagamentos.set(String(aprovado.id), aprovado);
     const pago = await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json();
     assert.equal(pago.status, 'PAGO');
@@ -275,7 +276,7 @@ test('cartão: recusado e depois aprovado sem webhook, a página ainda descobre 
     assert.equal((await avisar(recusado.id)).status, 200);
     assert.equal((await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json()).status, 'RECUSADO');
 
-    const aprovado = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId };
+    const aprovado = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId, transaction_amount: pedido.valorTotal / 100, currency_id: 'BRL' };
     falso.pagamentos.set(String(aprovado.id), aprovado);
     const pago = await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json();
     assert.equal(pago.status, 'PAGO');
@@ -303,4 +304,42 @@ test('Mercado Pago fora do ar no webhook: 500 para ele tentar de novo', async fu
     } finally {
         mp._cliente.get = antes;
     }
+});
+
+/* ---------- o valor aprovado precisa cobrir o pedido ---------- */
+test('pagamento aprovado com valor menor que o pedido não emite ingresso', async function () {
+    const pedido = await (await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 2, metodo: 'cartao' }, COMPRADORA))).json();
+    const barato = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId, transaction_amount: 1, currency_id: 'BRL' };
+    falso.pagamentos.set(String(barato.id), barato);
+
+    assert.equal((await avisar(barato.id)).status, 200);
+    const depois = await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json();
+    assert.equal(depois.status, 'PENDENTE', 'R$ 1,00 num pedido de R$ 110,00');
+    assert.equal(depois.ingressos.length, 0);
+
+    // o pagamento certo, depois, ainda libera
+    const certo = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId, transaction_amount: 110, currency_id: 'BRL' };
+    falso.pagamentos.set(String(certo.id), certo);
+    assert.equal((await avisar(certo.id)).status, 200);
+    assert.equal((await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json()).status, 'PAGO');
+});
+
+test('pagamento aprovado em outra moeda não emite ingresso', async function () {
+    const pedido = await (await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 1, metodo: 'cartao' }, COMPRADORA))).json();
+    const dolar = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId, transaction_amount: 55, currency_id: 'USD' };
+    falso.pagamentos.set(String(dolar.id), dolar);
+    assert.equal((await avisar(dolar.id)).status, 200);
+    assert.equal((await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json()).status, 'PENDENTE');
+});
+
+test('webhook usa o ID assinado da URL, não o do corpo', async function () {
+    const assinado = { id: proximoId++, status: 'pending', external_reference: 'MPnaoExisteXXXXXXX' };
+    falso.pagamentos.set(String(assinado.id), assinado);
+    const req = {
+        body: { type: 'payment', data: { id: '999999' } },
+        query: { 'data.id': String(assinado.id), type: 'payment' },
+        get: function () { return ''; }
+    };
+    const aviso = await mp.lerWebhook(req);
+    assert.equal(aviso.transacaoId, String(assinado.id));
 });

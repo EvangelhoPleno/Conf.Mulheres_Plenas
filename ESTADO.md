@@ -1,7 +1,44 @@
-# Estado do projeto — 24/09/2026
+# Estado do projeto — 25/09/2026
 
 Resumo para retomar o trabalho sem reler o histórico. Evento: **Conferência
 Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
+
+---
+
+## Auditoria de AppSec e performance (25/09, branch `seguranca/auditoria-25-09`)
+
+Nada deixava emitir ingresso sem pagar. O risco real era **derrubar a venda
+esgotando a cota do Google** (60 leituras/60 escritas por min, a mesma conta
+do site). `npm test`: 51 verdes (eram 42 antes desta rodada).
+
+| Achado | Correção |
+|---|---|
+| `GET /api/pedidos/<ID inventado>` forçava uma releitura da planilha por chamada: ~1 req/s esgotava as leituras | releitura forçada com teto de 1 a cada 5 s por instância **só para o navegador** (`busca.publica`); passando dele, **503 + Retry-After**, não 404 (a página não desiste). Webhook e gravações relêem sem teto. + limite de 30 respostas 404 por IP em 10 min |
+| Checkout sem anti-robô: cada POST cria um Pix real e gasta 1 escrita | **Cloudflare Turnstile**, pronto mas **DESLIGADO** até ter as chaves (ver abaixo). Cloudflare fora do ar deixa passar |
+| `api/index.js` devolvia mensagem e stack quando a API não subia | só a mensagem genérica; o motivo fica no log |
+| webhook lia primeiro o ID do corpo (não assinado) | usa o `data.id` da URL, que a assinatura cobre |
+| `approved` virava PAGO sem olhar o valor | só vira PAGO se `currency_id` = BRL e `transaction_amount` ≥ valor do pedido; senão fica PENDENTE e o log pede conferência manual |
+| QR do Pix regerado a cada consulta de 5 s | guardado em memória pelo copia-e-cola |
+| `/api/ingressos/:codigo/qr.png` sem limite | **mantida** (e-mails antigos usam), com 30/min por IP e `s-maxage` |
+| galeria: 8 JPEG de 1600 px (1,36 MB) em qualquer tela | `srcset` com `N-800.jpg` / `N-1200.jpg`; celular e desktop comum baixam ~0,56 MB. O `sizes` já conta o corte do `object-fit: cover` |
+| Fraunces com SOFT e WONK variáveis (271 KB) | eixos fixados em SOFT 100 / WONK 1, os únicos valores usados no CSS: 141 KB. Medidas dos 40 textos idênticas antes/depois |
+| `/assets/*` com `max-age=0` | `max-age=86400, stale-while-revalidate=604800` (imagem trocada leva até 1 dia para aparecer em quem já visitou; renomeie o arquivo se tiver pressa) |
+
+Janela de validade do `ts` do webhook **não** foi posta de propósito: não se
+sabe se as novas tentativas do Mercado Pago reaproveitam a assinatura, e
+reenviar um aviso capturado não faz nada (o status é sempre reconsultado).
+
+**Turnstile desligado por decisão (25/09):** para um evento de igreja o
+ataque é improvável e o estrago seria só pedido PENDENTE falso e venda
+travada por minutos (nunca ingresso sem pagar). Sinal para ligar: muitas
+linhas PENDENTES estranhas na aba Pedidos, ou 429 do Google no log.
+
+**Para ligar o Turnstile** (painel da Cloudflare > Turnstile > Add widget,
+domínio `evangelhoplenoparagominas.com.br`, modo Managed):
+1. chave pública em `turnstileSiteKey` no `config.js`, commit e deploy;
+2. **depois** `TURNSTILE_SECRET_KEY` na Vercel (Production) e redeploy;
+3. `/api/saude` mostra `antiRobo: true`; fazer uma compra de teste.
+Na ordem inversa, todo checkout é recusado com 403.
 
 ---
 

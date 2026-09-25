@@ -77,6 +77,7 @@
         var produtoId = params.get('produto') || '';
         var form = $('.pedido-form');
         var produto = null;
+        var antiRobo = iniciarAntiRobo();
 
         api('/produtos').then(function (dados) {
             produto = dados.produtos.filter(function (p) { return p.id === produtoId; })[0];
@@ -193,6 +194,38 @@
             return erros;
         }
 
+        /* Cloudflare Turnstile: só com turnstileSiteKey no config.js. Em modo
+           interaction-only ele resolve sozinho enquanto ela preenche o
+           formulário e só aparece se a Cloudflare desconfiar. Cada token vale
+           uma vez: depois de qualquer falha no checkout, pede outro. */
+        function iniciarAntiRobo() {
+            var chave = window.MP_CONFIG && window.MP_CONFIG.turnstileSiteKey;
+            var estado = { ligado: Boolean(chave), token: '', widget: null };
+            if (!chave) return estado;
+
+            window.mpAntiRoboPronto = function () {
+                estado.widget = window.turnstile.render('[data-turnstile]', {
+                    sitekey: chave,
+                    action: 'checkout',
+                    appearance: 'interaction-only',
+                    language: 'pt-br',
+                    callback: function (token) { estado.token = token; },
+                    'expired-callback': function () { estado.token = ''; },
+                    'error-callback': function () { estado.token = ''; }
+                });
+            };
+            var script = document.createElement('script');
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=mpAntiRoboPronto';
+            script.async = true;
+            document.head.appendChild(script);
+
+            estado.renovar = function () {
+                estado.token = '';
+                if (window.turnstile && estado.widget !== null) window.turnstile.reset(estado.widget);
+            };
+            return estado;
+        }
+
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             var botao = form.querySelector('[type="submit"]');
@@ -203,6 +236,12 @@
             var erros = validar();
             mostrarErros(erros);
             if (Object.keys(erros).length) return;
+
+            if (antiRobo.ligado && !antiRobo.token) {
+                avisoErro.textContent = 'Aguarde a verificação de segurança terminar e toque em continuar de novo.';
+                avisoErro.hidden = false;
+                return;
+            }
 
             botao.classList.add('is-carregando');
             var metodo = form.querySelector('[name="metodo"]:checked');
@@ -216,13 +255,15 @@
                     nome: form.nome.value,
                     email: form.email.value,
                     cpf: form.cpf.value,
-                    telefone: form.telefone.value
+                    telefone: form.telefone.value,
+                    turnstile: antiRobo.token || undefined
                 }
             }).then(function (pedido) {
                 try { sessionStorage.setItem('mp-pedido-' + pedido.pedidoId, JSON.stringify(pedido)); } catch (err) { /* sem storage, a próxima página busca na API */ }
                 location.href = 'pagamento.html?pedido=' + encodeURIComponent(pedido.pedidoId);
             }).catch(function (erro) {
                 botao.classList.remove('is-carregando');
+                if (antiRobo.ligado) antiRobo.renovar();
                 if (erro.dados && erro.dados.erros) mostrarErros(erro.dados.erros);
                 avisoErro.textContent = erro.message;
                 avisoErro.hidden = false;
@@ -375,8 +416,19 @@
 
         try { sessionStorage.removeItem('mp-pedido-' + pedidoId); } catch (e) { /* segue */ }
 
+        // servidor ocupado (503/429) não é "pedido perdido": espera e pergunta de novo
+        function buscarPedido(tentativa) {
+            return api('/pedidos/' + encodeURIComponent(pedidoId)).catch(function (erro) {
+                if ((erro.status === 503 || erro.status === 429) && tentativa < 5) {
+                    return new Promise(function (r) { setTimeout(r, 3000 * tentativa); })
+                        .then(function () { return buscarPedido(tentativa + 1); });
+                }
+                throw erro;
+            });
+        }
+
         Promise.all([
-            api('/pedidos/' + encodeURIComponent(pedidoId)),
+            buscarPedido(1),
             api('/saude').catch(function () { return {}; })
         ]).then(function (resultado) {
             var pedido = resultado[0];
@@ -418,7 +470,7 @@
 
             mostrar('pronto');
         }).catch(function (erro) {
-            if (erro.status === 0) {
+            if (erro.status === 0 || erro.status === 503 || erro.status === 429) {
                 $('[data-estado="erro"] [data-mensagem]').textContent = erro.message;
             }
             mostrar('erro');

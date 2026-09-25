@@ -99,16 +99,40 @@ function mapearStatus(pagamento) {
     return null;
 }
 
+/* "approved" só vira PAGO se o pagamento cobriu o pedido inteiro, em reais.
+   Hoje não há como pagar menos — o valor do Pix e do Checkout Pro sai do
+   catálogo, no servidor — mas o que libera o ingresso é qualquer pagamento
+   aprovado com o nosso Pedido_ID no external_reference. Se um dia surgir
+   outro jeito de criar um (link de cobrança do painel, outra integração),
+   pagar R$ 1 com o ID de outra pessoa não pode emitir ingresso. Fica
+   PENDENTE e o log grita: alguém confere à mão. */
+function cobreOPedido(pagamento, pedido) {
+    if (!pedido || !pedido.valorTotal) return true;   // sem valor para comparar (testes de unidade)
+    const pagoEmCentavos = Math.round(Number(pagamento.transaction_amount) * 100);
+    return pagamento.currency_id === 'BRL' && pagoEmCentavos >= pedido.valorTotal;
+}
+
+function statusConferido(pagamento, pedido) {
+    const status = mapearStatus(pagamento);
+    if (status === 'PAGO' && !cobreOPedido(pagamento, pedido)) {
+        console.error('[mercadopago] pagamento ' + pagamento.id + ' aprovado com ' +
+            pagamento.transaction_amount + ' ' + pagamento.currency_id + ', mas o pedido ' +
+            pedido.pedidoId + ' vale ' + (pedido.valorTotal / 100) + ' BRL: ingresso NÃO emitido, conferir à mão.');
+        return 'PENDENTE';
+    }
+    return status;
+}
+
 /* Várias tentativas no mesmo pedido (cartão recusado e depois outro aprovado)
    viram um status só. Uma aprovada basta; um estorno pesa mais que uma
    tentativa recusada; e enquanto houver tentativa em andamento, a recusa de
    outra não encerra o pedido. */
 const PRIORIDADE = ['PAGO', 'REEMBOLSADO', 'PENDENTE', 'RECUSADO', 'EXPIRADO', 'CANCELADO'];
 
-function resumirTentativas(pagamentos) {
+function resumirTentativas(pagamentos, pedido) {
     let melhor = null;
     (pagamentos || []).forEach(function (p) {
-        const status = mapearStatus(p);
+        const status = statusConferido(p, pedido);
         if (status && (melhor === null || PRIORIDADE.indexOf(status) < PRIORIDADE.indexOf(melhor))) melhor = status;
     });
     return melhor;
@@ -240,9 +264,10 @@ module.exports = {
         const id = String(transacaoId || '');
         if (id.startsWith(PREFERENCIA)) {
             if (!pedido || !pedido.pedidoId) return null;
-            return resumirTentativas(await pagamentosDoPedido(pedido.pedidoId));
+            return resumirTentativas(await pagamentosDoPedido(pedido.pedidoId), pedido);
         }
-        return mapearStatus(await buscarPagamento(id));
+        const pagamento = await buscarPagamento(id);
+        return pagamento ? statusConferido(pagamento, pedido) : null;
     },
 
     validarWebhook(req) {
@@ -260,7 +285,9 @@ module.exports = {
         const tipo = corpo.type || query.type || corpo.topic || query.topic;
         if (tipo && tipo !== 'payment') return null;
 
-        const id = (corpo.data && corpo.data.id) || query['data.id'] || (query.data && query.data.id);
+        /* O ID da URL vem primeiro: é ele que a assinatura cobre. O do corpo
+           não é assinado — só serve quando a URL não traz nenhum. */
+        const id = query['data.id'] || (query.data && query.data.id) || (corpo.data && corpo.data.id);
         if (!id) return null;
 
         const pagamento = await buscarPagamento(id);

@@ -131,6 +131,7 @@ test('fluxo Pix: pendente -> pago -> ingressos, sem duplicar', async function ()
     assert.deepEqual(pago.ingressos.map(function (i) { return i.codigo; }), simulado.ingressos.map(function (i) { return i.codigo; }));
     assert.match(pago.ingressos[0].codigo, /^MP26-[A-Z2-9]{4}-[A-Z2-9]{4}$/);
 
+    // nenhuma tela usa mais, mas os e-mails antigos ainda carregam a imagem
     const qr = await fetch(base + '/ingressos/' + pago.ingressos[0].codigo + '/qr.png');
     assert.equal(qr.status, 200);
     assert.equal(qr.headers.get('content-type'), 'image/png');
@@ -195,4 +196,17 @@ test('/saude no modo simulado nao traz o bloco do Mercado Pago', async function 
     assert.equal(saude.simulado, true);
     assert.equal(saude.mercadopago, undefined);
     assert.equal(saude.ok, true);
+});
+
+test('quem chuta IDs de pedido é barrado depois de 30 "não encontrado"', async function () {
+    // os testes anteriores já gastaram alguns 404 deste IP: conta até o 429
+    let status = 0;
+    let tentativas = 0;
+    while (tentativas < 40) {
+        tentativas++;
+        status = (await fetch(base + '/pedidos/MPchute' + String(tentativas).padStart(11, 'x'))).status;
+        if (status !== 404) break;
+    }
+    assert.equal(status, 429);
+    assert.ok(tentativas <= 31, 'barrado até o 31º chute, foi no ' + tentativas + 'º');
 });

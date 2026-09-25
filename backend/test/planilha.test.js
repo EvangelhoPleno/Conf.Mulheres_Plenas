@@ -102,3 +102,71 @@ test('comoNumero lê os formatos que a planilha pode devolver', function () {
         assert.equal(comoNumero(entrada), esperado, JSON.stringify(entrada));
     });
 });
+
+/* ---------- teto de releitura para consultas do navegador ----------
+   IDs inventados não podem forçar uma leitura do Google a cada requisição:
+   uma por segundo esgotava as 60 leituras/min e derrubava o checkout. */
+const { criarRepositorioPlanilha } = require('../src/services/sheetsService');
+
+function planilhaFalsa(ids) {
+    const aba = {
+        leituras: 0,
+        async getRows() {
+            aba.leituras++;
+            return ids.map(function (id) { return linhaFalsa({ Pedido_ID: id, Codigos_Ingresso: '' }); });
+        }
+    };
+    let relogio = 0;
+    const repo = criarRepositorioPlanilha({
+        abrirAba: async function () { return aba; },
+        agora: function () { return relogio; }
+    });
+    return { aba, repo, ids, avancar: function (ms) { relogio += ms; } };
+}
+
+test('IDs inventados não forçam uma leitura da planilha por requisição', async function () {
+    const p = planilhaFalsa(['MPexistenteAAAAAAAA']);
+
+    assert.equal(await p.repo.buscarPorId('MPchute1xxxxxxxxxx', { publica: true }), null);
+    assert.equal(p.aba.leituras, 1, 'primeira consulta lê a planilha');
+
+    p.avancar(2000);
+    assert.equal(await p.repo.buscarPorId('MPchute2xxxxxxxxxx', { publica: true }), null);
+    assert.equal(p.aba.leituras, 2, 'cópia de 2 s: uma releitura forçada é permitida');
+
+    p.avancar(1500);
+    await assert.rejects(p.repo.buscarPorId('MPchute3xxxxxxxxxx', { publica: true }), function (erro) {
+        assert.equal(erro.status, 503, '"tente de novo", não "não existe": a página não desiste');
+        assert.ok(erro.tenteEmSegundos > 0);
+        return true;
+    });
+    assert.equal(p.aba.leituras, 2, 'dentro dos 5 s, o chute não custa leitura');
+
+    p.avancar(3600);
+    assert.equal(await p.repo.buscarPorId('MPchute4xxxxxxxxxx', { publica: true }), null);
+    assert.equal(p.aba.leituras, 3, 'passados 5 s, volta a poder reler');
+});
+
+test('webhook e gravação continuam relendo sem teto', async function () {
+    const p = planilhaFalsa(['MPexistenteAAAAAAAA']);
+    await p.repo.buscarPorId('MPchute1xxxxxxxxxx', { publica: true });
+    p.avancar(2000);
+    await p.repo.buscarPorId('MPchute2xxxxxxxxxx', { publica: true });   // gasta o teto
+    p.avancar(1500);
+
+    // pedido criado noutra instância depois da última leitura
+    p.ids.push('MPnovoNoutraInstan');
+    const achado = await p.repo.buscarPorId('MPnovoNoutraInstan');
+    assert.equal(achado && achado.pedidoId, 'MPnovoNoutraInstan', 'sem busca.publica, relê e acha');
+});
+
+test('pedido existente na cópia em memória não gasta releitura nem cai no teto', async function () {
+    const p = planilhaFalsa(['MPexistenteAAAAAAAA']);
+    await p.repo.buscarPorId('MPexistenteAAAAAAAA', { publica: true });
+    for (let i = 0; i < 5; i++) {
+        p.avancar(1000);
+        const pedido = await p.repo.buscarPorId('MPexistenteAAAAAAAA', { publica: true });
+        assert.equal(pedido.pedidoId, 'MPexistenteAAAAAAAA');
+    }
+    assert.equal(p.aba.leituras, 1);
+});
