@@ -35,6 +35,15 @@
     <!-- sem defer e antes do script.js: o configurarVagas() lê window.MP_CONFIG -->
     <script src="config.js"></script>
     <script src="script.js" defer></script>
+    <!-- Vercel Web Analytics e Speed Insights: sem cookies, só nesta página.
+         Checkout, pagamento e confirmação ficam de fora de propósito: o
+         endereço delas leva o Pedido_ID, que dá acesso aos ingressos. -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+        window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
+    </script>
+    <script src="/_vercel/insights/script.js" defer></script>
+    <script src="/_vercel/speed-insights/script.js" defer></script>
     <script>
         /* Abertura: liga antes da página pintar, para a landing não piscar por trás.
            Se o script.js não começar a abertura em 6s (sem internet, erro), ela sai
