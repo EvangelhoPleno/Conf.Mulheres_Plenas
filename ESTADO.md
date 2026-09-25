@@ -36,6 +36,11 @@ reenviar um aviso capturado não faz nada (o status é sempre reconsultado).
   que ficam fora do Git); nome em Bebas Neue gigante com etiqueta torta. Tudo
   em `cqi`: o mesmo desenho do celular ao monitor. Trocou a foto? Gere as três
   de novo e suba o `?v=` no `index.html` (o cache de `/assets` é de 1 dia).
+  Card branco com a **borda corroída em blocos** (referência "Recap"): máscara
+  SVG de retângulos, uma por card (`assets/imagens/lineup/borda-1.svg` e
+  `borda-2.svg`), aplicada ao palco e ao véu atrás do nome; o miolo (9 células
+  da grade 80×100 a partir de cada lado) nunca é comido. Logo horizontal no
+  rodapé, símbolo das pétalas como marca-d'água (`marca/simbolo-marca-dagua.webp`).
   Nome completo no `data-nome` do botão (é o que a janela da bio mostra).
   As **bios** (`<template id="bio-1/2">`) ainda são texto provisório.
 - **Capa do vídeo** copiada do YouTube para `assets/imagens/recap-{640,960,1280}.jpg`

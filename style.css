@@ -1816,9 +1816,17 @@ html.entrada-ativa .entrada.is-dissolvendo {
     outline-offset: 6px;
 }
 
+.lineup-item:nth-child(odd) .lineup-card {
+    --borda: url('assets/imagens/lineup/borda-1.svg');
+}
+
+.lineup-item:nth-child(even) .lineup-card {
+    --borda: url('assets/imagens/lineup/borda-2.svg');
+}
+
 /* o palco: branco-papel, luz rosada atrás da pessoa, o símbolo da marca
-   bem apagado ao fundo e a borda se desfazendo em quadriculado — a mesma
-   linguagem de pixel da base da foto e das bordas da seção de ingressos */
+   bem apagado ao fundo e a borda corroída em blocos — a mesma linguagem de
+   pixel da base da foto */
 .lineup-palco {
     position: absolute;
     inset: 0;
@@ -1826,16 +1834,10 @@ html.entrada-ativa .entrada.is-dissolvendo {
         url('assets/imagens/marca/simbolo-marca-dagua.webp') 50% 22% / 86% auto no-repeat,
         radial-gradient(70% 55% at 50% 38%, var(--rosado), transparent 72%),
         var(--card);
-    /* miolo inteiro + xadrez por toda a peça: o xadrez só aparece na faixa
-       de dois quadrados que o miolo não cobre. "round" ajusta o quadrado
-       para caber um número inteiro deles, e os cantos fecham certinho. */
-    --quadro: 3cqi;
-    -webkit-mask:
-        linear-gradient(#000 0 0) center / calc(100% - 4 * var(--quadro)) calc(100% - 4 * var(--quadro)) no-repeat,
-        conic-gradient(#000 25%, transparent 0 50%, #000 0 75%, transparent 0) 0 0 / calc(2 * var(--quadro)) calc(2 * var(--quadro)) round;
-    mask:
-        linear-gradient(#000 0 0) center / calc(100% - 4 * var(--quadro)) calc(100% - 4 * var(--quadro)) no-repeat,
-        conic-gradient(#000 25%, transparent 0 50%, #000 0 75%, transparent 0) 0 0 / calc(2 * var(--quadro)) calc(2 * var(--quadro)) round;
+    /* borda "corroída" em blocos, como pixel de tela: a máscara é um SVG
+       de retângulos (nítido em qualquer tamanho), um desenho por card */
+    -webkit-mask: var(--borda) 0 0 / 100% 100% no-repeat;
+    mask: var(--borda) 0 0 / 100% 100% no-repeat;
 }
 
 /* a foto ocupa a largura do card e é ancorada acima da faixa do nome: a
@@ -1877,9 +1879,9 @@ html.entrada-ativa .entrada.is-dissolvendo {
 
 .lineup-nome {
     position: absolute;
-    left: 5cqi;
-    right: 5cqi;
-    bottom: 15cqi;
+    left: 10cqi;
+    right: 10cqi;
+    bottom: 15.5cqi;
     z-index: 2;
     display: flex;
     flex-direction: column;
@@ -1891,17 +1893,16 @@ html.entrada-ativa .entrada.is-dissolvendo {
     letter-spacing: 0.01em;
 }
 
-/* sombra escura atrás do nome, para ele não brigar com a roupa dissolvida.
-   Fica dentro da borda pontilhada, longe dos degraus do card. */
-.lineup-nome::before {
-    content: '';
+/* véu branco atrás do nome, para ele não brigar com a roupa dissolvida.
+   Ocupa o card inteiro e usa a mesma máscara do palco, então a borda
+   corroída continua igual por cima da foto. */
+.lineup-veu {
     position: absolute;
-    left: 1cqi;
-    right: 1cqi;
-    bottom: -9cqi;
-    top: -18cqi;
-    z-index: -1;
-    background: linear-gradient(rgba(255, 251, 249, 0), rgba(255, 251, 249, 0.85) 42%, var(--card) 70%);
+    inset: 0;
+    z-index: 2;
+    background: linear-gradient(to top, var(--card) 0 24%, rgba(255, 251, 249, 0.8) 33%, rgba(255, 251, 249, 0) 44%);
+    -webkit-mask: var(--borda) 0 0 / 100% 100% no-repeat;
+    mask: var(--borda) 0 0 / 100% 100% no-repeat;
 }
 
 .lineup-nome-1,
@@ -1940,7 +1941,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
 .lineup-logo {
     position: absolute;
     left: 50%;
-    bottom: 7.5cqi;
+    bottom: 9.5cqi;
     z-index: 2;
     width: 34cqi;
     height: auto;
@@ -1949,8 +1950,8 @@ html.entrada-ativa .entrada.is-dissolvendo {
 
 .lineup-bio {
     position: absolute;
-    top: 7cqi;
-    left: 7cqi;
+    top: 12cqi;
+    left: 12cqi;
     z-index: 3;
     padding: 1.4cqi 3cqi;
     border-radius: 999px;
