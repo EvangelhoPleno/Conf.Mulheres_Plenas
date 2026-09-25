@@ -1781,23 +1781,16 @@ html.entrada-ativa .entrada.is-dissolvendo {
     list-style: none;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(14px, 4vw, 64px);
-    max-width: 960px;
+    gap: clamp(14px, 4vw, 56px);
+    max-width: 800px;
     margin-inline: auto;
-    /* folga no topo para a cabeça que sai do card */
-    padding: clamp(36px, 7vw, 72px) var(--lateral) 20px;
-}
-
-/* notebook grande e monitor: os dois cards crescem para ocupar a tela */
-@media (min-width: 1280px) {
-    .lineup-trilho {
-        max-width: 1120px;
-        gap: 96px;
-    }
+    /* folga no topo para a cabeça (e a mão da Débora) que saem do card */
+    padding: clamp(72px, 19vw, 120px) var(--lateral) 20px;
 }
 
 .lineup-card {
     --escuro: #3E1A10;
+    --card: #FFFBF9;
     position: relative;
     display: block;
     width: 100%;
@@ -1823,39 +1816,36 @@ html.entrada-ativa .entrada.is-dissolvendo {
     outline-offset: 6px;
 }
 
-/* o palco: escuro da marca, luz terracota atrás da pessoa, cantos em degrau */
+/* o palco: branco-papel, luz rosada atrás da pessoa, o símbolo da marca
+   bem apagado ao fundo e a borda se desfazendo em quadriculado — a mesma
+   linguagem de pixel da base da foto e das bordas da seção de ingressos */
 .lineup-palco {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(70% 55% at 50% 38%, rgba(184, 104, 79, 0.55), transparent 70%),
-        var(--escuro);
-    clip-path: polygon(
-        0 7cqi, 5cqi 7cqi, 5cqi 0,
-        100% 0, 100% 62%,
-        97cqi 62%, 97cqi 88%, 100% 88%,
-        100% 100%, 8cqi 100%, 8cqi calc(100% - 4cqi), 0 calc(100% - 4cqi)
-    );
-    box-shadow: 0 18px 40px rgba(62, 26, 16, 0.35);
+        url('assets/imagens/marca/simbolo-marca-dagua.webp') 50% 22% / 86% auto no-repeat,
+        radial-gradient(70% 55% at 50% 38%, var(--rosado), transparent 72%),
+        var(--card);
+    /* miolo inteiro + xadrez por toda a peça: o xadrez só aparece na faixa
+       de dois quadrados que o miolo não cobre. "round" ajusta o quadrado
+       para caber um número inteiro deles, e os cantos fecham certinho. */
+    --quadro: 3cqi;
+    -webkit-mask:
+        linear-gradient(#000 0 0) center / calc(100% - 4 * var(--quadro)) calc(100% - 4 * var(--quadro)) no-repeat,
+        conic-gradient(#000 25%, transparent 0 50%, #000 0 75%, transparent 0) 0 0 / calc(2 * var(--quadro)) calc(2 * var(--quadro)) round;
+    mask:
+        linear-gradient(#000 0 0) center / calc(100% - 4 * var(--quadro)) calc(100% - 4 * var(--quadro)) no-repeat,
+        conic-gradient(#000 25%, transparent 0 50%, #000 0 75%, transparent 0) 0 0 / calc(2 * var(--quadro)) calc(2 * var(--quadro)) round;
 }
 
-/* borda pontilhada por dentro, a mesma linguagem do fim da página */
-.lineup-palco::after {
-    content: '';
-    position: absolute;
-    inset: 3.2cqi;
-    border: 2px dotted rgba(223, 185, 166, 0.35);
-    border-radius: 2px;
-}
-
-/* a foto é maior que o card e ancorada acima da faixa do nome: a cabeça
-   passa do topo e a base dissolvida fica atrás do nome */
+/* a foto ocupa a largura do card e é ancorada acima da faixa do nome: a
+   cabeça (e a mão) passa do topo e a base dissolvida fica atrás do nome */
 .lineup-foto {
     position: absolute;
-    left: -4%;
-    right: -4%;
+    left: 2%;
+    right: 2%;
     bottom: 11%;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: var(--proporcao, 4 / 5);
     overflow: visible;
     background: none;
     z-index: 1;
@@ -1876,7 +1866,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     object-fit: contain;
     object-position: bottom center;
     transform-origin: bottom center;
-    filter: drop-shadow(0 -2px 18px rgba(62, 26, 16, 0.45));
+    filter: drop-shadow(0 6px 14px rgba(62, 26, 16, 0.22));
     transition: transform 0.6s var(--ease-saida);
 }
 
@@ -1889,7 +1879,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     position: absolute;
     left: 5cqi;
     right: 5cqi;
-    bottom: 7cqi;
+    bottom: 15cqi;
     z-index: 2;
     display: flex;
     flex-direction: column;
@@ -1899,7 +1889,6 @@ html.entrada-ativa .entrada.is-dissolvendo {
     line-height: 0.84;
     text-transform: uppercase;
     letter-spacing: 0.01em;
-    text-shadow: 0 3px 0 rgba(62, 26, 16, 0.55);
 }
 
 /* sombra escura atrás do nome, para ele não brigar com a roupa dissolvida.
@@ -1907,12 +1896,12 @@ html.entrada-ativa .entrada.is-dissolvendo {
 .lineup-nome::before {
     content: '';
     position: absolute;
-    left: -1.8cqi;
-    right: -1.8cqi;
-    bottom: -2.8cqi;
+    left: 1cqi;
+    right: 1cqi;
+    bottom: -9cqi;
     top: -18cqi;
     z-index: -1;
-    background: linear-gradient(rgba(62, 26, 16, 0), rgba(62, 26, 16, 0.78) 45%, rgba(62, 26, 16, 0.92));
+    background: linear-gradient(rgba(255, 251, 249, 0), rgba(255, 251, 249, 0.85) 42%, var(--card) 70%);
 }
 
 .lineup-nome-1,
@@ -1922,11 +1911,11 @@ html.entrada-ativa .entrada.is-dissolvendo {
 }
 
 .lineup-nome-1 {
-    color: var(--rosado);
+    color: var(--texto);
 }
 
 .lineup-nome-2 {
-    color: var(--nude);
+    color: var(--tijolo);
 }
 
 /* etiqueta colada por cima do nome, torta como as faixas do site */
@@ -1935,17 +1924,27 @@ html.entrada-ativa .entrada.is-dissolvendo {
     z-index: 1;
     margin: -1.5cqi 0 -0.5cqi;
     padding: 1.6cqi 4.5cqi 1.3cqi;
-    background: var(--nude);
-    color: var(--tijolo);
+    background: var(--tijolo);
+    color: var(--rosado);
     font: 700 max(9px, 3.7cqi)/1 var(--fonte-texto);
     letter-spacing: 0.14em;
-    text-shadow: none;
     rotate: -4deg;
-    box-shadow: 0.8cqi 0.8cqi 0 var(--escuro);
+    box-shadow: 0.8cqi 0.8cqi 0 var(--nude);
 }
 
 .lineup-item:nth-child(even) .lineup-tag {
     rotate: 3deg;
+}
+
+/* assinatura da marca no rodapé de cada card */
+.lineup-logo {
+    position: absolute;
+    left: 50%;
+    bottom: 7.5cqi;
+    z-index: 2;
+    width: 34cqi;
+    height: auto;
+    translate: -50% 0;
 }
 
 .lineup-bio {
@@ -1965,8 +1964,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
 
 .lineup-card:hover .lineup-bio,
 .lineup-card:focus-visible .lineup-bio {
-    background: var(--rosado);
-    color: var(--tijolo);
+    background: var(--texto);
 }
 
 /* =============================================
@@ -3356,7 +3354,7 @@ html.entrada-ativa .entrada.is-dissolvendo {
     }
 
     .lineup-trilho {
-        padding: 72px 0 16px;
+        padding: clamp(72px, 19vw, 120px) 0 16px;
     }
 
     .ticket-topo {
