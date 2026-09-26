@@ -166,7 +166,7 @@
         </nav>
         <svg class="folha folha--traco menu-folha" aria-hidden="true"><use href="#ramo-traco"/></svg>
         <!-- EDITAR: datas -->
-        <p class="menu-overlay-info">00 e 00 de mês · Paragominas – PA</p>
+        <p class="menu-overlay-info">16 e 17 de outubro<br>Paragominas – PA</p>
     </div>
 
     <main>
@@ -251,12 +251,21 @@
                 <span class="faixa faixa--nude recap-tema-rotulo">o tema da conferência</span>
             </h2>
 
+            <!-- EDITAR: capa do vídeo (provisória, montada com dois quadros do próprio
+                 vídeo; os fontes estão em ../capa-video-fonte/). Paisagem no computador,
+                 4:5 no celular. Trocou a capa? Gere os mesmos tamanhos e mantenha os nomes.
+                 O play fica na emenda entre as duas fotos (--play-x / --play-y no CSS),
+                 para não cobrir rostos. Ao clicar, o vídeo vertical abre numa janela. -->
             <button class="recap-thumb" id="recapBtn" type="button" aria-label="Assistir ao vídeo da conferência">
-                <span class="recap-foto midia" data-rotulo="thumb do vídeo">
-                    <!-- EDITAR: capa do vídeo. É a capa do YouTube, copiada para
-                         assets/imagens/recap-{640,960,1280}.jpg (a do YouTube pesava 220 KB
-                         em qualquer tela). Trocou o vídeo? Gere as três de novo. -->
-                    <img src="assets/imagens/recap-960.jpg" srcset="assets/imagens/recap-640.jpg 640w, assets/imagens/recap-960.jpg 960w, assets/imagens/recap-1280.jpg 1280w" sizes="(min-width: 1024px) 960px, 92vw" alt="" width="1280" height="720" loading="lazy">
+                <span class="recap-foto midia" data-rotulo="capa do vídeo">
+                    <picture>
+                        <source media="(max-width: 640px)" srcset="assets/imagens/recap-capa-cel-720.jpg 720w, assets/imagens/recap-capa-cel-1080.jpg 1080w" sizes="92vw" width="1080" height="1350">
+                        <img src="assets/imagens/recap-capa-1280.jpg" srcset="assets/imagens/recap-capa-640.jpg 640w, assets/imagens/recap-capa-960.jpg 960w, assets/imagens/recap-capa-1280.jpg 1280w, assets/imagens/recap-capa-1920.jpg 1920w" sizes="(min-width: 1100px) 1000px, 92vw" alt="" width="1920" height="1080" loading="lazy">
+                    </picture>
+                    <!-- prévia muda em loop (4,5 s) só da área das fotos, com as etiquetas
+                         já gravadas por cima; começa quando a seção aparece. O script escolhe
+                         o arquivo pela largura da tela. Fonte: ../capa-video-fonte/previa.py -->
+                    <video class="recap-previa" data-desk="assets/video/previa-desk.mp4" data-cel="assets/video/previa-cel.mp4" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
                     <span class="recap-play" aria-hidden="true"></span>
                 </span>
                 <span class="recap-legenda script">Mulheres Plenas 2026</span>
@@ -672,12 +681,14 @@
         </div>
     </div>
 
-    <!-- MODAL: VÍDEO -->
-    <div class="modal" id="videoModal" role="dialog" aria-modal="true" aria-label="Vídeo da última edição" aria-hidden="true">
+    <!-- MODAL: VÍDEO (vertical, 9:16). assets/video/chamada-720.mp4 é o vídeo do
+         iPhone convertido (HDR para cor normal, 720x1280). preload="none": os 11 MB
+         só descem quando a pessoa aperta o play. -->
+    <div class="modal" id="videoModal" role="dialog" aria-modal="true" aria-label="Vídeo da conferência" aria-hidden="true">
         <div class="modal-fundo" data-fechar-modal></div>
         <div class="video-modal-conteudo">
             <button class="modal-fechar modal-fechar--claro" type="button" aria-label="Fechar vídeo" data-fechar-modal>&#x2715;</button>
-            <div class="video-modal-frame"></div>
+            <video class="video-modal-video" id="recapVideo" src="assets/video/chamada-720.mp4" poster="assets/video/chamada-capa.webp" width="720" height="1280" preload="none" playsinline controls></video>
         </div>
     </div>
 

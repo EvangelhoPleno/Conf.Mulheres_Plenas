@@ -13,8 +13,7 @@
     var CONFIG = {
         links: {
             ingressos: ''   // ex.: 'https://www.sympla.com.br/evento/...'
-        },
-        videoRecapYoutubeId: 'otVnNDNmVEk'  // só o ID: em youtube.com/watch?v=AbC123, é 'AbC123'
+        }
     };
 
     var reduzirMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1141,19 +1140,13 @@
         modal.setAttribute('aria-hidden', 'true');
         travarRolagem(false);
 
-        // tira o iframe para o vídeo parar de tocar
-        if (modal.id === 'videoModal') {
-            setTimeout(function () {
-                modal.querySelector('.video-modal-frame').replaceChildren();
-            }, 300);
-        }
+        if (modal.id === 'videoModal') modal.querySelector('video').pause();
 
         if (focoAnterior) focoAnterior.focus({ preventScroll: true });
     }
 
     function configurarModais() {
         var bioModal = document.getElementById('bioModal');
-        var videoModal = document.getElementById('videoModal');
 
         document.querySelectorAll('[data-fechar-modal]').forEach(function (el) {
             el.addEventListener('click', fecharModal);
@@ -1174,27 +1167,40 @@
             });
         }
 
+        // vídeo da chamada: abre numa janela e já toca com som
+        var videoModal = document.getElementById('videoModal');
         var recapBtn = document.getElementById('recapBtn');
-        if (videoModal && recapBtn) {
+        var recapVideo = document.getElementById('recapVideo');
+        if (videoModal && recapBtn && recapVideo) {
             recapBtn.addEventListener('click', function () {
-                var moldura = videoModal.querySelector('.video-modal-frame');
-                var id = CONFIG.videoRecapYoutubeId;
-
-                if (id) {
-                    var iframe = document.createElement('iframe');
-                    iframe.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0';
-                    iframe.title = 'Vídeo da última edição';
-                    iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
-                    iframe.allowFullscreen = true;
-                    moldura.replaceChildren(iframe);
-                } else {
-                    var aviso = document.createElement('p');
-                    aviso.className = 'video-modal-vazio';
-                    aviso.textContent = 'Configure o ID do vídeo em CONFIG.videoRecapYoutubeId, no script.js.';
-                    moldura.replaceChildren(aviso);
-                }
-
                 abrirModal(videoModal);
+                recapVideo.currentTime = 0;   // sempre do começo
+                recapVideo.play().catch(function () {});
+            });
+        }
+
+        // prévia muda da capa: toca só enquanto a capa está na tela. Quem pediu
+        // menos movimento ou economia de dados fica com a imagem parada.
+        var previa = document.querySelector('.recap-previa');
+        var economia = navigator.connection && navigator.connection.saveData;
+        if (previa && !reduzirMovimento && !economia && 'IntersectionObserver' in window) {
+            var celular = window.matchMedia('(max-width: 640px)');
+            var naTela = false;
+            var tocarPrevia = function () {
+                var src = celular.matches ? previa.dataset.cel : previa.dataset.desk;
+                if (previa.getAttribute('src') !== src) previa.src = src;
+                previa.play().catch(function () {});
+            };
+            previa.addEventListener('playing', function () { previa.classList.add('is-tocando'); });
+            celular.addEventListener('change', function () { if (naTela) tocarPrevia(); });
+            new IntersectionObserver(function (entradas) {
+                naTela = entradas[0].isIntersecting;
+                if (naTela && !videoModal.classList.contains('is-open')) tocarPrevia();
+                else previa.pause();
+            }, { threshold: 0.25 }).observe(previa);
+            recapBtn.addEventListener('click', function () { previa.pause(); });
+            videoModal.addEventListener('transitionend', function () {
+                if (!videoModal.classList.contains('is-open') && naTela) tocarPrevia();
             });
         }
     }

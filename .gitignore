@@ -8,3 +8,7 @@ tmp/
 # chave da conta de serviço do Google (nunca vai para o GitHub)
 credenciais-google*.json
 *-service-account*.json
+
+# video original do iPhone (74 MB); o site usa assets/video/chamada-720.mp4
+*.MOV
+*.mov

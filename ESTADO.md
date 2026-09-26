@@ -5,6 +5,23 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
 
+## Vídeo da chamada e QR Code (26/09, véspera da abertura das inscrições)
+
+- **Seção 2 (recap):** saiu o YouTube. Capa provisória feita com dois quadros do
+  próprio vídeo (`assets/imagens/recap-capa-{640,960,1280,1920}.jpg` e
+  `recap-capa-cel-{720,1080}.jpg`, 4:5 no celular). Ao aparecer na tela, as
+  fotos viram uma prévia muda de 4,5 s (`assets/video/previa-{desk,cel}.mp4`,
+  com as etiquetas gravadas); não toca com "menos movimento" ou economia de
+  dados. O play abre o vídeo vertical numa janela, sempre do começo
+  (`assets/video/chamada-720.mp4`, HDR do iPhone convertido, 11 MB,
+  `preload="none"`). Fontes da capa e o script da prévia ficam fora do Git, em
+  `../capa-video-fonte/` (`previa.py`). Trocou a capa? Gere de novo os mesmos
+  nomes e rode o `previa.py`.
+- `frame-src` do YouTube saiu do CSP.
+- Data do menu do celular corrigida ("00 e 00 de mês" → 16 e 17 de outubro).
+- **QR Code do telão:** `../qrcode-mulheres-plenas.png` (3960 px, tijolo, coração
+  no meio, correção H) → `https://evangelhoplenoparagominas.com.br`.
+
 ## Auditoria de AppSec e performance (25/09, branch `seguranca/auditoria-25-09`)
 
 Nada deixava emitir ingresso sem pagar. O risco real era **derrubar a venda
