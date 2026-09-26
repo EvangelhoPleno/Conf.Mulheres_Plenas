@@ -19,6 +19,14 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
   nomes e rode o `previa.py`.
 - `frame-src` do YouTube saiu do CSP.
 - Data do menu do celular corrigida ("00 e 00 de mês" → 16 e 17 de outubro).
+- **Botão "Convidar uma amiga"** (coração da marca): abaixo do vídeo, ao lado
+  do "Garanta seu ingresso" final e na `confirmacao.html` (texto "acabei de
+  garantir meu lugar"). Abre `wa.me/?text=` com texto + link; textos no
+  `convite.js`. A imagem vem da **pré-visualização do link** (og:image), não
+  de anexo: no iPhone o WhatsApp descarta o texto quando recebe imagem junto.
+- **og:image agora é URL absoluta** (antes era relativa e o WhatsApp não
+  mostrava imagem nenhuma): `compartilhamento-convite.jpg`, 1200x630, a capa do
+  vídeo. Trocar a imagem = **nome novo** (o WhatsApp guarda a prévia por dias).
 - **QR Code do telão:** `../qrcode-mulheres-plenas.png` (3960 px, tijolo, coração
   no meio, correção H) → `https://evangelhoplenoparagominas.com.br`.
 

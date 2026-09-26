@@ -11,15 +11,18 @@
     <meta property="og:locale" content="pt_BR">
     <meta property="og:title" content="Conferência Mulheres Plenas 2026">
     <meta property="og:description" content="Um encontro para mulheres que desejam viver algo novo. Garanta seu ingresso.">
-    <!-- Imagem de compartilhamento, 1200x630. A arte é montada em
-         assets/compartilhamento-fonte.html: abra no navegador e tire um print
-         de 1200x630 para gerar de novo (ex.: ao trocar a data).
-         ATENÇÃO: troque por URL absoluta quando o domínio estiver definido —
-         WhatsApp, Facebook e X não resolvem caminho relativo. -->
-    <meta property="og:image" content="assets/imagens/compartilhamento.jpg">
+    <meta property="og:url" content="https://evangelhoplenoparagominas.com.br/">
+    <!-- Imagem de compartilhamento, 1200x630: é a que aparece no WhatsApp quando
+         alguém manda o link (inclusive pelo botão "Convidar uma amiga"). Hoje é
+         a capa do vídeo da seção 2; a arte antiga continua em compartilhamento.jpg.
+         Precisa de URL ABSOLUTA: WhatsApp, Facebook e X não resolvem caminho
+         relativo. Trocou a imagem? Use um NOME NOVO, porque o WhatsApp guarda a
+         prévia antiga por dias. -->
+    <meta property="og:image" content="https://evangelhoplenoparagominas.com.br/assets/imagens/compartilhamento-convite.jpg">
+    <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="Conferência Mulheres Plenas 2026 — 16 e 17 de outubro, Paragominas – PA">
+    <meta property="og:image:alt" content="Conferência Mulheres Plenas 2026: moldadas pelo Espírito, movidas pelo Propósito. 16 e 17 de outubro, Paragominas – PA">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/png" href="assets/imagens/marca/favicon-64.png">
     <link rel="apple-touch-icon" href="assets/imagens/marca/apple-touch-180.png">
@@ -38,6 +41,7 @@
     <!-- sem defer e antes do script.js: o configurarVagas() lê window.MP_CONFIG -->
     <script src="config.js"></script>
     <script src="script.js" defer></script>
+    <script src="convite.js" defer></script>
     <!-- Vercel Web Analytics e Speed Insights: sem cookies, só nesta página.
          Checkout, pagamento e confirmação ficam de fora de propósito: o
          endereço delas leva o Pedido_ID, que dá acesso aos ingressos. -->
@@ -270,6 +274,14 @@
                 </span>
                 <span class="recap-legenda script">Mulheres Plenas 2026</span>
             </button>
+
+            <!-- CONVIDAR UMA AMIGA: o texto e o link ficam no convite.js -->
+            <div class="recap-convite">
+                <a class="btn-convite btn-convite--claro" data-convite="padrao" href="https://wa.me/?text=https%3A%2F%2Fevangelhoplenoparagominas.com.br" target="_blank" rel="noopener" aria-label="Convidar uma amiga pelo WhatsApp">
+                    <span class="btn-convite-coracao" aria-hidden="true"><img src="assets/imagens/marca/coracao-48.png" alt="" width="48" height="48"></span>
+                    <span class="btn-convite-texto">Convidar uma amiga</span>
+                </a>
+            </div>
         </section>
 
         <!-- GALERIA 3D + SOBRE -->
@@ -523,7 +535,13 @@
                     </ul>
                 </div>
 
-                <a href="#setores" class="btn-cta btn-cta--claro" data-link="ingressos"><span class="btn-cta-text">Garanta seu ingresso</span></a>
+                <div class="ingressos-acoes">
+                    <a href="#setores" class="btn-cta btn-cta--claro" data-link="ingressos"><span class="btn-cta-text">Garanta seu ingresso</span></a>
+                    <a class="btn-convite btn-convite--claro" data-convite="padrao" href="https://wa.me/?text=https%3A%2F%2Fevangelhoplenoparagominas.com.br" target="_blank" rel="noopener" aria-label="Convidar uma amiga pelo WhatsApp">
+                        <span class="btn-convite-coracao" aria-hidden="true"><img src="assets/imagens/marca/coracao-48.png" alt="" width="48" height="48"></span>
+                        <span class="btn-convite-texto">Convidar uma amiga</span>
+                    </a>
+                </div>
             </div>
         </section>
 

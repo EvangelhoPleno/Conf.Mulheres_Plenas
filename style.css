@@ -295,6 +295,76 @@ html.lenis body {
     --btn-sombra: var(--tijolo-escuro);
 }
 
+/* CONVIDAR UMA AMIGA: contorno com o coracao da marca num selo redondo.
+   Texto e link no convite.js. --claro e para fundo tijolo. */
+.btn-convite {
+    --convite-cor: var(--tijolo);
+    --convite-selo: var(--rosado);
+    --convite-texto-hover: var(--rosado);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 100%;
+    min-height: 54px;
+    padding: 5px 28px 5px 5px;
+    border: 2px solid var(--convite-cor);
+    border-radius: 999px;
+    color: var(--convite-cor);
+    font-weight: 700;
+    font-size: clamp(0.85rem, 3.4vw, 1rem);
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background-color 0.25s, color 0.25s, transform 0.25s var(--ease-saida);
+}
+
+.btn-convite--claro {
+    --convite-cor: var(--rosado);
+    --convite-selo: var(--papel);
+    --convite-texto-hover: var(--tijolo);
+}
+
+.btn-convite:hover {
+    background: var(--convite-cor);
+    color: var(--convite-texto-hover);
+    transform: translateY(-2px);
+}
+
+.btn-convite:active {
+    transform: translateY(1px);
+}
+
+.btn-convite-coracao {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--convite-selo);
+    box-shadow: 2px 3px 0 var(--terracota);
+}
+
+.btn-convite-coracao img {
+    width: 25px;
+    height: auto;
+    animation: conviteBate 2.4s ease-in-out infinite;
+}
+
+/* batida leve do coracao: dois pulsos e uma pausa */
+@keyframes conviteBate {
+    0%, 30%, 100% { transform: scale(1); }
+    10% { transform: scale(1.16); }
+    20% { transform: scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-convite-coracao img {
+        animation: none;
+    }
+}
+
 /* =============================================
    ENTRADA — abertura de ~5s a cada acesso
    O script inline no <head> liga html.entrada-ativa; o script.js anima e
@@ -1288,6 +1358,12 @@ html.entrada-ativa .entrada.is-dissolvendo {
 
 .recap-thumb:hover .recap-play {
     transform: scale(1.08);
+}
+
+.recap-convite {
+    display: flex;
+    justify-content: center;
+    margin-top: clamp(40px, 5vw, 60px);
 }
 
 .recap-legenda {
@@ -2665,15 +2741,23 @@ html.entrada-ativa .entrada.is-dissolvendo {
     from { opacity: 0; transform: translateY(26px); }
 }
 
-.ingressos-inner > .btn-cta {
+.ingressos-acoes {
     align-self: center;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 18px 22px;
+}
+
+.ingressos-acoes > .btn-cta {
     padding-inline: clamp(34px, 6vw, 58px);
     font-size: clamp(0.95rem, 2.4vw, 1.08rem);
     box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
     transition: transform 0.3s var(--ease-saida), box-shadow 0.3s var(--ease-saida);
 }
 
-.ingressos-inner > .btn-cta:hover {
+.ingressos-acoes > .btn-cta:hover {
     transform: translateY(-3px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.38);
 }
