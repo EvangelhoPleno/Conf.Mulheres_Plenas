@@ -1179,11 +1179,13 @@
             });
         }
 
-        // prévia muda da capa: toca só enquanto a capa está na tela. Quem pediu
-        // menos movimento ou economia de dados fica com a imagem parada.
+        // prévia muda da capa: toca só enquanto a capa está na tela, em qualquer
+        // tela. De propósito NÃO respeita "menos movimento" (pedido do cliente:
+        // o mesmo em todo aparelho); só quem liga economia de dados fica com a
+        // imagem parada.
         var previa = document.querySelector('.recap-previa');
         var economia = navigator.connection && navigator.connection.saveData;
-        if (previa && !reduzirMovimento && !economia && 'IntersectionObserver' in window) {
+        if (previa && !economia && 'IntersectionObserver' in window) {
             var celular = window.matchMedia('(max-width: 640px)');
             var naTela = false;
             var tocarPrevia = function () {

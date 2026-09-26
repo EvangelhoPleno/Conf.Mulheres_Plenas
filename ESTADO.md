@@ -11,8 +11,8 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
   próprio vídeo (`assets/imagens/recap-capa-{640,960,1280,1920}.jpg` e
   `recap-capa-cel-{720,1080}.jpg`, 4:5 no celular). Ao aparecer na tela, as
   fotos viram uma prévia muda de 4,5 s (`assets/video/previa-{desk,cel}.mp4`,
-  com as etiquetas gravadas); não toca com "menos movimento" ou economia de
-  dados. O play abre o vídeo vertical numa janela, sempre do começo
+  com as etiquetas gravadas); toca em qualquer tela, inclusive com "menos
+  movimento" ligado (pedido do Jadison); só economia de dados deixa parada. O play abre o vídeo vertical numa janela, sempre do começo
   (`assets/video/chamada-720.mp4`, HDR do iPhone convertido, 11 MB,
   `preload="none"`). Fontes da capa e o script da prévia ficam fora do Git, em
   `../capa-video-fonte/` (`previa.py`). Trocou a capa? Gere de novo os mesmos
