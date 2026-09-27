@@ -1,9 +1,58 @@
-# Estado do projeto — 25/09/2026
+# Estado do projeto — 26/09/2026
 
 Resumo para retomar o trabalho sem reler o histórico. Evento: **Conferência
 Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
+
+## Auditoria final da véspera (26/09, noite)
+
+Nenhuma linha de código mudou. `npm test` 51 verdes, `auditar-portas` verde.
+O `auditar-mercadopago` **não** foi rodado: o `.env` tem a credencial de
+produção e ele criaria cobrança real.
+
+**Achado grave, depende de mudança no DNS da Cloudflare:** da operadora do
+Jadison (a mesma do público de Paragominas, provavelmente), 3 rodadas de teste:
+
+| Endereço | Resultado |
+|---|---|
+| raiz `64.29.17.1` | **nunca responde** (a rota morre no 11º salto, dentro da operadora) |
+| raiz `216.198.79.1` e `76.76.21.21` | 200 em 0,26 s |
+| `www` → `216.198.79.65` | **nunca responde** |
+| `www` → `64.29.17.65`, `cname.vercel-dns.com` (`76.76.21.164`, `66.33.60.34`) | 308 em 0,15 s |
+
+Com os dois A na raiz, quem sorteia o IP morto espera ~21 s ou desiste. No
+navegador automático, 1 de 3 aberturas levou 21 s só para conectar.
+Correção: apagar o A `64.29.17.1` (fica só o `216.198.79.1`) e trocar o
+CNAME do `www` para `cname.vercel-dns.com`, os dois Somente DNS. A Vercel
+aceita os dois valores (`/v6/domains/.../config`, `misconfigured:false`).
+
+Provado nesta auditoria:
+- Produção: deploy `e5ba76d` READY = `main`; 14 variáveis em Production;
+  `/api/saude` ok:true; conta MP de produção (sem `test_user`).
+- Portas no ar: webhook sem/com assinatura falsa 401; admin 401; simulador
+  404; checkout sem Turnstile ou com token falso 403; JSON quebrado 400;
+  `package.json`, `vercel.json`, `.git/config`, `.md` 404.
+- **Webhook atual contra pagamentos reais** (planilha em memória, e-mail
+  desligado, só GET no MP): Pix aprovado → PAGO com código; cartão estornado
+  → REEMBOLSADO; Pix pendente → PENDENTE; R$ 55 num pedido de R$ 110 → não
+  emite; ID inexistente → ignorado.
+- **Planilha zerada** (0 pedidos). No MP só os testes conhecidos; o Pix de
+  teste de 25/09 (179855858091) está pendente e expira sozinho.
+- Navegador real (desktop e iPhone): zero erro de JS e zero bloqueio de CSP;
+  sem rolagem lateral; 1º lote "vendas abertas", 2º "abre 07/10"; validação
+  do checkout; pedido inexistente com mensagem clara. O botão do topo aparece
+  ~7 s depois de abrir (abertura animada), como projetado.
+- Resend verified; `resend._domainkey`, `send`, `rsend`, `_dmarc` intactos;
+  certificado Let's Encrypt até 22/12/2026.
+
+Não verificado: compra real paga com o código de 25/09 em diante (só a prova
+acima, com dados reais); entrega em Hotmail/Outlook (só Gmail testado);
+checkout dentro do navegador do Instagram; o pico da divulgação contra a
+cota do Google (a carga de 24/09 aguentou 30 juntas).
+
+Sem contato da organização, endereço e horário no site: várias mensagens
+dizem "fale com a organização" e não há como. Decisão de conteúdo, em aberto.
 
 ## Vídeo da chamada e QR Code (26/09, véspera da abertura das inscrições)
 
