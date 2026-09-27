@@ -187,7 +187,7 @@ test('/saude mostra o Mercado Pago de pé, sem expor segredo', async function ()
 });
 
 test('Pix: checkout -> QR -> webhook assinado -> PAGO, sem duplicar', async function () {
-    const r = await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 2, metodo: 'pix' }, COMPRADORA));
+    const r = await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 1, metodo: 'pix' }, COMPRADORA));
     const pedido = await r.json();
     assert.equal(r.status, 201, JSON.stringify(pedido));
     assert.equal(pedido.status, 'PENDENTE');
@@ -196,7 +196,7 @@ test('Pix: checkout -> QR -> webhook assinado -> PAGO, sem duplicar', async func
     assert.ok(pedido.linkPagamento, 'ticket_url como plano B');
 
     const chamada = falso.chamadas.find(function (c) { return c.corpo.external_reference === pedido.pedidoId; });
-    assert.equal(chamada.corpo.transaction_amount, 110, '2 x R$ 55,00 em reais');
+    assert.equal(chamada.corpo.transaction_amount, 55, 'R$ 55,00 em reais');
     assert.equal(chamada.corpo.payment_method_id, 'pix');
     assert.equal(chamada.opcoes.headers['X-Idempotency-Key'], pedido.pedidoId, 'repetir não cria outro Pix');
     assert.deepEqual(chamada.corpo.payer.identification, { type: 'CPF', number: '24971563792' });
@@ -216,7 +216,7 @@ test('Pix: checkout -> QR -> webhook assinado -> PAGO, sem duplicar', async func
     assert.equal((await avisar(pagamento.id)).status, 200);
     const pago = await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json();
     assert.equal(pago.status, 'PAGO');
-    assert.equal(pago.ingressos.length, 2);
+    assert.equal(pago.ingressos.length, 1);
     assert.equal(pago.transacaoId, String(pagamento.id));
 
     // o Mercado Pago reenvia: mesmos códigos
@@ -226,7 +226,7 @@ test('Pix: checkout -> QR -> webhook assinado -> PAGO, sem duplicar', async func
 });
 
 test('cartão: link do Checkout Pro; o pagamento que nasce depois acha o pedido', async function () {
-    const r = await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 3, metodo: 'cartao' }, COMPRADORA));
+    const r = await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 1, metodo: 'cartao' }, COMPRADORA));
     const pedido = await r.json();
     assert.equal(r.status, 201, JSON.stringify(pedido));
     assert.equal(pedido.pix, null);
@@ -234,7 +234,7 @@ test('cartão: link do Checkout Pro; o pagamento que nasce depois acha o pedido'
 
     const pref = falso.preferencias[falso.preferencias.length - 1];
     assert.equal(pref.external_reference, pedido.pedidoId);
-    assert.deepEqual(pref.items[0], { id: 'lote-1', title: pref.items[0].title, quantity: 3, unit_price: 55, currency_id: 'BRL' });
+    assert.deepEqual(pref.items[0], { id: 'lote-1', title: pref.items[0].title, quantity: 1, unit_price: 55, currency_id: 'BRL' });
     assert.equal(pref.auto_return, 'approved', 'SITE_URL https: volta sozinho para a página de pagamento');
     assert.match(pref.back_urls.success, /\/pagamento\.html\?pedido=MP/);
     assert.equal(pref.payment_methods.installments, 1);
@@ -254,7 +254,7 @@ test('cartão: link do Checkout Pro; o pagamento que nasce depois acha o pedido'
     assert.equal((await avisar(aprovado.id)).status, 200);
     const pago = await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json();
     assert.equal(pago.status, 'PAGO', 'a recusa anterior não segura o pedido');
-    assert.equal(pago.ingressos.length, 3);
+    assert.equal(pago.ingressos.length, 1);
 });
 
 test('cartão: se o webhook se perder, a página de pagamento descobre sozinha', async function () {
@@ -308,17 +308,17 @@ test('Mercado Pago fora do ar no webhook: 500 para ele tentar de novo', async fu
 
 /* ---------- o valor aprovado precisa cobrir o pedido ---------- */
 test('pagamento aprovado com valor menor que o pedido não emite ingresso', async function () {
-    const pedido = await (await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 2, metodo: 'cartao' }, COMPRADORA))).json();
+    const pedido = await (await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 1, metodo: 'cartao' }, COMPRADORA))).json();
     const barato = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId, transaction_amount: 1, currency_id: 'BRL' };
     falso.pagamentos.set(String(barato.id), barato);
 
     assert.equal((await avisar(barato.id)).status, 200);
     const depois = await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json();
-    assert.equal(depois.status, 'PENDENTE', 'R$ 1,00 num pedido de R$ 110,00');
+    assert.equal(depois.status, 'PENDENTE', 'R$ 1,00 num pedido de R$ 55,00');
     assert.equal(depois.ingressos.length, 0);
 
     // o pagamento certo, depois, ainda libera
-    const certo = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId, transaction_amount: 110, currency_id: 'BRL' };
+    const certo = { id: proximoId++, status: 'approved', external_reference: pedido.pedidoId, transaction_amount: 55, currency_id: 'BRL' };
     falso.pagamentos.set(String(certo.id), certo);
     assert.equal((await avisar(certo.id)).status, 200);
     assert.equal((await (await fetch(base + '/pedidos/' + pedido.pedidoId)).json()).status, 'PAGO');

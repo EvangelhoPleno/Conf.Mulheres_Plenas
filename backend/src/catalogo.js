@@ -19,9 +19,10 @@ const evento = {
     tema: 'Moldadas pelo Espírito. Movidas pelo Propósito.'
 };
 
-// quantos ingressos cabem num mesmo pedido (uma pessoa comprando para amigas)
+// quantos ingressos cabem num mesmo pedido: 1 desde 27/09, cada ingresso
+// precisa do nome de quem vai (pedidos antigos com 2 continuam valendo)
 const QTD_MIN = 1;
-const QTD_MAX = 5;
+const QTD_MAX = 1;
 
 // EDITAR: os dois lotes e a janela de venda de cada um.
 // As datas PRECISAM bater com os data-inicio / data-fim dos <li class="lote">

@@ -95,18 +95,18 @@ test('checkout recusa dados inválidos campo a campo', async function () {
 
 test('checkout recusa produto e quantidade inválidos', async function () {
     assert.equal((await post('/checkout', Object.assign({ produto: 'vip-gratis' }, COMPRADORA))).status, 400);
-    assert.equal((await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 6 }, COMPRADORA))).status, 400, 'acima do maximo de 5');
+    assert.equal((await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 2 }, COMPRADORA))).status, 400, 'um ingresso por pedido');
     assert.equal((await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 2.5 }, COMPRADORA))).status, 400, 'quantidade quebrada');
     // 0 e ausente sao a mesma coisa: caem no minimo do lote (ver pedidoService)
     assert.equal((await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 0 }, COMPRADORA))).status, 201, '0 = nao informado, vira 1');
 });
 
 test('fluxo Pix: pendente -> pago -> ingressos, sem duplicar', async function () {
-    const r = await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 3, metodo: 'pix', valorTotal: 1 }, COMPRADORA));
+    const r = await post('/checkout', Object.assign({ produto: 'lote-1', quantidade: 1, metodo: 'pix', valorTotal: 1 }, COMPRADORA));
     const checkout = await r.json();
     assert.equal(r.status, 201);
     assert.equal(checkout.status, 'PENDENTE');
-    assert.equal(checkout.valorTotal, 16500, 'ignora valor mandado pelo navegador: 3 x R$ 55,00');
+    assert.equal(checkout.valorTotal, 5500, 'ignora valor mandado pelo navegador: R$ 55,00');
     assert.ok(checkout.pix.copiaECola);
     assert.match(checkout.pix.qrCode, /^data:image\/png;base64,/);
     assert.equal(checkout.email, 'ma***@exemplo.com');
@@ -119,7 +119,7 @@ test('fluxo Pix: pendente -> pago -> ingressos, sem duplicar', async function ()
 
     const simulado = await (await post('/dev/simular-pagamento/' + checkout.pedidoId)).json();
     assert.equal(simulado.status, 'PAGO');
-    assert.equal(simulado.ingressos.length, 3);
+    assert.equal(simulado.ingressos.length, 1);
 
     // webhook repetido não gera códigos novos
     const w = await post('/webhook', { transacaoId: simulado.transacaoId });
@@ -138,9 +138,9 @@ test('fluxo Pix: pendente -> pago -> ingressos, sem duplicar', async function ()
 });
 
 test('fluxo cartão devolve link de pagamento', async function () {
-    const checkout = await (await post('/checkout', Object.assign({ produto: 'lote-2', quantidade: 5, metodo: 'cartao' }, COMPRADORA))).json();
-    assert.equal(checkout.quantidade, 5);
-    assert.equal(checkout.valorTotal, 32500, '5 x R$ 65,00');
+    const checkout = await (await post('/checkout', Object.assign({ produto: 'lote-2', quantidade: 1, metodo: 'cartao' }, COMPRADORA))).json();
+    assert.equal(checkout.quantidade, 1);
+    assert.equal(checkout.valorTotal, 6500, 'R$ 65,00');
     assert.ok(checkout.linkPagamento);
     assert.equal(checkout.pix, null);
 });

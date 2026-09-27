@@ -5,6 +5,23 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
 
+## Resend Pro (27/09, meio-dia)
+
+Abertura das vendas: 118 e-mails até ~11h50, acima do limite de 100/dia do
+plano Free (o Resend ainda aceitava, sem garantia). Jadison assinou o **Pro**
+(cartão; o Resend não aceita Pix). Conferido 12:02: a resposta do envio não
+traz mais `x-resend-daily-quota`, só `x-resend-monthly-quota` (137 de 50.000).
+Nenhuma mudança de chave ou código. **Cancelar (voltar ao Free) depois de
+17/10, antes da renovação**, em Settings > Billing.
+Planilha às 12h: 120 PAGO, todos `Email_Enviado = SIM`. 5 e-mails de
+ingresso voltaram (bounce, provável endereço digitado errado): carlenymiguelmiguel@gmail,
+thamyreandrille@gmail, eliednasousa@icloud, apassarellacalcados2013@live,
+aquilsilva2528@gmail — contato por telefone e reenvio pelo admin.
+Se um dia o Resend recusar por cota (`daily_quota_exceeded`), o pedido fica
+`ERRO` e só é reenviado com a página de confirmação aberta ou pelo admin.
+
+---
+
 ## Auditoria final da véspera (26/09, noite)
 
 Nenhuma linha de código mudou. `npm test` 51 verdes, `auditar-portas` verde.

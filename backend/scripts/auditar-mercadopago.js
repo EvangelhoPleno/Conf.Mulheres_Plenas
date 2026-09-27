@@ -60,7 +60,7 @@ function avisar(pagamentoId, segredo) {
 }
 
 const COMPRADORA = {
-    produto: 'lote-1', quantidade: 2, metodo: 'pix',
+    produto: 'lote-1', quantidade: 1, metodo: 'pix',
     nome: 'Maria de Teste', email: 'maria.teste@exemplo.com.br',
     cpf: '249.715.637-92', telefone: '(91) 98888-7777'
 };
@@ -122,7 +122,7 @@ async function main() {
         ok(compra.status === 201, 'POST /api/checkout responde 201', 'HTTP ' + compra.status + ' ' + JSON.stringify(compra.corpo).slice(0, 200));
         if (compra.status !== 201) throw new Error('sem pedido, nao da para seguir');
         const pedidoPix = compra.corpo;
-        ok(pedidoPix.valorTotal === 11000, 'valor de 2 ingressos = R$ 110,00', pedidoPix.valorTotal);
+        ok(pedidoPix.valorTotal === 5500, 'valor de 1 ingresso = R$ 55,00', pedidoPix.valorTotal);
         ok(Boolean(pedidoPix.pix && pedidoPix.pix.copiaECola), 'pix.copiaECola presente (sem ele: conta sem chave Pix)');
         ok(Boolean(pedidoPix.pix && String(pedidoPix.pix.qrCode || '').startsWith('data:image/png')), 'pix.qrCode e uma imagem pronta');
         ok(Boolean(pedidoPix.linkPagamento), 'linkPagamento, o plano B se o QR falhar');
@@ -153,7 +153,7 @@ async function main() {
     } else {
         let pago;
         try {
-            pago = await pagarNoCartao(pedidoCartao.pedidoId, 110);
+            pago = await pagarNoCartao(pedidoCartao.pedidoId, 55);
         } catch (e) {
             const motivo = JSON.stringify((e.response && e.response.data) || e.message);
             if (!/live credentials/i.test(motivo)) throw e;
