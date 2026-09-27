@@ -23,7 +23,11 @@ Jadison (a mesma do público de Paragominas, provavelmente), 3 rodadas de teste:
 
 Com os dois A na raiz, quem sorteia o IP morto espera ~21 s ou desiste. No
 navegador automático, 1 de 3 aberturas levou 21 s só para conectar.
-Correção: apagar o A `64.29.17.1` (fica só o `216.198.79.1`) e trocar o
+**CORRIGIDO na mesma noite** e conferido em 1.1.1.1, 8.8.8.8 e na Cloudflare;
+Vercel `misconfigured:false` nos dois nomes; 6 aberturas seguidas no
+navegador, página em 0,6–1,3 s. Zona hoje: A `@` só `216.198.79.1`, CNAME
+`www` → `cname.vercel-dns.com`; as tabelas de DNS mais abaixo são históricas.
+Feito: apagar o A `64.29.17.1` (fica só o `216.198.79.1`) e trocar o
 CNAME do `www` para `cname.vercel-dns.com`, os dois Somente DNS. A Vercel
 aceita os dois valores (`/v6/domains/.../config`, `misconfigured:false`).
 
@@ -127,7 +131,7 @@ reenviar um aviso capturado não faz nada (o status é sempre reconsultado).
   vídeo, Turnstile e fontes: zero violações. **Toda origem externa nova**
   (outro script, fonte, iframe, imagem de fora) **precisa entrar no CSP**, ou
   o navegador bloqueia em silêncio.
-- **Pendente:** um dos IPs da Vercel (`64.29.17.1`) não responde a partir da
+- **Resolvido em 26/09 (ver topo):** um dos IPs da Vercel (`64.29.17.1`) não responde a partir da
   operadora do Jadison (responde de 40 pontos do mundo): quem estiver nessa
   rota espera ~21 s. Opção: deixar só o A `216.198.79.1`. Aguarda teste no 4G.
 
