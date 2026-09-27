@@ -55,6 +55,23 @@ acima, com dados reais); entrega em Hotmail/Outlook (só Gmail testado);
 checkout dentro do navegador do Instagram; o pico da divulgação contra a
 cota do Google (a carga de 24/09 aguentou 30 juntas).
 
+**E-mail do ingresso: mail-tester 7,3 → 10/10 (26/09, noite).** A perda era
+toda do Reply-To em Gmail com From no domínio (FREEMAIL_FORGED_REPLYTO -2,5,
+padrão de golpe; Outlook/Yahoo punem mais que o Gmail). Criado o
+**Encaminhamento de e-mail da Cloudflare** (conta `Iep.paragominas...`, NÃO a
+conta pessoal `Jadisonribeiro1996...`, que não tem domínio):
+`contato@evangelhoplenoparagominas.com.br` → Gmail do Jadison. Ele criou 3 MX
+`route{1,2,3}.mx.cloudflare.net`, o TXT `v=spf1 include:_spf.mx.cloudflare.net
+~all` na raiz e a DKIM `cf2024-1._domainkey`, travados; Resend e DMARC
+intactos (o SPF que conta para o Resend é o do `send.`). `EMAIL_REPLY_TO` =
+`contato@...` na Vercel (redeploy 27/09 01:22 UTC, READY) e no `.env`.
+O Gmail esconde e-mail enviado dele mesmo para o `contato@`: testar de outro
+endereço, ou olhar o "Registro de atividade" do Encaminhamento.
+Armadilha: o 1º teste para o `contato@` saiu antes de a regra sincronizar,
+voltou (550 "Address does not exist") e o **Resend pôs o `contato@` na lista
+de supressão**: envios do Resend PARA ele saem `suppressed` até tirar no
+painel do Resend. Não afeta ingresso nenhum.
+
 Sem contato da organização, endereço e horário no site: várias mensagens
 dizem "fale com a organização" e não há como. Decisão de conteúdo, em aberto.
 
