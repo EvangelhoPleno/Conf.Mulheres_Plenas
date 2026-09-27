@@ -50,8 +50,15 @@ Provado nesta auditoria:
 - Resend verified; `resend._domainkey`, `send`, `rsend`, `_dmarc` intactos;
   certificado Let's Encrypt até 22/12/2026.
 
-Não verificado: compra real paga com o código de 25/09 em diante (só a prova
-acima, com dados reais); entrega em Hotmail/Outlook (só Gmail testado);
+**Compra real com o código atual — PROVADA (26/09, 22:31):** Pix de R$ 55
+pelo celular → aprovado 22:32:24 → planilha PAGO + `MP26-6ARM-967C` +
+e-mail SIM às 22:32:25 → Resend `delivered` com Reply-To `contato@` → e-mail
+recebido. "Devolver dinheiro" (operação 181097350892) às 22:36:48 →
+REEMBOLSADO na planilha às 22:36:49, só pelo webhook. A linha de teste deve
+ser apagada da planilha. (Os logs de execução da Vercel não abrem com o
+`VERCEL_TOKEN` do projeto: a API devolve vazio.)
+
+Não verificado: entrega em Hotmail/Outlook (só Gmail testado);
 checkout dentro do navegador do Instagram; o pico da divulgação contra a
 cota do Google (a carga de 24/09 aguentou 30 juntas).
 
