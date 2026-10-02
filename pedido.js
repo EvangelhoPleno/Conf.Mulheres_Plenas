@@ -73,6 +73,12 @@
         };
 
         if (!API) return indisponivel();
+        // esgotado: true no config.js fecha a compra também para quem chega
+        // direto pelo link do checkout (o backend continua aceitando)
+        if (window.MP_CONFIG && window.MP_CONFIG.esgotado) {
+            $('[data-estado="indisponivel"] .titulo').textContent = 'Vagas esgotadas';
+            return indisponivel('As vagas da Conferência Mulheres Plenas estão esgotadas. Obrigada pelo carinho! Se novas vagas forem abertas, avisaremos no site e nas nossas redes.');
+        }
 
         var produtoId = params.get('produto') || '';
         var form = $('.pedido-form');

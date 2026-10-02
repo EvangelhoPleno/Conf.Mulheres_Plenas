@@ -1280,6 +1280,10 @@
         if (!lotes.length) return;
 
         var agora = new Date();
+        // esgotado: true no config.js fecha todos os lotes de uma vez, sem
+        // olhar as datas (o backend não muda: é só a vitrine)
+        var esgotado = !!(window.MP_CONFIG && window.MP_CONFIG.esgotado);
+        if (esgotado) marcarEsgotado();
 
         Array.prototype.forEach.call(lotes, function (lote) {
             var inicio = lerDia(lote.getAttribute('data-inicio'), false);
@@ -1288,7 +1292,10 @@
             if (!inicio || !fim || !selo) return;
 
             var estado, texto;
-            if (agora < inicio) {
+            if (esgotado) {
+                estado = 'esgotado';
+                texto = 'esgotado';
+            } else if (agora < inicio) {
                 estado = 'espera';
                 texto = 'abre ' + lote.getAttribute('data-inicio').slice(8, 10) + '/' + lote.getAttribute('data-inicio').slice(5, 7);
             } else if (agora <= fim) {
@@ -1316,8 +1323,21 @@
             ticket.setAttribute('tabindex', '-1');
             ticket.removeAttribute('href');
             var acao = ticket.querySelector('.ticket-acao');
-            if (acao) acao.textContent = estado === 'espera' ? 'em breve' : 'vendas encerradas';
+            if (acao) acao.textContent = estado === 'espera' ? 'em breve' : estado === 'esgotado' ? 'esgotado' : 'vendas encerradas';
         });
+
+        /* troca os convites de compra do resto da página: título da seção,
+           botões "Garanta seu ingresso" e a faixa que corre embaixo do hero */
+        function marcarEsgotado() {
+            var titulo = document.getElementById('setores');
+            if (titulo) titulo.innerHTML = 'Vagas <span class="highlight-ingresso script">esgotadas</span>';
+            document.querySelectorAll('a.btn-cta[href="#setores"] .btn-cta-text').forEach(function (el) {
+                el.textContent = 'Vagas esgotadas';
+            });
+            document.querySelectorAll('.faixa-rolante-grupo span:not(.estrela)').forEach(function (el) {
+                if (el.textContent === 'Garanta seu ingresso') el.textContent = 'Vagas esgotadas';
+            });
+        }
 
         /* Pelo relógio de Paragominas (UTC-3 fixo), igual ao diaBR() do
            backend/src/catalogo.js. Com o fuso de quem está vendo, em Manaus ou

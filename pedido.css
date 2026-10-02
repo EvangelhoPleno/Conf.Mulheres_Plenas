@@ -772,3 +772,10 @@ button.btn-cta {
 
 /* Cloudflare Turnstile (anti-robô): ocupa espaço só quando pede interação */
 .anti-robo { display: flex; justify-content: center; }
+
+/* vagas esgotadas (esgotado: true no config.js): o checkout mostra só o aviso,
+   sem as etapas nem o "Garanta seu ingresso" */
+html.is-esgotado [data-pagina="checkout"] .etapas,
+html.is-esgotado [data-pagina="checkout"] .pedido-cabecalho {
+    display: none;
+}

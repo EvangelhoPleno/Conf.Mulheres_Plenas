@@ -141,6 +141,16 @@
         </symbol>
     </svg>
 
+    <!-- VAGAS ESGOTADAS: só aparece com esgotado: true no config.js
+         (o config.js põe .is-esgotado no <html>). Para reabrir, false. -->
+    <div class="aviso-esgotado" role="status">
+        <span class="aviso-esgotado-luz" aria-hidden="true"></span>
+        <span class="aviso-esgotado-selo" aria-hidden="true"><img src="assets/imagens/marca/coracao-48.png" alt="" width="48" height="48"></span>
+        <strong class="aviso-esgotado-titulo">Vagas esgotadas</strong>
+        <span class="aviso-esgotado-estrela" aria-hidden="true">✦</span>
+        <span class="aviso-esgotado-texto">obrigada pelo carinho!</span>
+    </div>
+
     <!-- NAVBAR -->
     <header class="navbar">
         <a href="#topo" class="nav-logo" aria-label="Mulheres Plenas — início">
@@ -456,6 +466,13 @@
                        2) o campo "vagas" da resposta de GET /api/produtos
                      Sem nenhuma das duas, fica só a frase das 350 vagas: o site
                      nunca mostra um número inventado. Ver configurarVagas() no script.js. -->
+                <!-- só no modo esgotado (config.js): toma o lugar das 350 vagas -->
+                <div class="esgotado-recado">
+                    <span class="faixa faixa--papel esgotado-recado-faixa">esgotado</span>
+                    <p class="esgotado-recado-texto">As vagas da Conferência Mulheres Plenas estão esgotadas. Obrigada a cada mulher que garantiu seu lugar!</p>
+                    <p class="esgotado-recado-nota">Se novas vagas forem abertas, avisaremos por aqui e nas nossas redes.</p>
+                </div>
+
                 <div class="vagas">
                     <p class="vagas-limite">
                         <span class="vagas-limite-pre">são apenas</span>
