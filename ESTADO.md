@@ -5,7 +5,7 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
 
-## Reabertura das vendas (05/10, 12h) e 2º lote em 06/10
+## Reabertura das vendas (05/10, 12h) e 2º lote em 07/10
 
 Vagas fechadas no site desde 01/10 (`esgotado: true`). Em 05/10 o Jadison
 reabriu: `esgotado: false` + `reabertura: '2026-10-05T12:00:00-03:00'` no
@@ -14,8 +14,11 @@ contagem regressiva na faixa do topo, na seção de ingressos e no checkout;
 ao zerar, a página recarrega sozinha (atraso sorteado de até 6 s) já aberta.
 Depois da hora o campo não faz nada. O relógio é o do aparelho de quem vê, e
 o backend não sabe da hora: quem forçar a API antes das 12h consegue comprar.
-- **Lotes mudaram:** 1º até 05/10 (era 06/10), 2º de 06/10 (era 07/10), no
-  `index.html` e no `backend/src/catalogo.js` (testes ajustados, 51 verdes).
+- **Lotes:** de manhã o 1º foi antecipado para 05/10; no mesmo dia o Jadison
+  voltou atrás: **1º lote (R$ 55) até 06/10 23:59, 2º (R$ 65) de 07/10**,
+  no `index.html` e no `backend/src/catalogo.js` (commit `88d313d`, 51
+  verdes, conferido no ar). Arte `../artes/novas-vagas/` refeita com essas
+  datas (selo "o 1º lote vai até 06/10 à meia-noite").
 - **Sem número de vagas no site:** saiu o "são apenas 350 vagas" e o painel
   de vendidos (`configurarVagas`). Nada trava a venda: fechar de novo é
   `esgotado: true` quando o Jadison pedir.
