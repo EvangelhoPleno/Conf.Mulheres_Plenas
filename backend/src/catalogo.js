@@ -32,8 +32,8 @@ const QTD_MAX = 1;
 const lotes = [
     // aberto de verdade em 24/09 para o ensaio em produção; o card da landing
     // continua anunciando 27/09 (texto fixo), que é quando o link é divulgado
-    { id: 'lote-1', lote: '1º lote', preco: 5500, de: '2026-09-24', ate: '2026-10-06' },
-    { id: 'lote-2', lote: '2º lote', preco: 6500, de: '2026-10-07', ate: '2026-10-15' }
+    { id: 'lote-1', lote: '1º lote', preco: 5500, de: '2026-09-24', ate: '2026-10-05' },
+    { id: 'lote-2', lote: '2º lote', preco: 6500, de: '2026-10-06', ate: '2026-10-15' }
 ];
 
 /* A janela de venda vale pelo relogio de Paragominas, nao pelo do servidor.

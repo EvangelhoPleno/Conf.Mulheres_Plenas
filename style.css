@@ -2286,136 +2286,6 @@ html.entrada-ativa .entrada.is-dissolvendo {
     z-index: 2;
 }
 
-/* ---------- capacidade e andamento das vendas ---------- */
-.vagas {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 26px;
-    margin-bottom: clamp(30px, 4.2vw, 46px);
-}
-
-/* a escassez dita a seção: 700 em corpo grande, o resto discreto */
-.vagas-limite {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 0 12px;
-    font-family: var(--fonte-faixa);
-    font-size: clamp(1rem, 3vw, 1.35rem);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--nude);
-    text-align: center;
-}
-
-.vagas-limite-num {
-    font-family: var(--fonte-titulo);
-    font-weight: 800;
-    font-variation-settings: "SOFT" 100, "WONK" 1;
-    font-size: clamp(3.4rem, 13vw, 5.6rem);
-    line-height: 0.9;
-    letter-spacing: -0.02em;
-    color: var(--papel);
-    text-shadow: 3px 4px 0 rgba(0, 0, 0, 0.18);
-}
-
-/* painel: só entra no ar quando existe número real de vendidos */
-.vagas-painel {
-    width: min(560px, 100%);
-    padding: 24px 26px 22px;
-    border: 1.5px solid rgba(223, 185, 166, 0.28);
-    border-radius: 20px;
-    background: rgba(62, 26, 16, 0.26);
-    -webkit-backdrop-filter: blur(2px);
-    backdrop-filter: blur(2px);
-    text-align: center;
-}
-
-.vagas-painel[hidden] { display: none; }
-
-.vagas-rotulo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--nude);
-}
-
-.vagas-chama {
-    width: 18px;
-    height: 18px;
-    fill: var(--terracota);
-    transform-origin: 50% 90%;
-}
-
-.vagas-chama-nucleo { fill: var(--nude); }
-
-.vagas-painel:not([hidden]) .vagas-chama {
-    animation: chamaBate 2.6s ease-in-out infinite;
-}
-
-@keyframes chamaBate {
-    50% { transform: scale(1.14); }
-}
-
-.vagas-numero {
-    margin-top: 6px;
-    font-family: var(--fonte-titulo);
-    font-weight: 800;
-    font-variation-settings: "SOFT" 100, "WONK" 1;
-    font-size: clamp(2.4rem, 9vw, 3.4rem);
-    line-height: 1;
-    letter-spacing: -0.02em;
-    color: var(--papel);
-}
-
-.vagas-de {
-    font-size: 0.42em;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: var(--nude);
-}
-
-.vagas-barra {
-    margin-top: 16px;
-}
-
-.vagas-barra-trilho {
-    display: block;
-    height: 12px;
-    padding: 3px;
-    border-radius: 999px;
-    background: rgba(245, 232, 226, 0.16);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
-}
-
-.vagas-barra-cheio {
-    display: block;
-    width: 0;
-    height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--terracota), var(--nude) 70%, var(--papel));
-    box-shadow: 0 0 10px rgba(223, 185, 166, 0.45);
-    /* o JS escreve a largura real; a transição faz ela subir do zero */
-    transition: width 1.1s var(--ease-saida);
-}
-
-.vagas-pct {
-    margin-top: 12px;
-    font-size: 0.86rem;
-    color: var(--nude);
-}
-
-.vagas-pct strong {
-    color: var(--papel);
-}
-
 /* ---------- lotes ----------
    Dois lotes, um ingresso em cada, nenhum combo: os dois cards são iguais em
    estrutura e só o preço, a janela de venda e a situação mudam. */
@@ -3630,16 +3500,6 @@ html.entrada-ativa .entrada.is-dissolvendo {
         animation-iteration-count: infinite !important;
     }
 
-    /* a barra de vagas cresce do zero: é o movimento que mostra o andamento */
-    .vagas-barra-cheio {
-        transition-duration: 1.1s !important;
-    }
-
-    .vagas-painel:not([hidden]) .vagas-chama {
-        animation-duration: 2.6s !important;
-        animation-iteration-count: infinite !important;
-    }
-
     /* o ponto do selo "vendas abertas" continua batendo: nao esconde nada */
     .ticket-status--aberto::before {
         animation-duration: 2.2s !important;
@@ -4171,8 +4031,7 @@ html.is-esgotado #setores {
 }
 
 /* ---------- seção de ingressos ---------- */
-/* o recado toma o lugar do "são apenas 350 vagas" e do contador */
-html.is-esgotado .vagas,
+/* o recado fica acima dos lotes, no lugar dos botões de compra */
 html.is-esgotado .ingressos-acoes,
 html.is-esgotado .btn-convite {
     display: none;
@@ -4245,6 +4104,87 @@ html.is-esgotado .esgotado-recado {
     white-space: nowrap;
     transform: translate(-50%, -50%) rotate(-12deg);
     box-shadow: 0 10px 26px rgba(62, 26, 16, 0.18);
+}
+
+/* =============================================
+   REABERTURA COM CONTADOR (reabertura no config.js)
+   Antes da hora, o config.js põe .is-esgotado E .is-reabrindo no <html>:
+   vale tudo do modo esgotado acima (faixa, navbar, lotes fechados), mas a
+   faixa e o recado trocam o "esgotado" pelo relógio [data-reabre-relogio].
+   ============================================= */
+.aviso-reabre,
+.reabre-recado {
+    display: none;
+}
+
+html.is-reabrindo .aviso-esgotado-titulo,
+html.is-reabrindo .aviso-esgotado-estrela,
+html.is-reabrindo .aviso-esgotado-texto,
+html.is-reabrindo .esgotado-recado {
+    display: none;
+}
+
+html.is-reabrindo .aviso-reabre {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.aviso-reabre-texto {
+    font-family: var(--fonte-mao);
+    font-weight: 700;
+    font-size: 1.3rem;
+    line-height: 1;
+    color: var(--nude);
+}
+
+/* largura fixa por dígito: o relógio não treme a cada segundo */
+.aviso-reabre-relogio {
+    padding-top: 0.12em;
+    font-family: var(--fonte-faixa);
+    font-weight: 400;
+    font-size: 1.5rem;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+    color: var(--papel);
+}
+
+html.is-reabrindo .reabre-recado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    max-width: 560px;
+    margin: 0 auto clamp(34px, 4.6vw, 50px);
+    text-align: center;
+}
+
+.reabre-recado-faixa {
+    font-size: clamp(2rem, 6vw, 2.6rem);
+    letter-spacing: 0.08em;
+    transform: rotate(-2deg);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+.reabre-recado-texto {
+    font-size: clamp(1rem, 2.6vw, 1.12rem);
+    line-height: 1.55;
+    color: var(--rosado);
+}
+
+.reabre-recado-texto strong {
+    color: var(--papel);
+}
+
+.reabre-recado-relogio {
+    font-family: var(--fonte-faixa);
+    font-size: clamp(3.4rem, 12vw, 5rem);
+    line-height: 1;
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+    color: var(--papel);
 }
 
 .ticket-status--esgotado {

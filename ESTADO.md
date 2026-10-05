@@ -1,9 +1,37 @@
-# Estado do projeto — 26/09/2026
+# Estado do projeto — 05/10/2026
 
 Resumo para retomar o trabalho sem reler o histórico. Evento: **Conferência
 Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
+
+## Reabertura das vendas (05/10, 12h) e 2º lote em 06/10
+
+Vagas fechadas no site desde 01/10 (`esgotado: true`). Em 05/10 o Jadison
+reabriu: `esgotado: false` + `reabertura: '2026-10-05T12:00:00-03:00'` no
+`config.js`. Antes da hora o site fica fechado como no esgotado, mas com
+contagem regressiva na faixa do topo, na seção de ingressos e no checkout;
+ao zerar, a página recarrega sozinha (atraso sorteado de até 6 s) já aberta.
+Depois da hora o campo não faz nada. O relógio é o do aparelho de quem vê, e
+o backend não sabe da hora: quem forçar a API antes das 12h consegue comprar.
+- **Lotes mudaram:** 1º até 05/10 (era 06/10), 2º de 06/10 (era 07/10), no
+  `index.html` e no `backend/src/catalogo.js` (testes ajustados, 51 verdes).
+- **Sem número de vagas no site:** saiu o "são apenas 350 vagas" e o painel
+  de vendidos (`configurarVagas`). Nada trava a venda: fechar de novo é
+  `esgotado: true` quando o Jadison pedir.
+
+## Conferência de 28/09, 16h
+
+Painel `Acompanhamento` recalculado linha a linha a partir de `Pedidos`: todos
+os números batem (292 pedidos, 237 PAGO, 244 ingressos, R$ 13.420). Mercado
+Pago (só GET): 237 aprovados = 237 PAGO, mesma soma; nenhum pago perdido; o
+único pagamento sem linha é o teste estornado de 26/09. `npm test` 51 verdes,
+`/api/saude` ok, deploy `9450764` = `main`.
+**Bounce não aparece na planilha** (`SIM` = o Resend aceitou): ainda com e-mail
+que volta, linhas 24, 50, 97, 133, 150, 152, 206, 233 (o 239 usa o mesmo
+e-mail do 233) e 87. Corrigir o e-mail na planilha e reenviar pelo admin.
+`karleanesousa073` está na lista de supressão do Resend. Pedido de cartão
+abandonado fica PENDENTE para sempre (16 hoje): infla "Aguardando pagamento".
 
 ## Resend Pro (27/09, meio-dia)
 
@@ -17,6 +45,7 @@ Planilha às 12h: 120 PAGO, todos `Email_Enviado = SIM`. 5 e-mails de
 ingresso voltaram (bounce, provável endereço digitado errado): carlenymiguelmiguel@gmail,
 thamyreandrille@gmail, eliednasousa@icloud, apassarellacalcados2013@live,
 aquilsilva2528@gmail — contato por telefone e reenvio pelo admin.
+Reenviados às 17:09 (e-mail corrigido na planilha, Resend `delivered`): Carlene, Tamires, Aquila e Keila Portela. Faltam eliednasousa e apassarellacalcados.
 Se um dia o Resend recusar por cota (`daily_quota_exceeded`), o pedido fica
 `ERRO` e só é reenviado com a página de confirmação aberta ou pelo admin.
 
@@ -109,7 +138,7 @@ dizem "fale com a organização" e não há como. Decisão de conteúdo, em aber
   movimento" ligado (pedido do Jadison); só economia de dados deixa parada. O play abre o vídeo vertical numa janela, sempre do começo
   (`assets/video/chamada-720.mp4`, HDR do iPhone convertido, 11 MB,
   `preload="none"`). Fontes da capa e o script da prévia ficam fora do Git, em
-  `../capa-video-fonte/` (`previa.py`). Trocou a capa? Gere de novo os mesmos
+  `../artes/capa-video/` (`previa.py`). Trocou a capa? Gere de novo os mesmos
   nomes e rode o `previa.py`.
 - `frame-src` do YouTube saiu do CSP.
 - Data do menu do celular corrigida ("00 e 00 de mês" → 16 e 17 de outubro).
@@ -121,7 +150,7 @@ dizem "fale com a organização" e não há como. Decisão de conteúdo, em aber
 - **og:image agora é URL absoluta** (antes era relativa e o WhatsApp não
   mostrava imagem nenhuma): `compartilhamento-convite.jpg`, 1200x630, a capa do
   vídeo. Trocar a imagem = **nome novo** (o WhatsApp guarda a prévia por dias).
-- **QR Code do telão:** `../qrcode-mulheres-plenas.png` (3960 px, tijolo, coração
+- **QR Code do telão:** `../midia/qrcode-mulheres-plenas.png` (3960 px, tijolo, coração
   no meio, correção H) → `https://evangelhoplenoparagominas.com.br`.
 
 ## Auditoria de AppSec e performance (25/09, branch `seguranca/auditoria-25-09`)

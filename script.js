@@ -1208,67 +1208,6 @@
     }
 
     /* ---------------------------------------------------------
-       VAGAS VENDIDAS (seção de ingressos)
-       O painel começa com hidden e SÓ é revelado quando chega um número
-       real. Sem dado, fica só a frase das 350 vagas — o site nunca mostra
-       contador inventado. A origem, nesta ordem:
-         1) window.MP_CONFIG.vagas = { total: 350, vendidos: 128 }
-         2) campo "vagas" da resposta de GET /api/produtos:
-            { "vagas": { "total": 350, "vendidos": 128 } }
-       --------------------------------------------------------- */
-    function configurarVagas() {
-        var painel = document.getElementById('vagasPainel');
-        if (!painel) return;
-
-        var barra = document.getElementById('vagasBarra');
-        var cheio = document.getElementById('vagasBarraCheio');
-        var elVendidos = document.getElementById('vagasVendidos');
-        var elTotal = document.getElementById('vagasTotal');
-        var elPct = document.getElementById('vagasPct');
-        if (!barra || !cheio || !elVendidos || !elTotal || !elPct) return;
-
-        function numero(v) {
-            return typeof v === 'number' && isFinite(v) && v >= 0;
-        }
-
-        function mostrar(vendidos, total) {
-            if (!numero(vendidos)) return;
-            if (!numero(total) || total <= 0) total = parseInt(painel.dataset.total, 10) || 350;
-
-            var v = Math.min(Math.round(vendidos), total);
-            var pct = Math.round((v / total) * 100);
-
-            elVendidos.textContent = v.toLocaleString('pt-BR');
-            elTotal.textContent = total.toLocaleString('pt-BR');
-            elPct.textContent = pct + '%';
-            barra.setAttribute('aria-valuenow', String(pct));
-            barra.setAttribute('aria-valuetext', v + ' de ' + total + ' ingressos vendidos');
-            painel.hidden = false;
-
-            // dois quadros depois do reveal, para a transição sair do zero
-            requestAnimationFrame(function () {
-                requestAnimationFrame(function () { cheio.style.width = pct + '%'; });
-            });
-        }
-
-        var cfg = window.MP_CONFIG && window.MP_CONFIG.vagas;
-        if (cfg && numero(cfg.vendidos)) {
-            mostrar(cfg.vendidos, cfg.total);
-            return;
-        }
-
-        var api = window.MP_CONFIG && window.MP_CONFIG.apiUrl;
-        if (!api || !window.fetch) return;
-
-        fetch(api.replace(/\/+$/, '') + '/api/produtos')
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (dados) {
-                if (dados && dados.vagas) mostrar(dados.vagas.vendidos, dados.vagas.total);
-            })
-            .catch(function () { /* sem API: fica só a frase das 350 vagas */ });
-    }
-
-    /* ---------------------------------------------------------
        SITUAÇÃO DOS LOTES (seção de ingressos)
        Cada [data-lote] traz a janela de venda no data-inicio / data-fim do
        HTML — nenhuma data mora aqui. A partir dela o selo diz se o lote está
@@ -1283,7 +1222,11 @@
         // esgotado: true no config.js fecha todos os lotes de uma vez, sem
         // olhar as datas (o backend não muda: é só a vitrine)
         var esgotado = !!(window.MP_CONFIG && window.MP_CONFIG.esgotado);
+        // antes da hora de reabertura (reabertura no config.js) fica tudo
+        // fechado como no esgotado, mas anunciando a abertura às 12h
+        var reabrindo = !esgotado && !!(window.MP_CONFIG && window.MP_CONFIG.reabrindo);
         if (esgotado) marcarEsgotado();
+        if (reabrindo) marcarReabrindo();
 
         Array.prototype.forEach.call(lotes, function (lote) {
             var inicio = lerDia(lote.getAttribute('data-inicio'), false);
@@ -1295,6 +1238,9 @@
             if (esgotado) {
                 estado = 'esgotado';
                 texto = 'esgotado';
+            } else if (reabrindo && agora >= inicio && agora <= fim) {
+                estado = 'espera';
+                texto = 'abre às 12h';
             } else if (agora < inicio) {
                 estado = 'espera';
                 texto = 'abre ' + lote.getAttribute('data-inicio').slice(8, 10) + '/' + lote.getAttribute('data-inicio').slice(5, 7);
@@ -1325,6 +1271,15 @@
             var acao = ticket.querySelector('.ticket-acao');
             if (acao) acao.textContent = estado === 'espera' ? 'em breve' : estado === 'esgotado' ? 'esgotado' : 'vendas encerradas';
         });
+
+        /* antes da reabertura: os convites de compra anunciam o meio-dia */
+        function marcarReabrindo() {
+            var titulo = document.getElementById('setores');
+            if (titulo) titulo.innerHTML = 'Novas vagas <span class="highlight-ingresso script">hoje às 12h</span>';
+            document.querySelectorAll('a.btn-cta[href="#setores"] .btn-cta-text').forEach(function (el) {
+                el.textContent = 'Vagas abrem às 12h';
+            });
+        }
 
         /* troca os convites de compra do resto da página: título da seção,
            botões "Garanta seu ingresso" e a faixa que corre embaixo do hero */
@@ -1477,7 +1432,6 @@
     var heroTl = iniciarAnimacoes();
     // sem GSAP (ou com menos movimento) as entradas ficam por conta do CSS
     configurarEntradas(!heroTl);
-    configurarVagas();
     configurarLotes();
     configurarDithers();
     configurarModais();

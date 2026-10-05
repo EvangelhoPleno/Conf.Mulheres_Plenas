@@ -141,14 +141,20 @@
         </symbol>
     </svg>
 
-    <!-- VAGAS ESGOTADAS: só aparece com esgotado: true no config.js
-         (o config.js põe .is-esgotado no <html>). Para reabrir, false. -->
+    <!-- VAGAS ESGOTADAS: só aparece com esgotado: true no config.js, ou antes
+         da hora de reabertura (reabertura no config.js), com o contador.
+         O config.js põe .is-esgotado (e .is-reabrindo) no <html>. -->
     <div class="aviso-esgotado" role="status">
         <span class="aviso-esgotado-luz" aria-hidden="true"></span>
         <span class="aviso-esgotado-selo" aria-hidden="true"><img src="assets/imagens/marca/coracao-48.png" alt="" width="48" height="48"></span>
         <strong class="aviso-esgotado-titulo">Vagas esgotadas</strong>
         <span class="aviso-esgotado-estrela" aria-hidden="true">✦</span>
         <span class="aviso-esgotado-texto">obrigada pelo carinho!</span>
+        <!-- só antes da reabertura (MP_CONFIG.reabertura): troca o "esgotadas" pelo contador -->
+        <span class="aviso-reabre">
+            <span class="aviso-reabre-texto">vagas abrem às 12h</span>
+            <strong class="aviso-reabre-relogio" data-reabre-relogio role="timer" aria-label="tempo até a abertura das vagas"></strong>
+        </span>
     </div>
 
     <!-- NAVBAR -->
@@ -267,7 +273,7 @@
             </h2>
 
             <!-- EDITAR: capa do vídeo (provisória, montada com dois quadros do próprio
-                 vídeo; os fontes estão em ../capa-video-fonte/). Paisagem no computador,
+                 vídeo; os fontes estão em ../artes/capa-video/). Paisagem no computador,
                  4:5 no celular. Trocou a capa? Gere os mesmos tamanhos e mantenha os nomes.
                  O play fica na emenda entre as duas fotos (--play-x / --play-y no CSS),
                  para não cobrir rostos. Ao clicar, o vídeo vertical abre numa janela. -->
@@ -279,7 +285,7 @@
                     </picture>
                     <!-- prévia muda em loop (4,5 s) só da área das fotos, com as etiquetas
                          já gravadas por cima; começa quando a seção aparece. O script escolhe
-                         o arquivo pela largura da tela. Fonte: ../capa-video-fonte/previa.py -->
+                         o arquivo pela largura da tela. Fonte: ../artes/capa-video/previa.py -->
                     <video class="recap-previa" data-desk="assets/video/previa-desk.mp4" data-cel="assets/video/previa-cel.mp4" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
                     <span class="recap-play" aria-hidden="true"></span>
                 </span>
@@ -431,7 +437,7 @@
         </section>
 
         <!-- INGRESSOS
-             EDITAR: vagas, lotes, datas de venda e preços.
+             EDITAR: lotes, datas de venda e preços.
              Um tipo de ingresso por lote, sem combo: o que muda de um lote
              para o outro é só o preço e a janela de venda. As datas moram nos
              data-inicio / data-fim de cada lote — o script.js lê dali e não
@@ -455,44 +461,23 @@
             <svg class="folha ingressos-folha-2" aria-hidden="true" data-flutuar><use href="#ramo"/></svg>
             <div class="ingressos-inner">
                 <!-- id="setores" fica no título, não nos cards: todo link "Ingressos"
-                     aponta para cá, e mirando os cards o "são apenas 350 vagas"
+                     aponta para cá, e mirando os cards o que vem acima deles
                      ficava escondido atrás do menu -->
                 <h2 class="cant-sub" id="setores">Escolha seu <span class="highlight-ingresso script">ingresso</span> abaixo:</h2>
 
-                <!-- CAPACIDADE + ANDAMENTO DAS VENDAS
-                     O painel de vendidos só aparece quando existe número REAL.
-                     A origem é, nesta ordem:
-                       1) window.MP_CONFIG.vagas = { total: 350, vendidos: 128 }  (config.js)
-                       2) o campo "vagas" da resposta de GET /api/produtos
-                     Sem nenhuma das duas, fica só a frase das 350 vagas: o site
-                     nunca mostra um número inventado. Ver configurarVagas() no script.js. -->
-                <!-- só no modo esgotado (config.js): toma o lugar das 350 vagas -->
+                <!-- só no modo esgotado (config.js) -->
                 <div class="esgotado-recado">
                     <span class="faixa faixa--papel esgotado-recado-faixa">esgotado</span>
                     <p class="esgotado-recado-texto">As vagas da Conferência Mulheres Plenas estão esgotadas. Obrigada a cada mulher que garantiu seu lugar!</p>
                     <p class="esgotado-recado-nota">Se novas vagas forem abertas, avisaremos por aqui e nas nossas redes.</p>
                 </div>
 
-                <div class="vagas">
-                    <p class="vagas-limite">
-                        <span class="vagas-limite-pre">são apenas</span>
-                        <strong class="vagas-limite-num">350</strong>
-                        <span class="vagas-limite-pos">vagas</span>
-                    </p>
-
-                    <div class="vagas-painel" id="vagasPainel" data-total="350" hidden>
-                        <p class="vagas-rotulo">
-                            <svg class="vagas-chama" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c.6 3 2.2 4.2 3.6 5.7 1.5 1.6 2.4 3.2 2.4 5.3a6 6 0 0 1-12 0c0-1.5.5-2.7 1.3-3.7.2 1 .8 1.8 1.7 2 .5-3 1.9-4.9 3-9.3Z"/><path class="vagas-chama-nucleo" d="M12 21a3 3 0 0 1-3-3c0-1.6 1.2-2.5 1.9-3.9.5 1 1 1.4 1.8 2 .8.7 1.3 1.3 1.3 1.9a3 3 0 0 1-2 3Z"/></svg>
-                            Ingressos vendidos
-                        </p>
-                        <p class="vagas-numero">
-                            <strong id="vagasVendidos">0</strong><span class="vagas-de">/ <span id="vagasTotal">350</span></span>
-                        </p>
-                        <div class="vagas-barra" role="progressbar" id="vagasBarra" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Vagas preenchidas">
-                            <span class="vagas-barra-trilho"><span class="vagas-barra-cheio" id="vagasBarraCheio"></span></span>
-                        </div>
-                        <p class="vagas-pct"><strong id="vagasPct">0%</strong> das vagas preenchidas</p>
-                    </div>
+                <!-- só antes da reabertura (reabertura no config.js): contagem
+                     regressiva; ao zerar, a página recarrega com as vendas abertas -->
+                <div class="reabre-recado">
+                    <span class="faixa faixa--papel reabre-recado-faixa">falta pouco</span>
+                    <p class="reabre-recado-texto">As vendas reabrem <strong>hoje, ao meio-dia</strong>. Fique nesta página: quando o contador zerar, o ingresso já aparece para você.</p>
+                    <p class="reabre-recado-relogio" data-reabre-relogio role="timer" aria-label="tempo até a abertura das vagas"></p>
                 </div>
 
                 <!-- EDITAR: os dois lotes. Um ingresso por lote, nada de combo.
@@ -502,7 +487,7 @@
                      e começa oculto: sem JS, o site não promete nada. -->
                 <div class="setores" data-entrada>
                     <ul class="setor-cards lotes">
-                        <li class="lote" data-lote data-inicio="2026-09-24" data-fim="2026-10-06">
+                        <li class="lote" data-lote data-inicio="2026-09-24" data-fim="2026-10-05">
                             <a class="ticket ticket--destaque" href="checkout.html?produto=lote-1" data-link="ingressos">
                                 <span class="ticket-topo">
                                     <span class="ticket-lote">1º lote</span>
@@ -514,7 +499,7 @@
                                 <span class="ticket-preco"><small>R$</small>55<small>,00</small></span>
                                 <span class="ticket-janela">
                                     <span class="ticket-janela-rotulo">vendas</span>
-                                    <span class="ticket-janela-datas">27/09 a 06/10</span>
+                                    <span class="ticket-janela-datas">27/09 a 05/10</span>
                                 </span>
                                 <span class="ticket-base">
                                     <span class="ticket-detalhe">1 ingresso · acesso aos dois dias de conferência</span>
@@ -526,7 +511,7 @@
                                 </span>
                             </a>
                         </li>
-                        <li class="lote" data-lote data-inicio="2026-10-07" data-fim="2026-10-15">
+                        <li class="lote" data-lote data-inicio="2026-10-06" data-fim="2026-10-15">
                             <a class="ticket" href="checkout.html?produto=lote-2" data-link="ingressos">
                                 <span class="ticket-topo">
                                     <span class="ticket-lote">2º lote</span>
@@ -538,7 +523,7 @@
                                 <span class="ticket-preco"><small>R$</small>65<small>,00</small></span>
                                 <span class="ticket-janela">
                                     <span class="ticket-janela-rotulo">vendas</span>
-                                    <span class="ticket-janela-datas">07/10 a 15/10</span>
+                                    <span class="ticket-janela-datas">06/10 a 15/10</span>
                                 </span>
                                 <span class="ticket-base">
                                     <span class="ticket-detalhe">1 ingresso · acesso aos dois dias de conferência</span>

@@ -79,6 +79,19 @@
             $('[data-estado="indisponivel"] .titulo').textContent = 'Vagas esgotadas';
             return indisponivel('As vagas da Conferência Mulheres Plenas estão esgotadas. Obrigada pelo carinho! Se novas vagas forem abertas, avisaremos no site e nas nossas redes.');
         }
+        // antes da hora de reabertura (config.js): mesmo bloqueio, com o
+        // contador; ao zerar, o config.js recarrega e o checkout abre
+        if (window.MP_CONFIG && window.MP_CONFIG.reabrindo) {
+            var caixa = $('[data-estado="indisponivel"]');
+            $('.titulo', caixa).textContent = 'As vagas abrem às 12h';
+            var relogio = document.createElement('p');
+            relogio.className = 'reabre-checkout-relogio';
+            relogio.setAttribute('data-reabre-relogio', '');
+            relogio.setAttribute('role', 'timer');
+            relogio.setAttribute('aria-label', 'tempo até a abertura das vagas');
+            caixa.insertBefore(relogio, $('.acoes', caixa));
+            return indisponivel('Fique nesta página: quando o contador zerar, ela recarrega sozinha e você já pode garantir o seu ingresso.');
+        }
 
         var produtoId = params.get('produto') || '';
         var form = $('.pedido-form');

@@ -779,3 +779,14 @@ html.is-esgotado [data-pagina="checkout"] .etapas,
 html.is-esgotado [data-pagina="checkout"] .pedido-cabecalho {
     display: none;
 }
+
+/* antes da reabertura (config.js): o contador grande na tela de aviso */
+.reabre-checkout-relogio {
+    margin: 6px 0 18px;
+    font-family: var(--fonte-faixa);
+    font-size: clamp(3rem, 12vw, 4.2rem);
+    line-height: 1;
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+    color: var(--tijolo);
+}
