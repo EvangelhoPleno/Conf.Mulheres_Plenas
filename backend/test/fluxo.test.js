@@ -58,8 +58,8 @@ test('janela de venda de cada lote', function () {
 
     // as datas precisam ser as mesmas dos data-inicio/data-fim do index.html
     assert.equal(um.vendaDe, '2026-09-24');
-    assert.equal(um.vendaAte, '2026-10-05');
-    assert.equal(dois.vendaDe, '2026-10-06');
+    assert.equal(um.vendaAte, '2026-10-06');
+    assert.equal(dois.vendaDe, '2026-10-07');
     assert.equal(dois.vendaAte, '2026-10-15');
 
     /* Os instantes vao em UTC de proposito. new Date(2026, 8, 27) usaria o
@@ -70,19 +70,19 @@ test('janela de venda de cada lote', function () {
 
     assert.equal(situacaoDoLote(um, emBelem('2026-09-24T02:59:00Z')), 'espera', '23/09 23:59 em Paragominas: vespera');
     assert.equal(situacaoDoLote(um, emBelem('2026-09-24T03:00:00Z')), 'aberto', '24/09 00:00 em Paragominas: abre');
-    assert.equal(situacaoDoLote(um, emBelem('2026-10-06T02:59:00Z')), 'aberto', '05/10 23:59 em Paragominas: ultimo dia vende');
-    assert.equal(situacaoDoLote(um, emBelem('2026-10-06T03:00:00Z')), 'encerrado', '06/10 00:00 em Paragominas: fechou');
+    assert.equal(situacaoDoLote(um, emBelem('2026-10-07T02:59:00Z')), 'aberto', '06/10 23:59 em Paragominas: ultimo dia vende');
+    assert.equal(situacaoDoLote(um, emBelem('2026-10-07T03:00:00Z')), 'encerrado', '07/10 00:00 em Paragominas: fechou');
 
     /* As bordas que o fuso do servidor estragava: as 21:00 de Paragominas o
        relogio em UTC ja virou o dia. Se a venda abrir ou fechar aqui, o
        servidor esta decidindo pelo fuso dele. */
     assert.equal(situacaoDoLote(um, emBelem('2026-09-24T00:00:00Z')), 'espera', '23/09 21:00 em Paragominas: ainda nao abriu');
-    assert.equal(situacaoDoLote(um, emBelem('2026-10-06T00:00:00Z')), 'aberto', '05/10 21:00 em Paragominas: ainda vende');
-    assert.equal(situacaoDoLote(dois, emBelem('2026-10-06T00:00:00Z')), 'espera', '05/10 21:00 em Paragominas: o 2o ainda nao abriu');
+    assert.equal(situacaoDoLote(um, emBelem('2026-10-07T00:00:00Z')), 'aberto', '06/10 21:00 em Paragominas: ainda vende');
+    assert.equal(situacaoDoLote(dois, emBelem('2026-10-07T00:00:00Z')), 'espera', '06/10 21:00 em Paragominas: o 2o ainda nao abriu');
     assert.equal(situacaoDoLote(dois, emBelem('2026-10-16T02:59:00Z')), 'aberto', '15/10 23:59 em Paragominas: ultimo dia vende');
 
     // os dois lotes se encaixam sem buraco nem sobreposicao
-    assert.equal(situacaoDoLote(dois, emBelem('2026-10-06T03:00:00Z')), 'aberto', 'o 2o abre quando o 1o fecha');
+    assert.equal(situacaoDoLote(dois, emBelem('2026-10-07T03:00:00Z')), 'aberto', 'o 2o abre quando o 1o fecha');
     assert.equal(situacaoDoLote(dois, emBelem('2026-10-16T03:00:00Z')), 'encerrado', 'fechado no dia do evento');
 });
 
