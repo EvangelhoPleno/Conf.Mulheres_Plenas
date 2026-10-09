@@ -63,6 +63,19 @@
         $$('[data-aviso-teste]').forEach(function (el) { el.hidden = !simulado; });
     }
 
+    var cfg = window.MP_CONFIG || {};
+
+    function encerrou() {
+        return !!cfg.encerramentoMs && Date.now() >= cfg.encerramentoMs;
+    }
+
+    function fecharInscricoes() {
+        document.documentElement.classList.add('is-esgotado', 'is-encerrado');
+        $('[data-estado="indisponivel"] .titulo').textContent = 'Inscrições encerradas';
+        $('[data-estado="indisponivel"] [data-mensagem]').textContent = 'As inscrições da Conferência Mulheres Plenas foram encerradas. Obrigada pelo carinho! Já tem ingresso? É só apresentar o e-mail com o seu código na entrada.';
+        mostrar('indisponivel');
+    }
+
     /* =========================================================
        1. CHECKOUT
        ========================================================= */
@@ -73,6 +86,9 @@
         };
 
         if (!API) return indisponivel();
+        // passado o encerramento (config.js): inscrições encerradas no site,
+        // mesmo para quem chega direto pelo link do checkout
+        if (encerrou()) return fecharInscricoes();
         // esgotado: true no config.js fecha a compra também para quem chega
         // direto pelo link do checkout (o backend continua aceitando)
         if (window.MP_CONFIG && window.MP_CONFIG.esgotado) {
@@ -255,6 +271,9 @@
             var erros = validar();
             mostrarErros(erros);
             if (Object.keys(erros).length) return;
+
+            // aba aberta antes da meia-noite e enviada depois: não cria o Pix
+            if (encerrou()) return fecharInscricoes();
 
             if (antiRobo.ligado && !antiRobo.token) {
                 avisoErro.textContent = 'Aguarde a verificação de segurança terminar e toque em continuar de novo.';

@@ -5,6 +5,26 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
 
+## Encerramento das inscrições no site: 12/10, 00:00 (preparado em 09/10)
+
+A pastora fecha as inscrições no domingo, 11/10, à meia-noite. **Só o site
+fecha**: o backend continua vendendo o 2º lote até 15/10 (para casos à mão).
+`encerramento: '2026-10-12T00:00:00-03:00'` no `config.js`:
+- antes da hora: `.is-encerrando`, contador em blocos (dias/horas/min/seg)
+  na seção de ingressos com o selo "últimos dias"; vendas normais.
+- a partir da hora: `.is-esgotado` + `.is-encerrado`, o modo esgotado com
+  "Inscrições encerradas" (faixa do topo, título, botões, faixa rolante,
+  carimbo "encerrado" nos lotes, checkout bloqueado com aviso).
+- quem está na landing ou no checkout na virada recarrega sozinho (até 6 s);
+  a tela do Pix e a confirmação **não** recarregam (quem já está pagando
+  termina). Checkout aberto antes e enviado depois também é barrado.
+- card do 2º lote mostra "07/10 a 11/10"; o `data-fim` segue 2026-10-15,
+  igual ao `catalogo.js`.
+Relógio = o do aparelho; quem forçar a API ainda compra até 15/10.
+Validado no Chrome com relógio simulado (09/10, virada às 23:59, celular
+320/375, checkout e pagamento). `npm test`: 45 verdes e 6 falhas que já
+existiam (testes do Mercado Pago compram o 1º lote, fechado desde 06/10).
+
 ## Reabertura das vendas (05/10, 12h) e 2º lote em 07/10
 
 Vagas fechadas no site desde 01/10 (`esgotado: true`). Em 05/10 o Jadison

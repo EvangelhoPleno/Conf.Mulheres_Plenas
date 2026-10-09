@@ -1222,6 +1222,11 @@
         // esgotado: true no config.js fecha todos os lotes de uma vez, sem
         // olhar as datas (o backend não muda: é só a vitrine)
         var esgotado = !!(window.MP_CONFIG && window.MP_CONFIG.esgotado);
+        // passado o encerramento (encerramento no config.js) fecha do mesmo
+        // jeito, com "encerrado" no lugar de "esgotado"
+        var encerrado = !!(window.MP_CONFIG && window.MP_CONFIG.encerrado);
+        var rotuloFechado = encerrado ? 'encerrado' : 'esgotado';
+        esgotado = esgotado || encerrado;
         // antes da hora de reabertura (reabertura no config.js) fica tudo
         // fechado como no esgotado, mas anunciando a abertura às 12h
         var reabrindo = !esgotado && !!(window.MP_CONFIG && window.MP_CONFIG.reabrindo);
@@ -1237,7 +1242,7 @@
             var estado, texto;
             if (esgotado) {
                 estado = 'esgotado';
-                texto = 'esgotado';
+                texto = rotuloFechado;
             } else if (reabrindo && agora >= inicio && agora <= fim) {
                 estado = 'espera';
                 texto = 'abre às 12h';
@@ -1269,7 +1274,7 @@
             ticket.setAttribute('tabindex', '-1');
             ticket.removeAttribute('href');
             var acao = ticket.querySelector('.ticket-acao');
-            if (acao) acao.textContent = estado === 'espera' ? 'em breve' : estado === 'esgotado' ? 'esgotado' : 'vendas encerradas';
+            if (acao) acao.textContent = estado === 'espera' ? 'em breve' : estado === 'esgotado' ? rotuloFechado : 'vendas encerradas';
         });
 
         /* antes da reabertura: os convites de compra anunciam o meio-dia */
@@ -1285,12 +1290,17 @@
            botões "Garanta seu ingresso" e a faixa que corre embaixo do hero */
         function marcarEsgotado() {
             var titulo = document.getElementById('setores');
-            if (titulo) titulo.innerHTML = 'Vagas <span class="highlight-ingresso script">esgotadas</span>';
+            var aviso = encerrado ? 'Inscrições encerradas' : 'Vagas esgotadas';
+            if (titulo) {
+                titulo.innerHTML = encerrado
+                    ? 'Inscrições <span class="highlight-ingresso script">encerradas</span>'
+                    : 'Vagas <span class="highlight-ingresso script">esgotadas</span>';
+            }
             document.querySelectorAll('a.btn-cta[href="#setores"] .btn-cta-text').forEach(function (el) {
-                el.textContent = 'Vagas esgotadas';
+                el.textContent = aviso;
             });
             document.querySelectorAll('.faixa-rolante-grupo span:not(.estrela)').forEach(function (el) {
-                if (el.textContent === 'Garanta seu ingresso') el.textContent = 'Vagas esgotadas';
+                if (el.textContent === 'Garanta seu ingresso') el.textContent = aviso;
             });
         }
 

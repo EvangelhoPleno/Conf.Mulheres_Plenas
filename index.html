@@ -141,13 +141,15 @@
         </symbol>
     </svg>
 
-    <!-- VAGAS ESGOTADAS: só aparece com esgotado: true no config.js, ou antes
-         da hora de reabertura (reabertura no config.js), com o contador.
-         O config.js põe .is-esgotado (e .is-reabrindo) no <html>. -->
+    <!-- VAGAS ESGOTADAS: só aparece com esgotado: true no config.js, antes
+         da hora de reabertura (reabertura no config.js), com o contador, ou
+         depois do encerramento (encerramento no config.js), com "Inscrições
+         encerradas". O config.js põe .is-esgotado (e .is-reabrindo ou
+         .is-encerrado) no <html>. -->
     <div class="aviso-esgotado" role="status">
         <span class="aviso-esgotado-luz" aria-hidden="true"></span>
         <span class="aviso-esgotado-selo" aria-hidden="true"><img src="assets/imagens/marca/coracao-48.png" alt="" width="48" height="48"></span>
-        <strong class="aviso-esgotado-titulo">Vagas esgotadas</strong>
+        <strong class="aviso-esgotado-titulo"><span class="so-esgotado">Vagas esgotadas</span><span class="so-encerrado">Inscrições encerradas</span></strong>
         <span class="aviso-esgotado-estrela" aria-hidden="true">✦</span>
         <span class="aviso-esgotado-texto">obrigada pelo carinho!</span>
         <!-- só antes da reabertura (MP_CONFIG.reabertura): troca o "esgotadas" pelo contador -->
@@ -472,6 +474,29 @@
                     <p class="esgotado-recado-nota">Se novas vagas forem abertas, avisaremos por aqui e nas nossas redes.</p>
                 </div>
 
+                <!-- só depois do encerramento (encerramento no config.js) -->
+                <div class="encerrado-recado">
+                    <span class="faixa faixa--papel esgotado-recado-faixa">encerradas</span>
+                    <p class="esgotado-recado-texto">As inscrições da Conferência Mulheres Plenas foram encerradas. Obrigada a cada mulher que garantiu seu lugar!</p>
+                    <p class="esgotado-recado-nota">Já tem ingresso? É só apresentar o e-mail com o seu código na entrada. Nos vemos dias 16 e 17 de outubro.</p>
+                </div>
+
+                <!-- só antes do encerramento (encerramento no config.js):
+                     contagem regressiva; ao zerar, a página recarrega fechada -->
+                <div class="encerra-recado">
+                    <span class="faixa faixa--papel reabre-recado-faixa">últimos dias</span>
+                    <p class="reabre-recado-texto">As inscrições encerram no <strong>domingo, 11/10, à meia-noite</strong>. Garanta o seu lugar antes que o contador zere.</p>
+                    <div class="encerra-relogio" role="timer" aria-label="tempo até o encerramento das inscrições">
+                        <span class="encerra-bloco"><strong data-encerra="dias">00</strong><small>dias</small></span>
+                        <span class="encerra-sep" aria-hidden="true">:</span>
+                        <span class="encerra-bloco"><strong data-encerra="horas">00</strong><small>horas</small></span>
+                        <span class="encerra-sep" aria-hidden="true">:</span>
+                        <span class="encerra-bloco"><strong data-encerra="minutos">00</strong><small>min</small></span>
+                        <span class="encerra-sep" aria-hidden="true">:</span>
+                        <span class="encerra-bloco"><strong data-encerra="segundos">00</strong><small>seg</small></span>
+                    </div>
+                </div>
+
                 <!-- só antes da reabertura (reabertura no config.js): contagem
                      regressiva; ao zerar, a página recarrega com as vendas abertas -->
                 <div class="reabre-recado">
@@ -523,7 +548,7 @@
                                 <span class="ticket-preco"><small>R$</small>65<small>,00</small></span>
                                 <span class="ticket-janela">
                                     <span class="ticket-janela-rotulo">vendas</span>
-                                    <span class="ticket-janela-datas">07/10 a 15/10</span>
+                                    <span class="ticket-janela-datas">07/10 a 11/10</span>
                                 </span>
                                 <span class="ticket-base">
                                     <span class="ticket-detalhe">1 ingresso · acesso aos dois dias de conferência</span>
