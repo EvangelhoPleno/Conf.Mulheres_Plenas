@@ -2313,6 +2313,12 @@ html.entrada-ativa .entrada.is-dissolvendo {
     display: flex;
 }
 
+/* no celular, um card embaixo do outro: o lote em venda sobe para o topo,
+   logo abaixo do contador (no tablet/desktop, lado a lado, volta à ordem) */
+.lote.is-aberto {
+    order: -1;
+}
+
 /* ---------- o ingresso ---------- */
 .ticket {
     position: relative;
@@ -3197,6 +3203,10 @@ html.entrada-ativa .entrada.is-dissolvendo {
         width: 100%;
         max-width: 860px;
         margin: 0 auto;
+    }
+
+    .lote.is-aberto {
+        order: 0;
     }
 
     .ticket {
