@@ -22,9 +22,10 @@ const DEZ_MIN = 10 * 60 * 1000;
 // pedir código: por IP (os celulares da porta dividem o Wi-Fi) e por e-mail
 const pedidosPorIp = limitar({ janelaMs: DEZ_MIN, maximo: 12 });
 const pedidosPorEmail = limitar({ janelaMs: DEZ_MIN, maximo: 4, chave: function (req) { return 'e:' + req.emailPortaria; } });
-// código errado: 5 por e-mail e 15 por IP a cada 10 minutos
+// código errado: 5 por e-mail e 15 por IP a cada 10 minutos. O do e-mail
+// reserva a vaga na chegada: chutes mandados juntos não passam do limite
 const errosPorEmail = limitar({
-    janelaMs: DEZ_MIN, maximo: 5,
+    janelaMs: DEZ_MIN, maximo: 5, reservar: true,
     chave: function (req) { return 'e:' + req.emailPortaria; },
     contar: function (res) { return res.statusCode === 401; }
 });

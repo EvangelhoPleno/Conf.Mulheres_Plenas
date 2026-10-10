@@ -137,6 +137,24 @@ test('cinco códigos errados seguidos travam aquele e-mail', async function () {
     assert.equal(status, 429);
 });
 
+test('códigos errados enviados ao mesmo tempo não furam o limite do e-mail', async function () {
+    // outro IP: os 401 dos testes acima já gastaram quase toda a cota do 127.0.0.1
+    const ip = { 'X-Forwarded-For': '10.9.9.9' };
+    /* No ar, cada tentativa espera a Cloudflare (anti-robô) antes de ser
+       conferida; aqui quem demora é a leitura da lista de e-mails. Nesse
+       intervalo as 12 já passaram pela contagem. */
+    armazem.lerUsuarios = async function () {
+        await new Promise(function (ok) { setTimeout(ok, 80); });
+        return [];
+    };
+    const respostas = await Promise.all(Array.from({ length: 12 }, function (_, n) {
+        return chamar('/portaria/entrar', { email: 'rajada@exemplo.com', codigo: '9' + String(n).padStart(2, '0') + '456' }, ip);
+    }));
+    const conferidos = respostas.filter(function (r) { return r.status === 401; }).length;
+    assert.ok(conferidos <= 5, conferidos + ' chutes foram conferidos; o limite é 5');
+    assert.ok(respostas.some(function (r) { return r.status === 429; }));
+});
+
 test('lista os pagos em ordem alfabética, sem cache no navegador, sem CPF inteiro nem telefone', async function () {
     const r = await chamar('/portaria/lista');
     assert.equal(r.status, 200);

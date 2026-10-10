@@ -5,6 +5,27 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
 
+## Auditoria de segurança de 09/10 (noite)
+
+Código inteiro relido (pagamento, webhook, planilha, portaria, páginas),
+`npm audit` sem vulnerabilidade, nenhum segredo no Git nem no histórico (a
+"chave privada" que a busca acha é o exemplo do PDF da Sipag, já apagado).
+- **Corrigido:** o limite de 5 códigos errados por e-mail em
+  `/api/portaria/entrar` só contava quando a resposta terminava. Como cada
+  tentativa espera o Turnstile antes de ser conferida, uma rajada de chutes
+  simultâneos passava inteira (teste novo: 12 de 12). Agora `limitar()` tem
+  `reservar: true`: conta na chegada e devolve a vaga se a resposta não for
+  401. Só esse limite mudou; os outros (`contar` sem `reservar`) ficam como
+  eram, para não barrar o Wi-Fi da igreja com requisições em andamento.
+- **Sabido e mantido:** os limites são por instância da Vercel; `/api/portaria/codigo`
+  demora mais para e-mail cadastrado (envia e-mail), o que deixa adivinhar
+  quem tem acesso pelo tempo; CSP com `'unsafe-inline'`; o backend vende até
+  15/10 mesmo com o site fechado em 12/10.
+- **Os 6 testes vermelhos do Mercado Pago são só a data** (compram o 1º lote,
+  fechado em 06/10): com o relógio em 01/10 os 31 de pagamento passam.
+- A Vercel desafia (403, `X-Vercel-Mitigated: challenge`) quem faz dezenas de
+  `curl` seguidos: sondar o site no ar devagar ou por navegador.
+
 ## Portaria do dia 16–17/10 (feita em 09/10)
 
 - **Aba `Portaria`** na planilha (`npm run portaria`): só PAGO, um ingresso

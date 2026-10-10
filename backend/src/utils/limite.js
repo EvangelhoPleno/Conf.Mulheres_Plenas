@@ -3,8 +3,12 @@
    `chave` troca o "por IP" por outra coisa: várias compradoras no mesmo Wi-Fi
    saem com o MESMO IP, e contar todas juntas barrava a 13ª.
    `contar` faz só algumas respostas gastarem a cota (ex.: só os 404): a
-   decisão sai depois que a resposta termina, por isso fica no 'finish'. */
-function limitar({ janelaMs, maximo, chave: chaveDe, contar }) {
+   decisão sai depois que a resposta termina, por isso fica no 'finish'.
+   `reservar` (com `contar`) conta a requisição na chegada e devolve a vaga
+   se a resposta não gastar a cota. Sem isso, uma rajada de requisições
+   simultâneas passa inteira antes de a primeira resposta terminar: é o que
+   deixaria chutar muitos códigos da portaria de uma vez. */
+function limitar({ janelaMs, maximo, chave: chaveDe, contar, reservar }) {
     const contagem = new Map();
 
     return function (req, res, next) {
@@ -21,7 +25,10 @@ function limitar({ janelaMs, maximo, chave: chaveDe, contar }) {
             return res.status(429).json({ erro: 'Muitas tentativas. Aguarde alguns minutos e tente de novo.' });
         }
 
-        if (contar) {
+        if (contar && reservar) {
+            registro.total++;
+            res.on('finish', function () { if (!contar(res)) registro.total--; });
+        } else if (contar) {
             res.on('finish', function () { if (contar(res)) registro.total++; });
         } else {
             registro.total++;
