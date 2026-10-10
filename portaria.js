@@ -91,6 +91,7 @@
             estado.widget = window.turnstile.render('[data-turnstile]', {
                 sitekey: chave,
                 action: 'portaria',
+                theme: 'light',
                 appearance: 'interaction-only',
                 language: 'pt-br',
                 callback: function (token) { estado.token = token; },
@@ -140,7 +141,7 @@
     // manda o formulário com o token do anti-robô e renova o token depois
     function enviarEntrada(form, caminho, corpo, seletorErro) {
         if (antiRobo.ligado && !antiRobo.token) {
-            erroEm(seletorErro, 'Aguarde um instante: estamos confirmando que você não é um robô. Depois toque de novo.');
+            erroEm(seletorErro, 'Falta confirmar que você não é um robô. Se aparecer a caixinha "Confirme que é humano" aqui embaixo, marque-a e toque de novo.');
             return Promise.resolve(null);
         }
         var botao = form.querySelector('.botao');
