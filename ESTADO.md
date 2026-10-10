@@ -23,8 +23,14 @@ Código inteiro relido (pagamento, webhook, planilha, portaria, páginas),
   15/10 mesmo com o site fechado em 12/10.
 - **Os 6 testes vermelhos do Mercado Pago são só a data** (compram o 1º lote,
   fechado em 06/10): com o relógio em 01/10 os 31 de pagamento passam.
-- A Vercel desafia (403, `X-Vercel-Mitigated: challenge`) quem faz dezenas de
-  `curl` seguidos: sondar o site no ar devagar ou por navegador.
+- **A sondagem do site no ar acionou o desafio da Vercel** (403, "Vercel
+  Security Checkpoint", `X-Vercel-Mitigated: challenge`) depois de ~16 `curl`
+  em poucos segundos, vários em caminhos de scanner (`.env`, `.git`). A
+  partir daí `curl`, Chrome sem janela e uma origem externa receberam 403; não
+  deu para confirmar daqui se visitante comum e o webhook do Mercado Pago
+  passam. O projeto não tem regra de firewall própria (`security: null`).
+  Da próxima vez: poucas chamadas, espaçadas. Deploy `af2b93d` READY, mas as
+  portas no ar depois dele **não** foram reconferidas.
 
 ## Portaria do dia 16–17/10 (feita em 09/10)
 
