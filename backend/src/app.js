@@ -29,6 +29,7 @@ function criarApp() {
     app.use('/api', require('./routes/publicas'));
     app.use('/api', require('./routes/webhook'));
     app.use('/api', require('./routes/admin'));
+    app.use('/api', require('./routes/portaria'));
 
     app.use(function (req, res) {
         res.status(404).json({ erro: 'Rota não encontrada.' });

@@ -8,6 +8,7 @@
 const config = require('../config');
 const { buscarProduto, descreverProduto, situacaoDoLote } = require('../catalogo');
 const { pedidos } = require('./sheetsService');
+const { portaria } = require('./portariaService');
 const { pagamento } = require('./pagamento');
 const { enviarIngresso } = require('./emailService');
 const { validarComprador, mascararEmail } = require('../utils/validacao');
@@ -146,7 +147,9 @@ function confirmarPagamento(pedidoId) {
                Mercado Pago reenvia, e a chave de idempotência do Resend não
                deixa o e-mail sair duas vezes. */
             const email = await tentarEmail(Object.assign({}, pedido, pago));
-            return pedidos().atualizar(pedidoId, Object.assign(pago, { emailEnviado: email }));
+            const gravado = await pedidos().atualizar(pedidoId, Object.assign(pago, { emailEnviado: email }));
+            await incluirNaPortaria(gravado);
+            return gravado;
         }
 
         if (faltaEmail(pedido)) pedido = await enviarEmailDoPedido(pedido);
@@ -155,6 +158,19 @@ function confirmarPagamento(pedidoId) {
 
     emAndamento.set(pedidoId, tarefa);
     return tarefa;
+}
+
+/* Quem acabou de pagar entra na aba Portaria na hora (1 leitura + 1 escrita).
+   Nunca lança: o pagamento já está gravado, e quem ficar de fora ainda entra
+   pela página da portaria ou pelo npm run portaria. */
+async function incluirNaPortaria(pedido) {
+    // npm run carga vende numa aba temporária: compradora de mentira não entra
+    if (config.google.aba !== 'Pedidos') return;
+    try {
+        await portaria().incluir(pedido);
+    } catch (erro) {
+        console.error('[portaria] pedido pago ficou fora da aba', pedido.pedidoId, erro.message);
+    }
 }
 
 // Envia o ingresso e diz o que escrever em Email_Enviado. Nunca lança: o

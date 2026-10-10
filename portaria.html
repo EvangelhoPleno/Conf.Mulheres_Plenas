@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Portaria · Mulheres Plenas</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="no-referrer">
+    <meta name="theme-color" content="#85351E">
+    <link rel="icon" type="image/png" href="assets/imagens/marca/favicon-64.png">
+    <link rel="apple-touch-icon" href="assets/imagens/marca/apple-touch-180.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- ?v= sobe a cada mudança: o celular da porta não pode ficar com a versão velha -->
+    <link rel="stylesheet" href="portaria.css?v=5">
+    <script src="portaria.js?v=5" defer></script>
+</head>
+<!-- PORTARIA do dia da conferência. Fora do menu e do Google (noindex).
+     A equipe entra pelo link portaria.html#senha=<PORTARIA_SENHA>: a senha
+     fica guardada no celular e some da barra de endereço. -->
+<body>
+
+    <!-- entrada: senha e nome de quem está na porta -->
+    <main class="entrar" data-tela="entrar" hidden>
+        <img class="entrar-logo" src="assets/imagens/marca/mp-horizontal-escuro.png" alt="Mulheres Plenas" width="1100" height="198">
+        <h1>Portaria</h1>
+        <form class="entrar-form" data-form-entrar>
+            <label>
+                <span>Senha da portaria</span>
+                <input type="password" name="senha" autocomplete="current-password" required>
+            </label>
+            <label>
+                <span>Seu nome</span>
+                <input type="text" name="por" autocomplete="given-name" maxlength="30" required placeholder="Digite seu nome. Ex.: Ana">
+                <small class="entrar-ajuda">Vai junto com a hora de cada entrada que você confirmar.</small>
+            </label>
+            <p class="entrar-erro" data-erro-entrar hidden></p>
+            <button type="submit" class="botao">Entrar</button>
+        </form>
+    </main>
+
+    <div class="app" data-tela="lista" hidden>
+        <header class="topo">
+            <div class="topo-linha">
+                <img class="topo-logo" src="assets/imagens/marca/mp-horizontal-claro.png" alt="Mulheres Plenas" width="1100" height="198">
+                <span class="topo-sinal" data-sinal>ao vivo</span>
+            </div>
+            <div class="placar">
+                <p class="placar-numeros">
+                    <strong data-presentes>0</strong>
+                    <span>de <b data-total>0</b> já entraram</span>
+                    <em data-porcento>0%</em>
+                </p>
+                <div class="placar-barra" aria-hidden="true"><span data-barra></span></div>
+            </div>
+            <nav class="abas" role="tablist" aria-label="Telas da portaria">
+                <button type="button" role="tab" class="aba" data-aba="buscar" aria-selected="true">Buscar</button>
+                <button type="button" role="tab" class="aba" data-aba="confirmadas" aria-selected="false">Confirmadas <span class="aba-conta" data-conta>0</span></button>
+            </nav>
+        </header>
+
+        <!-- no celular e no tablet, uma aba de cada vez; no computador, as
+             duas lado a lado (busca à esquerda, confirmadas à direita) -->
+        <div class="paineis">
+        <!-- BUSCAR -->
+        <section class="painel" data-painel="buscar" role="tabpanel">
+            <div class="busca">
+                <svg class="busca-lupa" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input type="search" data-busca placeholder="Nome, CPF ou código" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Buscar inscrita por nome, CPF ou código">
+                <button type="button" class="busca-limpar" data-limpar aria-label="Limpar busca" hidden>×</button>
+            </div>
+            <p class="dica" data-dica></p>
+            <ul class="lista" data-resultados></ul>
+
+            <!-- com a busca vazia: as últimas confirmadas, de todos os celulares -->
+            <div class="recentes" data-recentes hidden>
+                <div class="bloco-titulo">
+                    <h2>Últimas confirmadas</h2>
+                    <button type="button" class="link" data-ver-todas>ver todas</button>
+                </div>
+                <ul class="lista lista--entradas" data-recentes-lista></ul>
+            </div>
+        </section>
+
+        <!-- CONFIRMADAS: histórico completo -->
+        <section class="painel" data-painel="confirmadas" role="tabpanel" hidden>
+            <h2 class="painel-titulo">Entradas confirmadas</h2>
+            <div class="filtros" role="group" aria-label="Filtrar confirmadas">
+                <button type="button" class="filtro" data-filtro="todas" aria-pressed="true">Todas <span data-conta-todas>0</span></button>
+                <button type="button" class="filtro" data-filtro="minhas" aria-pressed="false">Só as minhas <span data-conta-minhas>0</span></button>
+            </div>
+            <p class="dica" data-dica-confirmadas hidden></p>
+            <ul class="lista lista--entradas" data-confirmadas></ul>
+        </section>
+        </div>
+
+        <footer class="rodape">
+            <span>na porta: <strong data-por></strong></span>
+            <button type="button" class="link" data-sair>sair</button>
+        </footer>
+    </div>
+
+    <!-- aviso grande: entrada confirmada / já entrou / erro -->
+    <div class="aviso" data-aviso role="alertdialog" aria-modal="true" hidden>
+        <div class="aviso-caixa">
+            <span class="aviso-icone" data-aviso-icone aria-hidden="true"></span>
+            <p class="aviso-titulo" data-aviso-titulo></p>
+            <p class="aviso-nome" data-aviso-nome></p>
+            <p class="aviso-detalhe" data-aviso-detalhe></p>
+            <p class="aviso-extra" data-aviso-extra hidden></p>
+            <div class="aviso-acoes">
+                <button type="button" class="botao botao--leve" data-aviso-desfazer hidden>Desfazer</button>
+                <button type="button" class="botao" data-aviso-ok>Próxima</button>
+            </div>
+            <span class="aviso-tempo" data-aviso-tempo aria-hidden="true"></span>
+        </div>
+    </div>
+
+    <!-- confirmação do desfazer (no lugar do confirm() do navegador) -->
+    <div class="aviso aviso--pergunta" data-pergunta role="alertdialog" aria-modal="true" hidden>
+        <div class="aviso-caixa">
+            <p class="aviso-titulo">Desfazer entrada?</p>
+            <p class="aviso-nome" data-pergunta-nome></p>
+            <p class="aviso-detalhe" data-pergunta-detalhe></p>
+            <div class="aviso-acoes">
+                <button type="button" class="botao botao--leve" data-pergunta-nao>Cancelar</button>
+                <button type="button" class="botao botao--alerta" data-pergunta-sim>Desfazer</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" data-toast role="status" hidden></div>
+
+</body>
+</html>

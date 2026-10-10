@@ -343,4 +343,4 @@ function pedidos() {
     return repositorio;
 }
 
-module.exports = { pedidos, CABECALHO, COLUNAS_NUMERICAS, prepararLinha, comoNumero, repetindoSeOcupado, criarRepositorioPlanilha };
+module.exports = { pedidos, CABECALHO, COLUNAS_NUMERICAS, REPETICAO, prepararLinha, comoNumero, repetindoSeOcupado, criarRepositorioPlanilha };

@@ -96,7 +96,10 @@ const config = {
         segredo: (process.env.TURNSTILE_SECRET_KEY || '').trim()
     },
 
-    adminToken: process.env.ADMIN_TOKEN || ''
+    adminToken: process.env.ADMIN_TOKEN || '',
+
+    // senha da página portaria.html (lista de entrada do dia); vazio = desligada
+    portariaSenha: (process.env.PORTARIA_SENHA || '').trim()
 };
 
 // fora de produção, o site aberto no próprio computador (Live Server etc.) também pode chamar a API

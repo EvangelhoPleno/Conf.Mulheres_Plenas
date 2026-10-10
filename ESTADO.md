@@ -5,6 +5,45 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
 
+## Portaria do dia 16–17/10 (feita em 09/10)
+
+- **Aba `Portaria`** na planilha (`npm run portaria`): só PAGO, um ingresso
+  por linha, alfabética; Nome, Código, CPF, Telefone, Presente (caixinha),
+  Entrada ("16/10 18:42:07 · Ana"), Pedido; "Painel da portaria" em I1:J7
+  (inscritas, já entraram, faltam, %, barra). Visual da marca refeito a
+  cada rodada: linhas alternadas, verde em quem entrou, nome em MAIÚSCULAS
+  (só na aba; Pedidos e a página ficam como a pessoa digitou), CPF e telefone
+  formatados, coluna A congelada, A–D e G protegidas só com aviso. Rodar
+  de novo refaz a lista e guarda as presenças pelo código. **Não rodar com
+  a porta marcando presença.** Armadilha: `values:batchClear` apaga a
+  caixinha (validação) junto; ela é reaplicada depois da gravação.
+- **Quem paga depois entra sozinha na aba** (09/10, noite; vale a partir do
+  deploy): `confirmarPagamento` chama `portaria().incluir(pedido)`, que relê
+  a coluna de códigos e grava a linha logo abaixo da lista com `appendCells`
+  (valor + caixinha numa escrita só; +1 leitura e +1 escrita por pagamento).
+  Falha ali só vai para o log, o pagamento não é afetado. O visual da aba
+  vai até a última linha (50 de folga) para a linha nova nascer no padrão;
+  ela fica no fim, fora da ordem alfabética, até o próximo `npm run
+  portaria`. O painel conta códigos únicos (`COUNTUNIQUE`). `npm run carga`
+  não grava na Portaria. Reembolsada continua na aba até a próxima rodada
+  (a página da portaria já não a mostra). Provado na aba real com linha de
+  teste, depois apagada. Causa do pedido: Lorena Rodrigues pagou 20:15 e
+  não aparecia (a aba era só a foto da última rodada).
+- **Página `portaria.html`** (noindex, fora do menu): login por senha
+  (`PORTARIA_SENHA`, só Production na Vercel) + nome de quem está na porta.
+  Link para a equipe: `https://evangelhoplenoparagominas.com.br/portaria.html#senha=...`
+  (a senha fica no celular e some da barra). Busca local por nome, CPF ou
+  código; **um toque em "Confirmar entrada"**; o aviso verde fecha em 2,5 s
+  e limpa a busca. Outro celular que tentar o mesmo código recebe "JÁ
+  ENTROU" com hora e nome. "Desfazer" no aviso e no item.
+- API: `/api/portaria/lista|entrada|desfazer` (`routes/portaria.js`,
+  `services/portariaService.js`). A lista é 1 leitura (Pedidos + Portaria
+  num batchGet, cache de 4 s); confirmar relê a Portaria e grava (1+1).
+  Pago depois da última rodada do `npm run portaria` entra na aba na hora
+  de confirmar (linha nova no fim). 15 senhas erradas/10 min por IP.
+- Testado com a planilha real (API local, 2 celulares simulados): busca,
+  confirmação em ~0,9 s, "já entrou" no outro aparelho, desfazer.
+
 ## Encerramento das inscrições no site: 12/10, 00:00 (preparado em 09/10)
 
 A pastora fecha as inscrições no domingo, 11/10, à meia-noite. **Só o site
