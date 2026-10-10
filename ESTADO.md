@@ -29,15 +29,21 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
   (a página da portaria já não a mostra). Provado na aba real com linha de
   teste, depois apagada. Causa do pedido: Lorena Rodrigues pagou 20:15 e
   não aparecia (a aba era só a foto da última rodada).
+- **Aba `Usuários Portaria`** (09/10, `npm run portaria:usuarios -- a@x.com
+  b@y.com`): quem pode entrar na página, um e-mail por linha na coluna A
+  (Nome e Observação são só anotação). Incluir = escrever o e-mail na aba;
+  tirar = apagar a linha; vale em até 1 min, **sem deploy** (lida 1 vez por
+  minuto por instância). `PORTARIA_EMAILS` na Vercel virou só a reserva do
+  Jadison, que entra mesmo com a aba apagada ou ilegível. Quem edita a
+  planilha decide quem vê a lista: cuidado com o compartilhamento dela.
 - **Página `portaria.html`** (noindex, fora do menu): entra só quem tem o
-  e-mail em `PORTARIA_EMAILS` (vírgulas; só Production na Vercel). E-mail +
+  e-mail na aba `Usuários Portaria` (ou em `PORTARIA_EMAILS`). E-mail +
   nome → código de 6 números pelo Resend (vale 10–20 min) → sessão de 48 h
   no aparelho. Sem banco: código e sessão são HMAC com `PORTARIA_SEGREDO`
   (`services/portariaAcesso.js`); trocar o segredo desloga todo mundo, tirar
   um e-mail da lista derruba só ele. Turnstile (ação `portaria`) nos dois
   passos; 5 códigos errados por e-mail e 15 por IP a cada 10 min. A resposta
-  de "pedir código" é igual para e-mail cadastrado ou não. **Incluir alguém
-  da equipe = editar `PORTARIA_EMAILS` na Vercel e fazer Redeploy.** A senha
+  de "pedir código" é igual para e-mail cadastrado ou não. A senha
   única no link (`PORTARIA_SENHA`) foi abandonada antes de ser usada.
   **O CPF inteiro e o telefone não saem do servidor**: a lista leva só os 6
   números do meio (`cpfMeio`) e um número de grupo por CPF; a busca por CPF

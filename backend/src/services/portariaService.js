@@ -14,6 +14,8 @@ const config = require('../config');
 const { REPETICAO, repetindoSeOcupado } = require('./sheetsService');
 
 const ABA = 'Portaria';
+// quem pode entrar na página: um e-mail por linha, na coluna A (npm run portaria:usuarios)
+const ABA_USUARIOS = 'Usuários Portaria';
 // colunas da aba (ver backend/scripts/portaria.js): A Nome, B Código,
 // C CPF, D Telefone, E Presente, F Entrada, G Pedido
 const COL = { nome: 0, codigo: 1, cpf: 2, telefone: 3, presente: 4, entrada: 5, pedido: 6 };
@@ -171,6 +173,9 @@ function criarArmazemPlanilha() {
         async lerPortaria() {
             return (await lerVarias([ABA + '!A2:G'], 'FORMATTED_VALUE'))[0];
         },
+        async lerUsuarios() {
+            return (await lerVarias(["'" + ABA_USUARIOS + "'!A2:A"], 'FORMATTED_VALUE'))[0];
+        },
         // linha = número da linha na planilha (2 em diante)
         async marcar(linha, presente, entrada) {
             await gravar(ABA + '!E' + linha + ':F' + linha, [[presente, entrada]]);
@@ -220,9 +225,12 @@ function criarArmazemPlanilha() {
 /* ---------- memória (testes) ---------- */
 function criarArmazemMemoria(pagos) {
     const portaria = [];
+    const usuarios = [];  // e-mails da aba Usuários Portaria
     return {
         pagos: pagos,
         portaria: portaria,
+        usuarios: usuarios,
+        async lerUsuarios() { return usuarios.map(function (email) { return [email]; }); },
         async lerTudo() { return { pagos: pagos.slice(), portaria: portaria.map(function (l) { return l.slice(); }) }; },
         async lerPortaria() { return portaria.map(function (l) { return l.slice(); }); },
         async marcar(linha, presente, entrada) {
@@ -239,6 +247,11 @@ function criarPortaria(armazem, opcoes) {
     const agora = opcoes.agora || function () { return new Date(); };
     const CACHE_MS = 4000;  // celulares que atualizam juntos dividem uma leitura
     let cache = { em: 0, dados: null };
+    /* A lista de quem pode entrar é conferida a cada toque na página: uma
+       leitura por minuto por instância basta. Quem for tirado da aba perde
+       o acesso em até 1 minuto. */
+    const USUARIOS_MS = 60000;
+    let usuariosCache = { em: 0, emails: [] };
 
     async function lerTudo(fresco) {
         if (!fresco && cache.dados && Date.now() - cache.em < CACHE_MS) return cache.dados;
@@ -260,6 +273,22 @@ function criarPortaria(armazem, opcoes) {
     }
 
     return {
+        // e-mails da aba Usuários Portaria (minúsculos)
+        async usuarios() {
+            if (Date.now() - usuariosCache.em < USUARIOS_MS) return usuariosCache.emails;
+            try {
+                const emails = (await armazem.lerUsuarios()).map(function (l) { return texto(l[0]).toLowerCase(); })
+                    .filter(function (email) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email); });
+                usuariosCache = { em: Date.now(), emails: emails };
+            } catch (erro) {
+                // aba apagada ou Google ocupado: vale a última lista lida; tenta de novo em 15 s
+                console.error('[portaria] não li a aba ' + ABA_USUARIOS + ':', erro.message);
+                usuariosCache.em = Date.now() - USUARIOS_MS + 15000;
+            }
+            return usuariosCache.emails;
+        },
+        esquecerUsuarios() { usuariosCache.em = 0; },
+
         async listar() {
             const dados = await lerTudo(false);
             const ingressos = montarLista(dados.pagos, dados.portaria).map(visaoDaPorta());
@@ -339,4 +368,4 @@ function usarArmazem(armazem, opcoes) {
     return instancia;
 }
 
-module.exports = { portaria, usarArmazem, criarArmazemMemoria, pagosDosPedidos, montarLista, carimbo };
+module.exports = { ABA_USUARIOS, portaria, usarArmazem, criarArmazemMemoria, pagosDosPedidos, montarLista, carimbo };

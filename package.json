@@ -14,6 +14,7 @@
     "planilha:testar": "node backend/scripts/testar-planilha.js",
     "planilha:preparar": "node backend/scripts/preparar-planilha.js",
     "portaria": "node backend/scripts/portaria.js",
+    "portaria:usuarios": "node backend/scripts/usuarios-portaria.js",
     "mercadopago:testar": "node backend/scripts/testar-mercadopago.js",
     "mercadopago:ensaio-cartao": "node backend/scripts/ensaio-cartao.js",
     "email:testar": "node backend/scripts/testar-email.js",

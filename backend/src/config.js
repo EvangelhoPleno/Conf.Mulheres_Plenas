@@ -98,8 +98,9 @@ const config = {
 
     adminToken: process.env.ADMIN_TOKEN || '',
 
-    // página portaria.html (lista de entrada do dia): quem pode entrar e o
-    // segredo que assina o código do e-mail e a sessão; sem os dois = desligada
+    // página portaria.html (lista de entrada do dia). Quem pode entrar fica na
+    // aba "Usuários Portaria" da planilha; PORTARIA_EMAILS é a reserva do
+    // administrador. O segredo assina o código do e-mail e a sessão; sem ele = desligada
     portaria: {
         emails: lista((process.env.PORTARIA_EMAILS || '').toLowerCase()),
         segredo: (process.env.PORTARIA_SEGREDO || '').trim()
@@ -122,6 +123,6 @@ config.mercadoPago.configurado = Boolean(config.mercadoPago.accessToken);
 config.google.configurado = Boolean(config.google.planilhaId && config.google.email && config.google.chave);
 config.email.configurado = Boolean(config.email.resendApiKey);
 // segredo curto seria adivinhável: melhor a portaria desligada
-config.portaria.configurada = Boolean(config.portaria.emails.length && config.portaria.segredo.length >= 32);
+config.portaria.configurada = config.portaria.segredo.length >= 32;
 
 module.exports = config;

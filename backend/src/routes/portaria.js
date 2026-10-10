@@ -1,5 +1,6 @@
 /* Rotas da portaria (portaria.html).
-   Entrada em dois passos, só para os e-mails de PORTARIA_EMAILS:
+   Entrada em dois passos, só para os e-mails da aba "Usuários Portaria"
+   (e os de PORTARIA_EMAILS):
      POST /portaria/codigo  { email }          -> código de 6 números por e-mail
      POST /portaria/entrar  { email, codigo }  -> sessão de 48 h
    Os dois passam pelo anti-robô (Turnstile). As demais rotas pedem
@@ -52,7 +53,7 @@ async function humano(req, res, next) {
    descobre quais e-mails têm acesso. */
 router.post('/portaria/codigo', ligada, pedidosPorIp, comEmail, humano, pedidosPorEmail, async function (req, res) {
     const email = req.emailPortaria;
-    if (acesso.autorizado(email)) {
+    if (await acesso.autorizado(email)) {
         try {
             await enviarCodigoPortaria(email, acesso.codigoAtual(email));
         } catch (erro) {
@@ -63,18 +64,18 @@ router.post('/portaria/codigo', ligada, pedidosPorIp, comEmail, humano, pedidosP
     res.json({ ok: true });
 });
 
-router.post('/portaria/entrar', ligada, errosPorIp, comEmail, errosPorEmail, humano, function (req, res) {
+router.post('/portaria/entrar', ligada, errosPorIp, comEmail, errosPorEmail, humano, async function (req, res) {
     const email = req.emailPortaria;
-    if (!acesso.codigoConfere(email, req.body && req.body.codigo)) {
+    if (!(await acesso.codigoConfere(email, req.body && req.body.codigo))) {
         return res.status(401).json({ erro: 'Código incorreto ou vencido.' });
     }
     console.log('[portaria] entrou:', email);
     res.json(acesso.criarSessao(email));
 });
 
-function exigirSessao(req, res, next) {
+async function exigirSessao(req, res, next) {
     const token = String(req.get('authorization') || '').replace(/^Bearer\s+/i, '');
-    if (!acesso.lerSessao(token)) return res.status(401).json({ erro: 'Sessão da portaria vencida. Entre de novo.' });
+    if (!(await acesso.lerSessao(token))) return res.status(401).json({ erro: 'Sessão da portaria vencida. Entre de novo.' });
     next();
 }
 

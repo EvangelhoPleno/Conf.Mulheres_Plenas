@@ -79,6 +79,31 @@ test('e-mail tirado da lista perde a sessão na hora', async function () {
     }
 });
 
+test('e-mail da aba Usuários Portaria entra; apagado da aba, perde o acesso', async function () {
+    const { portaria } = require('../src/services/portariaService');
+    const email = 'equipe@exemplo.com';
+    assert.equal(await acesso.autorizado(email), false);
+    armazem.usuarios.push(' Equipe@Exemplo.com ', 'linha sem e-mail');
+    portaria().esquecerUsuarios();
+    assert.equal(await acesso.autorizado(email), true);
+    assert.equal(await acesso.autorizado('linha sem e-mail'), false);
+
+    const r = await chamar('/portaria/entrar', { email: email, codigo: acesso.codigoAtual(email) }, {});
+    assert.equal(r.status, 200);
+    const sessao = { Authorization: 'Bearer ' + (await r.json()).sessao };
+    assert.equal((await chamar('/portaria/lista', null, sessao)).status, 200);
+
+    armazem.usuarios.length = 0;
+    portaria().esquecerUsuarios();
+    assert.equal((await chamar('/portaria/lista', null, sessao)).status, 401);
+
+    // aba ilegível (apagada, Google ocupado): ninguém novo entra, a reserva do .env continua
+    armazem.lerUsuarios = async function () { throw new Error('aba não existe'); };
+    portaria().esquecerUsuarios();
+    assert.equal(await acesso.autorizado(email), false);
+    assert.equal(await acesso.autorizado('porta@exemplo.com'), true);
+});
+
 test('entrar: código do e-mail vira sessão; código errado e e-mail de fora não entram', async function () {
     // pedir o código responde igual para quem está e quem não está na lista
     const cadastrado = await chamar('/portaria/codigo', { email: ' Porta@exemplo.com ' }, {});
@@ -101,7 +126,7 @@ test('entrar: código do e-mail vira sessão; código errado e e-mail de fora n�
     const dados = await r.json();
     assert.equal((await chamar('/portaria/lista', null, { Authorization: 'Bearer ' + dados.sessao })).status, 200);
     // vencido: o código de 30 minutos atrás não entra mais
-    assert.equal(acesso.codigoConfere('porta@exemplo.com', acesso.codigoAtual('porta@exemplo.com', Date.now() - 30 * 60 * 1000)), false);
+    assert.equal(await acesso.codigoConfere('porta@exemplo.com', acesso.codigoAtual('porta@exemplo.com', Date.now() - 30 * 60 * 1000)), false);
 });
 
 test('cinco códigos errados seguidos travam aquele e-mail', async function () {
