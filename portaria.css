@@ -153,6 +153,20 @@ button { cursor: pointer; }
 
 .entrar-ajuda { font-size: 0.82rem; color: var(--rotulo); }
 
+.entrar-texto { font-size: 0.95rem; line-height: 1.45; overflow-wrap: anywhere; }
+
+.entrar-form input.entrar-codigo {
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-align: center;
+}
+
+.entrar-form .link { align-self: center; }
+
+/* Cloudflare Turnstile (anti-robô): ocupa espaço só quando pede interação */
+.anti-robo { display: flex; justify-content: center; }
+
 .entrar-erro {
     padding: 12px 14px;
     border-radius: 12px;

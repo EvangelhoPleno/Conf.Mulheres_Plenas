@@ -13,7 +13,8 @@ const config = require('../config');
 
 const VERIFICAR = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
-async function pareceHumano(token, ip) {
+// acao: a do widget que gerou o token ('checkout' ou 'portaria')
+async function pareceHumano(token, ip, acao) {
     if (!config.turnstile.segredo) return true;
     if (typeof token !== 'string' || !token || token.length > 2048) return false;
 
@@ -38,7 +39,7 @@ async function pareceHumano(token, ip) {
         return false;
     }
     // o token de outro widget (outra ação) não serve para comprar
-    return !dados.action || dados.action === 'checkout';
+    return !dados.action || dados.action === (acao || 'checkout');
 }
 
 module.exports = { pareceHumano };

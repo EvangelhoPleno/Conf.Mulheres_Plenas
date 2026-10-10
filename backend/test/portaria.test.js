@@ -1,20 +1,23 @@
-/* Portaria (portaria.html): senha, lista dos pagos, confirmar, "já entrou",
+/* Portaria (portaria.html): entrada por e-mail + código, lista dos pagos, confirmar, "já entrou",
    desfazer e ingresso pago depois da última rodada do npm run portaria.
    A planilha é trocada por uma lista em memória. */
 process.env.NODE_ENV = 'test';
 process.env.PAYMENT_PROVIDER = 'mock';
 process.env.GOOGLE_SHEET_ID = '';
 process.env.RESEND_API_KEY = '';
-process.env.PORTARIA_SENHA = 'senha-da-porta';
+process.env.PORTARIA_EMAILS = 'Porta@Exemplo.com, outra@exemplo.com';
+process.env.PORTARIA_SEGREDO = 'segredo-de-teste-com-mais-de-32-caracteres';
+process.env.TURNSTILE_SECRET_KEY = '';
 
 const { test, before, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const { criarApp } = require('../src/app');
 const config = require('../src/config');
 const { usarArmazem, criarArmazemMemoria, pagosDosPedidos, carimbo } = require('../src/services/portariaService');
+const acesso = require('../src/services/portariaAcesso');
 
 let servidor, base, armazem;
-const SENHA = { Authorization: 'Bearer senha-da-porta' };
+const SENHA = { Authorization: 'Bearer ' + acesso.criarSessao('porta@exemplo.com').sessao };
 const ANA = 'MP26-AAAA-AAAA';
 const BIA = 'MP26-BBBB-BBBB';
 
@@ -44,26 +47,84 @@ function chamar(caminho, corpo, cabecalhos) {
     });
 }
 
-test('sem senha ou com senha errada: 401; sem PORTARIA_SENHA no servidor: 503', async function () {
+test('sem sessão, com sessão inventada ou vencida: 401; portaria desligada: 503', async function () {
     assert.equal((await chamar('/portaria/lista', null, {})).status, 401);
     assert.equal((await chamar('/portaria/lista', null, { Authorization: 'Bearer chute' })).status, 401);
-    const antes = config.portariaSenha;
-    config.portariaSenha = '';
+    const vencida = acesso.criarSessao('porta@exemplo.com', Date.now() - 49 * 60 * 60 * 1000).sessao;
+    assert.equal((await chamar('/portaria/lista', null, { Authorization: 'Bearer ' + vencida })).status, 401);
+    // assinatura de outro segredo, ou o e-mail trocado dentro da sessão
+    const [corpo, assinatura] = SENHA.Authorization.replace('Bearer ', '').split('.');
+    const trocado = Buffer.from(JSON.stringify({ e: 'intruso@exemplo.com', x: Date.now() + 1e6 })).toString('base64url');
+    assert.equal((await chamar('/portaria/lista', null, { Authorization: 'Bearer ' + trocado + '.' + assinatura })).status, 401);
+    assert.ok(corpo);
+
+    config.portaria.configurada = false;
     try {
         assert.equal((await chamar('/portaria/lista')).status, 503);
+        assert.equal((await chamar('/portaria/codigo', { email: 'porta@exemplo.com' }, {})).status, 503);
     } finally {
-        config.portariaSenha = antes;
+        config.portaria.configurada = true;
     }
 });
 
-test('lista os pagos em ordem alfabética, sem cache no navegador', async function () {
+test('e-mail tirado da lista perde a sessão na hora', async function () {
+    const sessao = { Authorization: 'Bearer ' + acesso.criarSessao('outra@exemplo.com').sessao };
+    assert.equal((await chamar('/portaria/lista', null, sessao)).status, 200);
+    const antes = config.portaria.emails;
+    config.portaria.emails = ['porta@exemplo.com'];
+    try {
+        assert.equal((await chamar('/portaria/lista', null, sessao)).status, 401);
+    } finally {
+        config.portaria.emails = antes;
+    }
+});
+
+test('entrar: código do e-mail vira sessão; código errado e e-mail de fora não entram', async function () {
+    // pedir o código responde igual para quem está e quem não está na lista
+    const cadastrado = await chamar('/portaria/codigo', { email: ' Porta@exemplo.com ' }, {});
+    const deFora = await chamar('/portaria/codigo', { email: 'intruso@exemplo.com' }, {});
+    assert.equal(cadastrado.status, 200);
+    assert.equal(deFora.status, 200);
+    assert.deepEqual(await cadastrado.json(), await deFora.json());
+    assert.equal((await chamar('/portaria/codigo', { email: 'sem-arroba' }, {})).status, 422);
+
+    const codigo = acesso.codigoAtual('porta@exemplo.com');
+    assert.match(codigo, /^\d{6}$/);
+    const errado = codigo === '000000' ? '000001' : '000000';
+    assert.equal((await chamar('/portaria/entrar', { email: 'porta@exemplo.com', codigo: errado }, {})).status, 401);
+    // o código de um e-mail não serve para outro, nem para quem está de fora
+    assert.equal((await chamar('/portaria/entrar', { email: 'outra@exemplo.com', codigo: codigo }, {})).status, 401);
+    assert.equal((await chamar('/portaria/entrar', { email: 'intruso@exemplo.com', codigo: acesso.codigoAtual('intruso@exemplo.com') }, {})).status, 401);
+
+    const r = await chamar('/portaria/entrar', { email: 'porta@exemplo.com', codigo: codigo }, {});
+    assert.equal(r.status, 200);
+    const dados = await r.json();
+    assert.equal((await chamar('/portaria/lista', null, { Authorization: 'Bearer ' + dados.sessao })).status, 200);
+    // vencido: o código de 30 minutos atrás não entra mais
+    assert.equal(acesso.codigoConfere('porta@exemplo.com', acesso.codigoAtual('porta@exemplo.com', Date.now() - 30 * 60 * 1000)), false);
+});
+
+test('cinco códigos errados seguidos travam aquele e-mail', async function () {
+    let status;
+    for (let n = 0; n < 6; n++) {
+        status = (await chamar('/portaria/entrar', { email: 'outra@exemplo.com', codigo: '12' + n + '456' }, {})).status;
+    }
+    assert.equal(status, 429);
+});
+
+test('lista os pagos em ordem alfabética, sem cache no navegador, sem CPF inteiro nem telefone', async function () {
     const r = await chamar('/portaria/lista');
     assert.equal(r.status, 200);
     assert.equal(r.headers.get('cache-control'), 'no-store');
-    const dados = await r.json();
+    const texto = await r.text();
+    const dados = JSON.parse(texto);
     assert.deepEqual(dados.ingressos.map(function (i) { return i.nome; }), ['Ana Lima', 'Beatriz Souza']);
     assert.equal(dados.total, 2);
     assert.equal(dados.presentes, 0);
+    assert.deepEqual(Object.keys(dados.ingressos[0]).sort(), ['codigo', 'cpfMeio', 'entrada', 'grupo', 'nome']);
+    assert.equal(dados.ingressos[0].cpfMeio, '444777');
+    assert.ok(!texto.includes('11144477735') && !texto.includes('52998224725'));
+    assert.notEqual(dados.ingressos[0].grupo, dados.ingressos[1].grupo);
 });
 
 test('confirmar grava hora e quem; a segunda vez responde 409 "já entrou"', async function () {

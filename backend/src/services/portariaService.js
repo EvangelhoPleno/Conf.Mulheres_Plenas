@@ -78,6 +78,26 @@ function montarLista(pagos, linhasPortaria) {
     return ingressos;
 }
 
+/* O que vai para o celular da porta: o CPF inteiro e o telefone NÃO saem do
+   servidor. Vão só os 6 números do meio do CPF (o bastante para conferir com
+   o documento e para a busca) e um número de grupo, igual para os ingressos
+   comprados no mesmo CPF (acompanhantes). Se o acesso vazar, não vaza CPF. */
+function visaoDaPorta() {
+    const grupos = {};
+    let proximo = 0;
+    return function (ingresso) {
+        const completo = ingresso.cpf.length === 11;
+        if (completo && !grupos[ingresso.cpf]) grupos[ingresso.cpf] = ++proximo;
+        return {
+            codigo: ingresso.codigo,
+            nome: ingresso.nome,
+            cpfMeio: completo ? ingresso.cpf.slice(3, 9) : '',
+            grupo: completo ? grupos[ingresso.cpf] : 0,
+            entrada: ingresso.entrada
+        };
+    };
+}
+
 /* linhas da aba Pedidos (valores, 1ª linha = cabeçalho) -> ingressos pagos */
 function pagosDosPedidos(valores) {
     const cab = (valores[0] || []).map(texto);
@@ -242,7 +262,7 @@ function criarPortaria(armazem, opcoes) {
     return {
         async listar() {
             const dados = await lerTudo(false);
-            const ingressos = montarLista(dados.pagos, dados.portaria);
+            const ingressos = montarLista(dados.pagos, dados.portaria).map(visaoDaPorta());
             return {
                 ingressos: ingressos,
                 total: ingressos.length,

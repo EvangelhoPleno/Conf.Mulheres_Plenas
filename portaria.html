@@ -13,22 +13,26 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- ?v= sobe a cada mudança: o celular da porta não pode ficar com a versão velha -->
-    <link rel="stylesheet" href="portaria.css?v=5">
-    <script src="portaria.js?v=5" defer></script>
+    <link rel="stylesheet" href="portaria.css?v=6">
+    <script src="config.js"></script>
+    <script src="portaria.js?v=6" defer></script>
 </head>
 <!-- PORTARIA do dia da conferência. Fora do menu e do Google (noindex).
-     A equipe entra pelo link portaria.html#senha=<PORTARIA_SENHA>: a senha
-     fica guardada no celular e some da barra de endereço. -->
+     Só entra quem tem o e-mail cadastrado (PORTARIA_EMAILS): a pessoa digita
+     o e-mail, recebe um código de 6 números e fica 48 h com acesso naquele
+     aparelho. -->
 <body>
 
-    <!-- entrada: senha e nome de quem está na porta -->
+    <!-- entrada: e-mail cadastrado + código recebido nele -->
     <main class="entrar" data-tela="entrar" hidden>
         <img class="entrar-logo" src="assets/imagens/marca/mp-horizontal-escuro.png" alt="Mulheres Plenas" width="1100" height="198">
         <h1>Portaria</h1>
-        <form class="entrar-form" data-form-entrar>
+
+        <!-- passo 1 -->
+        <form class="entrar-form" data-form-email>
             <label>
-                <span>Senha da portaria</span>
-                <input type="password" name="senha" autocomplete="current-password" required>
+                <span>Seu e-mail</span>
+                <input type="email" name="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="120" required placeholder="O e-mail cadastrado na equipe">
             </label>
             <label>
                 <span>Seu nome</span>
@@ -36,8 +40,23 @@
                 <small class="entrar-ajuda">Vai junto com a hora de cada entrada que você confirmar.</small>
             </label>
             <p class="entrar-erro" data-erro-entrar hidden></p>
-            <button type="submit" class="botao">Entrar</button>
+            <button type="submit" class="botao">Receber código por e-mail</button>
         </form>
+
+        <!-- passo 2 -->
+        <form class="entrar-form" data-form-codigo hidden>
+            <p class="entrar-texto">Se <strong data-email-enviado></strong> estiver cadastrado na equipe, um código de 6 números chegou nele agora. Olhe também a caixa de spam.</p>
+            <label>
+                <span>Código do e-mail</span>
+                <input class="entrar-codigo" type="text" name="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="7" required placeholder="000000">
+            </label>
+            <p class="entrar-erro" data-erro-codigo hidden></p>
+            <button type="submit" class="botao">Entrar</button>
+            <button type="button" class="link" data-outro-email>usar outro e-mail ou pedir novo código</button>
+        </form>
+
+        <!-- verificação anti-robô: só aparece quando a Cloudflare pede interação -->
+        <div class="anti-robo" data-turnstile></div>
     </main>
 
     <div class="app" data-tela="lista" hidden>

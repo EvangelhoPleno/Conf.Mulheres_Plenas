@@ -29,11 +29,20 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
   (a página da portaria já não a mostra). Provado na aba real com linha de
   teste, depois apagada. Causa do pedido: Lorena Rodrigues pagou 20:15 e
   não aparecia (a aba era só a foto da última rodada).
-- **Página `portaria.html`** (noindex, fora do menu): login por senha
-  (`PORTARIA_SENHA`, só Production na Vercel) + nome de quem está na porta.
-  Link para a equipe: `https://evangelhoplenoparagominas.com.br/portaria.html#senha=...`
-  (a senha fica no celular e some da barra). Busca local por nome, CPF ou
-  código; **um toque em "Confirmar entrada"**; o aviso verde fecha em 2,5 s
+- **Página `portaria.html`** (noindex, fora do menu): entra só quem tem o
+  e-mail em `PORTARIA_EMAILS` (vírgulas; só Production na Vercel). E-mail +
+  nome → código de 6 números pelo Resend (vale 10–20 min) → sessão de 48 h
+  no aparelho. Sem banco: código e sessão são HMAC com `PORTARIA_SEGREDO`
+  (`services/portariaAcesso.js`); trocar o segredo desloga todo mundo, tirar
+  um e-mail da lista derruba só ele. Turnstile (ação `portaria`) nos dois
+  passos; 5 códigos errados por e-mail e 15 por IP a cada 10 min. A resposta
+  de "pedir código" é igual para e-mail cadastrado ou não. **Incluir alguém
+  da equipe = editar `PORTARIA_EMAILS` na Vercel e fazer Redeploy.** A senha
+  única no link (`PORTARIA_SENHA`) foi abandonada antes de ser usada.
+  **O CPF inteiro e o telefone não saem do servidor**: a lista leva só os 6
+  números do meio (`cpfMeio`) e um número de grupo por CPF; a busca por CPF
+  funciona com esses 6 ou com o CPF digitado inteiro. Busca local por nome,
+  CPF ou código; **um toque em "Confirmar entrada"**; o aviso verde fecha em 2,5 s
   e limpa a busca. Outro celular que tentar o mesmo código recebe "JÁ
   ENTROU" com hora e nome. "Desfazer" no aviso e no item.
 - API: `/api/portaria/lista|entrada|desfazer` (`routes/portaria.js`,

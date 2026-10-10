@@ -1,7 +1,8 @@
 /* =============================================================
    PORTARIA — confirmação de entrada no dia da conferência.
-   Lista dos ingressos PAGOS vinda de /api/portaria/lista (senha da
-   portaria). A busca é toda no celular: só confirmar/desfazer vai ao
+   Entra só quem tem o e-mail cadastrado: e-mail -> código de 6 números ->
+   sessão de 48 h. Lista dos ingressos PAGOS vinda de /api/portaria/lista,
+   sem CPF inteiro nem telefone. A busca é toda no celular: só confirmar/desfazer vai ao
    servidor, que relê a planilha e avisa se outro celular já confirmou.
 
    Duas abas: "Buscar" (busca + últimas confirmadas) e "Confirmadas"
@@ -53,16 +54,8 @@
         try { localStorage.setItem('mp-portaria', JSON.stringify(sessao)); } catch (e) { /* aba anônima */ }
     }
 
-    // link portaria.html#senha=...: guarda e tira da barra de endereço
-    var hash = /[#&]senha=([^&]+)/.exec(location.hash);
-    if (hash) {
-        sessao.senha = decodeURIComponent(hash[1]);
-        salvar();
-        history.replaceState(null, '', location.pathname + location.search);
-    }
-
     function api(caminho, corpo) {
-        var opcoes = { headers: { Authorization: 'Bearer ' + (sessao.senha || '') }, cache: 'no-store' };
+        var opcoes = { headers: { Authorization: 'Bearer ' + (sessao.token || '') }, cache: 'no-store' };
         if (corpo) {
             opcoes.method = 'POST';
             opcoes.headers['Content-Type'] = 'application/json';
@@ -80,26 +73,115 @@
         $$('[data-tela]').forEach(function (e) { e.hidden = e.dataset.tela !== nome; });
     }
 
-    /* ---------- entrar / sair ---------- */
-    function mostrarEntrar(erro) {
-        var form = $('[data-form-entrar]');
-        form.senha.value = sessao.senha || '';
-        form.por.value = sessao.por || '';
-        var caixa = $('[data-erro-entrar]');
-        caixa.textContent = erro || '';
-        caixa.hidden = !erro;
-        clearTimeout(timerLista);
-        tela('entrar');
-        (sessao.senha ? form.por : form.senha).focus();
+    /* ---------- anti-robô (Cloudflare Turnstile) ----------
+       Mesmo widget do checkout, em modo interaction-only: resolve sozinho e
+       só aparece se a Cloudflare desconfiar. Cada token vale uma vez, então
+       é renovado depois de cada envio. No computador de desenvolvimento não
+       carrega (a chave só vale para o domínio do site). */
+    var antiRobo = (function () {
+        var chave = window.MP_CONFIG && window.MP_CONFIG.turnstileSiteKey;
+        var estado = { ligado: Boolean(chave) && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname), token: '', widget: null };
+        estado.renovar = function () {
+            estado.token = '';
+            if (window.turnstile && estado.widget !== null) window.turnstile.reset(estado.widget);
+        };
+        if (!estado.ligado) return estado;
+
+        window.mpAntiRoboPronto = function () {
+            estado.widget = window.turnstile.render('[data-turnstile]', {
+                sitekey: chave,
+                action: 'portaria',
+                appearance: 'interaction-only',
+                language: 'pt-br',
+                callback: function (token) { estado.token = token; },
+                'expired-callback': function () { estado.token = ''; },
+                'error-callback': function () { estado.token = ''; }
+            });
+        };
+        var script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=mpAntiRoboPronto';
+        script.async = true;
+        document.head.appendChild(script);
+        return estado;
+    })();
+
+    /* ---------- entrar / sair ----------
+       Passo 1: e-mail cadastrado + nome. Passo 2: o código que chegou no
+       e-mail. A sessão (48 h) fica guardada neste aparelho. */
+    var formEmail = $('[data-form-email]');
+    var formCodigo = $('[data-form-codigo]');
+
+    function erroEm(seletor, texto) {
+        var caixa = $(seletor);
+        caixa.textContent = texto || '';
+        caixa.hidden = !texto;
     }
 
-    $('[data-form-entrar]').addEventListener('submit', function (e) {
+    function mostrarEntrar(erro) {
+        formEmail.email.value = sessao.email || '';
+        formEmail.por.value = sessao.por || '';
+        formEmail.hidden = false;
+        formCodigo.hidden = true;
+        erroEm('[data-erro-entrar]', erro);
+        clearTimeout(timerLista);
+        tela('entrar');
+        (sessao.email ? formEmail.por : formEmail.email).focus();
+    }
+
+    function mostrarCodigo() {
+        $('[data-email-enviado]').textContent = sessao.email;
+        formCodigo.codigo.value = '';
+        formEmail.hidden = true;
+        formCodigo.hidden = false;
+        erroEm('[data-erro-codigo]', '');
+        formCodigo.codigo.focus();
+    }
+
+    // manda o formulário com o token do anti-robô e renova o token depois
+    function enviarEntrada(form, caminho, corpo, seletorErro) {
+        if (antiRobo.ligado && !antiRobo.token) {
+            erroEm(seletorErro, 'Aguarde um instante: estamos confirmando que você não é um robô. Depois toque de novo.');
+            return Promise.resolve(null);
+        }
+        var botao = form.querySelector('.botao');
+        ocupado(botao, true);
+        erroEm(seletorErro, '');
+        corpo.turnstile = antiRobo.token || undefined;
+        return api(caminho, corpo).then(function (r) {
+            ocupado(botao, false);
+            antiRobo.renovar();
+            if (r.status === 200) return r;
+            erroEm(seletorErro, r.status === 503 ? 'A portaria ainda não foi ligada no servidor.' : (r.erro || 'Não deu certo. Tente de novo.'));
+            return null;
+        }).catch(function () {
+            ocupado(botao, false);
+            antiRobo.renovar();
+            erroEm(seletorErro, 'Sem conexão com o servidor. Confira a internet e tente de novo.');
+            return null;
+        });
+    }
+
+    formEmail.addEventListener('submit', function (e) {
         e.preventDefault();
-        sessao.senha = this.senha.value.trim();
-        sessao.por = this.por.value.trim().slice(0, 30);
+        sessao = { email: this.email.value.trim().toLowerCase(), por: this.por.value.trim().slice(0, 30) };
         salvar();
-        iniciar();
+        enviarEntrada(this, '/portaria/codigo', { email: sessao.email }, '[data-erro-entrar]').then(function (r) {
+            if (r) mostrarCodigo();
+        });
     });
+
+    formCodigo.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var codigo = this.codigo.value.replace(/\D/g, '');
+        enviarEntrada(this, '/portaria/entrar', { email: sessao.email, codigo: codigo }, '[data-erro-codigo]').then(function (r) {
+            if (!r) return;
+            sessao.token = r.sessao;
+            salvar();
+            iniciar();
+        });
+    });
+
+    $('[data-outro-email]').addEventListener('click', function () { mostrarEntrar(); });
 
     $('[data-sair]').addEventListener('click', function () {
         sessao = {};
@@ -108,8 +190,8 @@
     });
 
     function iniciar() {
-        if (!sessao.senha || !sessao.por) return mostrarEntrar();
-        var botao = $('[data-form-entrar] .botao');
+        if (!sessao.token || !sessao.por) return mostrarEntrar();
+        var botao = formCodigo.querySelector('.botao');
         botao.classList.add('is-carregando');
         atualizarLista().then(function (ok) {
             botao.classList.remove('is-carregando');
@@ -125,7 +207,9 @@
         clearTimeout(timerLista);
         return api('/portaria/lista').then(function (dados) {
             if (dados.status === 401 || dados.status === 503) {
-                mostrarEntrar(dados.status === 401 ? 'Senha incorreta.' : 'A portaria ainda não foi ligada no servidor.');
+                delete sessao.token;
+                salvar();
+                mostrarEntrar(dados.status === 401 ? 'Seu acesso venceu. Peça um código novo.' : 'A portaria ainda não foi ligada no servidor.');
                 return false;
             }
             if (dados.status !== 200) throw new Error(dados.erro || 'falhou');
@@ -182,7 +266,8 @@
     function agrupar() {
         var grupos = {};
         ingressos.forEach(function (i) {
-            var chave = i.cpf.length === 11 ? i.cpf : 'nome:' + i.busca;
+            // o servidor não manda o CPF: manda um número igual para o mesmo CPF
+            var chave = i.grupo ? 'cpf:' + i.grupo : 'nome:' + i.busca;
             (grupos[chave] = grupos[chave] || []).push(i);
         });
         Object.keys(grupos).forEach(function (chave) {
@@ -241,16 +326,17 @@
         $('[data-conta]').textContent = presentes;
     }
 
-    function mascararCpf(cpf) {
-        if (cpf.length !== 11) return '';
-        return '•••.' + cpf.slice(3, 6) + '.' + cpf.slice(6, 9) + '-••';
+    // do CPF só chegam os 6 números do meio (cpfMeio)
+    function mascararCpf(meio) {
+        if (!meio || meio.length !== 6) return '';
+        return '•••.' + meio.slice(0, 3) + '.' + meio.slice(3) + '-••';
     }
 
     function linhaDetalhe(i) {
         var det = el('p', 'item-detalhe', i.codigo);
-        if (mascararCpf(i.cpf)) {
+        if (mascararCpf(i.cpfMeio)) {
             det.appendChild(document.createTextNode(' · '));
-            det.appendChild(el('span', 'item-cpf', 'CPF ' + mascararCpf(i.cpf)));
+            det.appendChild(el('span', 'item-cpf', 'CPF ' + mascararCpf(i.cpfMeio)));
         }
         return det;
     }
@@ -328,7 +414,13 @@
         var compacto = q.toUpperCase().replace(/[^A-Z0-9]/g, '');
         if (compacto.length >= 4 && i.codigoBusca.indexOf(compacto) > -1) return true;
         if (digitos.length >= 3 && digitos.length === q.replace(/[\s.\-]/g, '').length) {
-            return i.cpf.indexOf(digitos) > -1;
+            /* Só os 6 números do meio do CPF estão no celular. Vale um pedaço
+               deles, ou o CPF digitado desde o começo (do 4º número em diante
+               tem de bater com o meio). */
+            var meio = i.cpfMeio || '';
+            if (!meio) return false;
+            if (digitos.length <= 6 && meio.indexOf(digitos) > -1) return true;
+            return digitos.length >= 5 && meio.indexOf(digitos.slice(3, 9)) === 0;
         }
         var partes = normalizar(q).split(' ');
         return partes.every(function (p) { return i.busca.indexOf(p) > -1; });
@@ -448,7 +540,9 @@
                         'Entrada registrada às ' + (e.hora || r.entrada) + (e.por ? ', por ' + e.por : '') + '.', false);
                 }
             } else if (r.status === 401) {
-                mostrarEntrar('A senha da portaria mudou. Entre de novo.');
+                delete sessao.token;
+                salvar();
+                mostrarEntrar('Seu acesso venceu. Peça um código novo.');
             } else {
                 aviso('erro', 'Não confirmou', i.nome, r.erro || 'Tente de novo.', false);
             }
