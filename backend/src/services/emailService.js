@@ -70,14 +70,14 @@ async function enviarIngresso(pedido, opcoes) {
     return { enviado: true, id: data && data.id };
 }
 
-/* Código de acesso da página da portaria (services/portariaAcesso.js).
+/* Código de acesso da página de check-in, a portaria (services/portariaAcesso.js).
    Sem chave de idempotência: pedir de novo tem de mandar de novo. */
 async function enviarCodigoPortaria(para, codigo) {
-    const assunto = codigo + ' é o seu código da portaria';
-    const text = 'Código de acesso à portaria da Conferência Mulheres Plenas: ' + codigo +
+    const assunto = codigo + ' é o seu código do check-in';
+    const text = 'Código de acesso ao check-in da Conferência Mulheres Plenas: ' + codigo +
         '\n\nEle vale por 10 minutos. Se não foi você quem pediu, ignore este e-mail.';
     const html = '<div style="font-family:Arial,Helvetica,sans-serif;max-width:420px;margin:0 auto;padding:24px;color:#3E1A10">' +
-        '<p style="margin:0 0 8px;font-size:15px">Seu código de acesso à portaria da Conferência Mulheres Plenas:</p>' +
+        '<p style="margin:0 0 8px;font-size:15px">Seu código de acesso ao check-in da Conferência Mulheres Plenas:</p>' +
         '<p style="margin:0 0 16px;padding:16px;border-radius:12px;background:#F5E8E2;color:#85351E;font-size:34px;font-weight:bold;letter-spacing:8px;text-align:center">' + codigo + '</p>' +
         '<p style="margin:0;font-size:13px;color:#8A6A5E">Ele vale por 10 minutos. Se não foi você quem pediu, ignore este e-mail.</p></div>';
 

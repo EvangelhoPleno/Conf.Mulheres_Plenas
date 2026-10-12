@@ -33,7 +33,7 @@ const errosPorEmail = limitar({
 const errosPorIp = limitar({ janelaMs: DEZ_MIN, maximo: 15, contar: function (res) { return res.statusCode === 401; } });
 
 function ligada(req, res, next) {
-    if (!config.portaria.configurada) return res.status(503).json({ erro: 'Portaria não configurada.' });
+    if (!config.portaria.configurada) return res.status(503).json({ erro: 'Check-in não configurado.' });
     res.set('Cache-Control', 'no-store');
     next();
 }
@@ -76,7 +76,7 @@ router.post('/portaria/entrar', ligada, errosPorIp, comEmail, errosPorEmail, hum
 
 async function exigirSessao(req, res, next) {
     const token = String(req.get('authorization') || '').replace(/^Bearer\s+/i, '');
-    if (!(await acesso.lerSessao(token))) return res.status(401).json({ erro: 'Sessão da portaria vencida. Entre de novo.' });
+    if (!(await acesso.lerSessao(token))) return res.status(401).json({ erro: 'Sessão do check-in vencida. Entre de novo.' });
     next();
 }
 

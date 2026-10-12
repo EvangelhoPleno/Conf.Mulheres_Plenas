@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Portaria · Mulheres Plenas</title>
+    <title>Check-in · Mulheres Plenas</title>
     <meta name="robots" content="noindex, nofollow">
     <meta name="referrer" content="no-referrer">
     <meta name="theme-color" content="#85351E">
@@ -11,13 +11,15 @@
     <link rel="apple-touch-icon" href="assets/imagens/marca/apple-touch-180.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Fraunces com os mesmos eixos da landing: o arquivo já está no cache de quem abriu o site -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500..900,100,1;1,9..144,500..900,100,1&display=swap" rel="stylesheet">
     <!-- ?v= sobe a cada mudança: o celular da porta não pode ficar com a versão velha -->
-    <link rel="stylesheet" href="portaria.css?v=7">
+    <link rel="stylesheet" href="portaria.css?v=8">
     <script src="config.js"></script>
-    <script src="portaria.js?v=7" defer></script>
+    <script src="portaria.js?v=8" defer></script>
 </head>
-<!-- PORTARIA do dia da conferência. Fora do menu e do Google (noindex).
+<!-- CHECK-IN do dia da conferência (o arquivo, a API e a planilha seguem com
+     o nome antigo, "portaria"). Fora do menu e do Google (noindex).
      Só entra quem tem o e-mail cadastrado (PORTARIA_EMAILS): a pessoa digita
      o e-mail, recebe um código de 6 números e fica 48 h com acesso naquele
      aparelho. -->
@@ -25,62 +27,81 @@
 
     <!-- entrada: e-mail cadastrado + código recebido nele -->
     <main class="entrar" data-tela="entrar" hidden>
-        <img class="entrar-logo" src="assets/imagens/marca/mp-horizontal-escuro.png" alt="Mulheres Plenas" width="1100" height="198">
-        <h1>Portaria</h1>
+        <div class="entrar-capa">
+            <img class="entrar-logo" src="assets/imagens/marca/mp-horizontal-claro.png" alt="Mulheres Plenas" width="1100" height="198">
+            <div class="entrar-chamada">
+                <p class="entrar-sobre">Conferência · 16 e 17 de outubro</p>
+                <h1>Check-in</h1>
+                <p class="entrar-sub">Acesso da equipe de recepção.</p>
+            </div>
+        </div>
 
-        <!-- passo 1 -->
-        <form class="entrar-form" data-form-email>
-            <label>
-                <span>Seu e-mail</span>
-                <input type="email" name="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="120" required placeholder="O e-mail cadastrado na equipe">
-            </label>
-            <label>
-                <span>Seu nome</span>
-                <input type="text" name="por" autocomplete="given-name" maxlength="30" required placeholder="Digite seu nome. Ex.: Ana">
-                <small class="entrar-ajuda">Vai junto com a hora de cada entrada que você confirmar.</small>
-            </label>
-            <p class="entrar-erro" data-erro-entrar hidden></p>
-            <button type="submit" class="botao">Receber código por e-mail</button>
-        </form>
+        <div class="entrar-cartao">
+            <!-- passo 1 -->
+            <form class="entrar-form" data-form-email>
+                <p class="entrar-passo"><b>1</b> de 2 <span>Quem é você</span></p>
+                <label>
+                    <span>Seu e-mail</span>
+                    <input type="email" name="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="120" required placeholder="E-mail cadastrado na equipe">
+                </label>
+                <label>
+                    <span>Seu nome</span>
+                    <input type="text" name="por" autocomplete="given-name" maxlength="30" required placeholder="Ex.: Ana">
+                    <small class="entrar-ajuda">Vai junto com a hora de cada check-in que você fizer.</small>
+                </label>
+                <p class="entrar-erro" data-erro-entrar hidden></p>
+                <button type="submit" class="botao">Receber código por e-mail</button>
+            </form>
 
-        <!-- passo 2 -->
-        <form class="entrar-form" data-form-codigo hidden>
-            <p class="entrar-texto">Se <strong data-email-enviado></strong> estiver cadastrado na equipe, um código de 6 números chegou nele agora. Olhe também a caixa de spam.</p>
-            <label>
-                <span>Código do e-mail</span>
-                <input class="entrar-codigo" type="text" name="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="7" required placeholder="000000">
-            </label>
-            <p class="entrar-erro" data-erro-codigo hidden></p>
-            <button type="submit" class="botao">Entrar</button>
-            <button type="button" class="link" data-outro-email>usar outro e-mail ou pedir novo código</button>
-        </form>
+            <!-- passo 2 -->
+            <form class="entrar-form" data-form-codigo hidden>
+                <p class="entrar-passo"><b>2</b> de 2 <span>Código de acesso</span></p>
+                <p class="entrar-texto">Se <strong data-email-enviado></strong> estiver cadastrado na equipe, um código de 6 números chegou nele agora. Olhe também a caixa de spam.</p>
+                <label>
+                    <span>Código do e-mail</span>
+                    <input class="entrar-codigo" type="text" name="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="7" required placeholder="000000">
+                </label>
+                <p class="entrar-erro" data-erro-codigo hidden></p>
+                <button type="submit" class="botao">Entrar</button>
+                <button type="button" class="link" data-outro-email>usar outro e-mail ou pedir novo código</button>
+            </form>
 
-        <!-- verificação anti-robô: só aparece quando a Cloudflare pede interação -->
-        <div class="anti-robo" data-turnstile></div>
+            <!-- verificação anti-robô: só aparece quando a Cloudflare pede interação -->
+            <div class="anti-robo" data-turnstile></div>
+        </div>
     </main>
 
     <div class="app" data-tela="lista" hidden>
         <header class="topo">
             <div class="topo-linha">
-                <img class="topo-logo" src="assets/imagens/marca/mp-horizontal-claro.png" alt="Mulheres Plenas" width="1100" height="198">
+                <div class="topo-marca">
+                    <img class="topo-logo" src="assets/imagens/marca/mp-horizontal-claro.png" alt="Mulheres Plenas" width="1100" height="198">
+                    <span class="topo-nome">Check-in</span>
+                </div>
                 <span class="topo-sinal" data-sinal>ao vivo</span>
             </div>
             <div class="placar">
-                <p class="placar-numeros">
-                    <strong data-presentes>0</strong>
-                    <span>de <b data-total>0</b> já entraram</span>
+                <div class="placar-anel" aria-hidden="true">
+                    <svg viewBox="0 0 48 48"><circle class="anel-trilho" cx="24" cy="24" r="21"/><circle class="anel-valor" data-anel cx="24" cy="24" r="21" pathLength="100"/></svg>
                     <em data-porcento>0%</em>
-                </p>
-                <div class="placar-barra" aria-hidden="true"><span data-barra></span></div>
+                </div>
+                <div class="placar-bloco">
+                    <p class="placar-numeros"><strong data-presentes>0</strong> <span>de <b data-total>0</b></span></p>
+                    <p class="placar-rotulo">já entraram</p>
+                </div>
+                <div class="placar-bloco placar-bloco--faltam">
+                    <p class="placar-numeros"><strong data-faltam>0</strong></p>
+                    <p class="placar-rotulo">faltam</p>
+                </div>
             </div>
-            <nav class="abas" role="tablist" aria-label="Telas da portaria">
+            <nav class="abas" role="tablist" aria-label="Telas do check-in">
                 <button type="button" role="tab" class="aba" data-aba="buscar" aria-selected="true">Buscar</button>
-                <button type="button" role="tab" class="aba" data-aba="confirmadas" aria-selected="false">Confirmadas <span class="aba-conta" data-conta>0</span></button>
+                <button type="button" role="tab" class="aba" data-aba="confirmadas" aria-selected="false">Presentes <span class="aba-conta" data-conta>0</span></button>
             </nav>
         </header>
 
         <!-- no celular e no tablet, uma aba de cada vez; no computador, as
-             duas lado a lado (busca à esquerda, confirmadas à direita) -->
+             duas lado a lado (busca à esquerda, presentes à direita) -->
         <div class="paineis">
         <!-- BUSCAR -->
         <section class="painel" data-painel="buscar" role="tabpanel">
@@ -92,22 +113,22 @@
             <p class="dica" data-dica></p>
             <ul class="lista" data-resultados></ul>
 
-            <!-- com a busca vazia: as últimas confirmadas, de todos os celulares -->
+            <!-- com a busca vazia: os últimos check-ins, de todos os celulares -->
             <div class="recentes" data-recentes hidden>
                 <div class="bloco-titulo">
-                    <h2>Últimas confirmadas</h2>
-                    <button type="button" class="link" data-ver-todas>ver todas</button>
+                    <h2>Últimos check-ins</h2>
+                    <button type="button" class="link" data-ver-todas>ver todos</button>
                 </div>
                 <ul class="lista lista--entradas" data-recentes-lista></ul>
             </div>
         </section>
 
-        <!-- CONFIRMADAS: histórico completo -->
+        <!-- PRESENTES: histórico completo -->
         <section class="painel" data-painel="confirmadas" role="tabpanel" hidden>
-            <h2 class="painel-titulo">Entradas confirmadas</h2>
-            <div class="filtros" role="group" aria-label="Filtrar confirmadas">
-                <button type="button" class="filtro" data-filtro="todas" aria-pressed="true">Todas <span data-conta-todas>0</span></button>
-                <button type="button" class="filtro" data-filtro="minhas" aria-pressed="false">Só as minhas <span data-conta-minhas>0</span></button>
+            <h2 class="painel-titulo">Check-ins feitos</h2>
+            <div class="filtros" role="group" aria-label="Filtrar check-ins">
+                <button type="button" class="filtro" data-filtro="todas" aria-pressed="true">Todos <span data-conta-todas>0</span></button>
+                <button type="button" class="filtro" data-filtro="minhas" aria-pressed="false">Feitos por mim <span data-conta-minhas>0</span></button>
             </div>
             <p class="dica" data-dica-confirmadas hidden></p>
             <ul class="lista lista--entradas" data-confirmadas></ul>
@@ -115,15 +136,15 @@
         </div>
 
         <footer class="rodape">
-            <span>na porta: <strong data-por></strong></span>
+            <span>no check-in: <strong data-por></strong></span>
             <button type="button" class="link" data-sair>sair</button>
         </footer>
     </div>
 
-    <!-- aviso grande: entrada confirmada / já entrou / erro -->
+    <!-- aviso grande: check-in confirmado / já feito / erro -->
     <div class="aviso" data-aviso role="alertdialog" aria-modal="true" hidden>
         <div class="aviso-caixa">
-            <span class="aviso-icone" data-aviso-icone aria-hidden="true"></span>
+            <span class="aviso-icone" aria-hidden="true"></span>
             <p class="aviso-titulo" data-aviso-titulo></p>
             <p class="aviso-nome" data-aviso-nome></p>
             <p class="aviso-detalhe" data-aviso-detalhe></p>
@@ -139,7 +160,7 @@
     <!-- confirmação do desfazer (no lugar do confirm() do navegador) -->
     <div class="aviso aviso--pergunta" data-pergunta role="alertdialog" aria-modal="true" hidden>
         <div class="aviso-caixa">
-            <p class="aviso-titulo">Desfazer entrada?</p>
+            <p class="aviso-titulo">Desfazer check-in?</p>
             <p class="aviso-nome" data-pergunta-nome></p>
             <p class="aviso-detalhe" data-pergunta-detalhe></p>
             <div class="aviso-acoes">

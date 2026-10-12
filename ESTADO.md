@@ -5,6 +5,30 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
 
+## Portaria virou "Check-in" na tela (12/10) — AINDA NÃO PUBLICADO
+
+Só o nome que a equipe vê e o visual mudaram. **Arquivo (`portaria.html`),
+rotas (`/api/portaria/...`), abas da planilha (`Portaria`, `Usuários
+Portaria`), variáveis e `npm run portaria` continuam com o nome antigo**: o
+link da equipe é o mesmo.
+- Textos: título, botão do cartão ("Check-in"), avisos ("Check-in
+  confirmado", "Check-in já feito", "Desfazer check-in?"), aba "Presentes",
+  rodapé "no check-in: Ana", assunto do e-mail do código ("é o seu código do
+  check-in") e os dois erros da API que citavam a portaria.
+- Visual (`portaria.css` reescrito, `?v=8`): Fraunces nos títulos (mesma
+  URL da landing) e DM Sans no resto, saiu a Bebas Neue; tela de entrar com
+  capa tijolo e cartão branco (lado a lado a partir de 900 px); topo com
+  anel fino da porcentagem (`data-anel`, `pathLength=100`), "já entraram" e
+  "faltam" (`data-faltam`); abas em controle segmentado; cartões com as
+  iniciais (viram o visto verde depois do check-in); ícones dos avisos
+  desenhados no CSS (máscara `data:`, coberta pelo `img-src data:` do CSP).
+- Conferido só local, com a API simulada (Chrome sem janela em 320, 390,
+  820 e 1440 px): entrar, código errado, busca, check-in, acompanhantes,
+  já feito, sem conexão, desfazer, lista vazia; sem rolagem lateral e sem
+  erro de JS. `npm test`: 59 verdes e as mesmas 6 falhas de data do Mercado
+  Pago. **Não conferido:** o Turnstile dentro do cartão novo (não carrega em
+  localhost) e um celular de verdade.
+
 ## Auditoria de segurança de 09/10 (noite)
 
 Código inteiro relido (pagamento, webhook, planilha, portaria, páginas),

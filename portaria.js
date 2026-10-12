@@ -1,11 +1,12 @@
 /* =============================================================
-   PORTARIA — confirmação de entrada no dia da conferência.
+   CHECK-IN — confirmação de entrada no dia da conferência (na tela o nome
+   é "Check-in"; arquivos, API e planilha seguem como "portaria").
    Entra só quem tem o e-mail cadastrado: e-mail -> código de 6 números ->
    sessão de 48 h. Lista dos ingressos PAGOS vinda de /api/portaria/lista,
    sem CPF inteiro nem telefone. A busca é toda no celular: só confirmar/desfazer vai ao
    servidor, que relê a planilha e avisa se outro celular já confirmou.
 
-   Duas abas: "Buscar" (busca + últimas confirmadas) e "Confirmadas"
+   Duas abas: "Buscar" (busca + últimos check-ins) e "Presentes"
    (histórico completo, com desfazer). Toda confirmação aparece na hora,
    sem recarregar: o estado local é atualizado com a resposta do servidor.
    ============================================================= */
@@ -152,7 +153,7 @@
             ocupado(botao, false);
             antiRobo.renovar();
             if (r.status === 200) return r;
-            erroEm(seletorErro, r.status === 503 ? 'A portaria ainda não foi ligada no servidor.' : (r.erro || 'Não deu certo. Tente de novo.'));
+            erroEm(seletorErro, r.status === 503 ? 'O check-in ainda não foi ligado no servidor.' : (r.erro || 'Não deu certo. Tente de novo.'));
             return null;
         }).catch(function () {
             ocupado(botao, false);
@@ -210,7 +211,7 @@
             if (dados.status === 401 || dados.status === 503) {
                 delete sessao.token;
                 salvar();
-                mostrarEntrar(dados.status === 401 ? 'Seu acesso venceu. Peça um código novo.' : 'A portaria ainda não foi ligada no servidor.');
+                mostrarEntrar(dados.status === 401 ? 'Seu acesso venceu. Peça um código novo.' : 'O check-in ainda não foi ligado no servidor.');
                 return false;
             }
             if (dados.status !== 200) throw new Error(dados.erro || 'falhou');
@@ -322,9 +323,21 @@
         var pct = ingressos.length ? Math.round((presentes / ingressos.length) * 100) : 0;
         $('[data-presentes]').textContent = presentes;
         $('[data-total]').textContent = ingressos.length;
+        $('[data-faltam]').textContent = ingressos.length - presentes;
         $('[data-porcento]').textContent = pct + '%';
-        $('[data-barra]').style.width = pct + '%';
+        // o anel tem pathLength 100: o traço é a própria porcentagem
+        var anel = $('[data-anel]');
+        anel.style.strokeDasharray = pct + ' 100';
+        anel.style.opacity = pct ? 1 : 0;
         $('[data-conta]').textContent = presentes;
+    }
+
+    // "Maria Aparecida da Silva" -> "MS"
+    function iniciais(nome) {
+        var partes = String(nome || '').trim().split(/\s+/).filter(Boolean);
+        if (!partes.length) return '';
+        var ultima = partes.length > 1 ? partes[partes.length - 1] : '';
+        return (Array.from(partes[0])[0] + (Array.from(ultima)[0] || '')).toUpperCase();
     }
 
     // do CPF só chegam os 6 números do meio (cpfMeio)
@@ -334,11 +347,9 @@
     }
 
     function linhaDetalhe(i) {
-        var det = el('p', 'item-detalhe', i.codigo);
-        if (mascararCpf(i.cpfMeio)) {
-            det.appendChild(document.createTextNode(' · '));
-            det.appendChild(el('span', 'item-cpf', 'CPF ' + mascararCpf(i.cpfMeio)));
-        }
+        var det = el('p', 'item-detalhe');
+        det.appendChild(el('span', 'item-codigo', i.codigo));
+        if (mascararCpf(i.cpfMeio)) det.appendChild(el('span', 'item-cpf', 'CPF ' + mascararCpf(i.cpfMeio)));
         return det;
     }
 
@@ -352,7 +363,7 @@
     function botaoDesfazer(i) {
         var b = el('button', 'botao-desfazer', 'desfazer');
         b.type = 'button';
-        b.setAttribute('aria-label', 'Desfazer a entrada de ' + i.nome);
+        b.setAttribute('aria-label', 'Desfazer o check-in de ' + i.nome);
         b.addEventListener('click', function () { perguntarDesfazer(i); });
         return b;
     }
@@ -360,6 +371,10 @@
     // resultado da busca (tudo por textContent: o nome vem do que a compradora digitou)
     function cartaoBusca(i) {
         var li = el('li', 'item' + (i.entrada ? ' is-dentro' : ''));
+        // bolinha com as iniciais; depois do check-in vira o visto (no CSS)
+        var avatar = el('span', 'item-avatar', i.entrada ? '' : iniciais(i.nome));
+        avatar.setAttribute('aria-hidden', 'true');
+        li.appendChild(avatar);
         var info = el('div', 'item-info');
         info.appendChild(el('p', 'item-nome', i.nome));
         info.appendChild(linhaDetalhe(i));
@@ -369,11 +384,12 @@
 
         if (i.entrada) {
             var e = lerEntrada(i.entrada);
-            info.appendChild(el('p', 'item-selo', '✓ entrou às ' + (e.hora || i.entrada) + (e.por ? ' · ' + e.por : '')));
+            info.appendChild(el('p', 'item-selo', 'Check-in às ' + (e.hora || i.entrada) + (e.por ? ' · ' + e.por : '')));
             li.appendChild(botaoDesfazer(i));
         } else {
-            var b = el('button', 'botao item-confirmar', 'Confirmar entrada');
+            var b = el('button', 'botao item-confirmar', 'Check-in');
             b.type = 'button';
+            b.setAttribute('aria-label', 'Fazer o check-in de ' + i.nome);
             b.addEventListener('click', function () { confirmar(i, b); });
             li.appendChild(b);
         }
@@ -399,7 +415,7 @@
         info.appendChild(linhaDetalhe(i));
         var g = seloGrupo(i);
         if (g) info.appendChild(g);
-        if (e.por) info.appendChild(el('p', 'entrada-por', 'confirmado por ' + (e.por === sessao.por ? 'você' : e.por)));
+        if (e.por) info.appendChild(el('p', 'entrada-por', 'check-in por ' + (e.por === sessao.por ? 'você' : e.por)));
         li.appendChild(info);
         li.appendChild(botaoDesfazer(i));
         return li;
@@ -481,8 +497,8 @@
         lista.textContent = '';
         dica.hidden = mostrar.length > 0;
         dica.textContent = filtro === 'minhas'
-            ? 'Você ainda não confirmou nenhuma entrada.'
-            : 'Nenhuma entrada confirmada ainda. Elas aparecem aqui na hora, a mais recente no topo.';
+            ? 'Você ainda não fez nenhum check-in.'
+            : 'Nenhum check-in ainda. Eles aparecem aqui na hora, o mais recente no topo.';
         mostrar.forEach(function (i) { lista.appendChild(linhaEntrada(i)); });
     }
 
@@ -533,12 +549,12 @@
                 sinal(true);
                 if (r.status === 200) {
                     var resta = semUso(i);
-                    aviso('ok', 'Entrada confirmada', i.nome, 'às ' + lerEntrada(r.entrada).hora + ' · ' + i.codigo, true,
+                    aviso('ok', 'Check-in confirmado', i.nome, 'às ' + lerEntrada(r.entrada).hora + ' · ' + i.codigo, true,
                         resta ? 'Este CPF tem mais ' + resta + (resta > 1 ? ' ingressos' : ' ingresso') + ' sem uso (acompanhantes).' : '');
                 } else {
                     var e = lerEntrada(r.entrada);
-                    aviso('ja', 'Este ingresso já entrou', i.nome,
-                        'Entrada registrada às ' + (e.hora || r.entrada) + (e.por ? ', por ' + e.por : '') + '.', false);
+                    aviso('ja', 'Check-in já feito', i.nome,
+                        'Este ingresso entrou às ' + (e.hora || r.entrada) + '.' + (e.por ? ' Check-in feito por ' + e.por + '.' : ''), false);
                 }
             } else if (r.status === 401) {
                 delete sessao.token;
@@ -550,7 +566,7 @@
         }).catch(function () {
             ocupado(botao, false);
             sinal(false);
-            aviso('erro', 'Sem conexão', i.nome, 'A entrada NÃO foi registrada. Confira a internet e toque de novo.', false);
+            aviso('erro', 'Sem conexão', i.nome, 'O check-in NÃO foi registrado. Confira a internet e toque de novo.', false);
         });
     }
 
@@ -559,7 +575,7 @@
         aguardandoDesfazer = i;
         var e = lerEntrada(i.entrada);
         $('[data-pergunta-nome]').textContent = i.nome;
-        $('[data-pergunta-detalhe]').textContent = i.codigo + ' · entrou às ' + (e.hora || i.entrada) + (e.por ? ' · ' + e.por : '');
+        $('[data-pergunta-detalhe]').textContent = i.codigo + ' · check-in às ' + (e.hora || i.entrada) + (e.por ? ', por ' + e.por : '');
         $('[data-pergunta]').hidden = false;
         $('[data-pergunta-nao]').focus();
     }
@@ -588,11 +604,11 @@
             fecharPergunta();
             fecharAviso();
             desenhar();
-            toast('Entrada de ' + i.nome.split(' ')[0] + ' desfeita.');
+            toast('Check-in de ' + i.nome.split(' ')[0] + ' desfeito.');
         }).catch(function () {
             ocupado(botao, false);
             fecharPergunta();
-            aviso('erro', 'Sem conexão', i.nome, 'A entrada NÃO foi desfeita. Confira a internet e tente de novo.', false);
+            aviso('erro', 'Sem conexão', i.nome, 'O check-in NÃO foi desfeito. Confira a internet e tente de novo.', false);
         });
     }
 
@@ -600,8 +616,7 @@
     function aviso(tipo, titulo, nome, detalhe, podeDesfazer, extra) {
         clearTimeout(timerAviso);
         var a = $('[data-aviso]');
-        a.className = 'aviso aviso--' + tipo;
-        $('[data-aviso-icone]').textContent = tipo === 'ok' ? '✓' : '!';
+        a.className = 'aviso aviso--' + tipo;  // o ícone (visto ou "!") vem do CSS
         $('[data-aviso-titulo]').textContent = titulo;
         $('[data-aviso-nome]').textContent = nome;
         $('[data-aviso-detalhe]').textContent = detalhe || '';
