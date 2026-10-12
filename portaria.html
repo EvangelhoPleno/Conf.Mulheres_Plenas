@@ -14,9 +14,9 @@
     <!-- Fraunces com os mesmos eixos da landing: o arquivo já está no cache de quem abriu o site -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500..900,100,1;1,9..144,500..900,100,1&display=swap" rel="stylesheet">
     <!-- ?v= sobe a cada mudança: o celular da porta não pode ficar com a versão velha -->
-    <link rel="stylesheet" href="portaria.css?v=8">
+    <link rel="stylesheet" href="portaria.css?v=9">
     <script src="config.js"></script>
-    <script src="portaria.js?v=8" defer></script>
+    <script src="portaria.js?v=9" defer></script>
 </head>
 <!-- CHECK-IN do dia da conferência (o arquivo, a API e a planilha seguem com
      o nome antigo, "portaria"). Fora do menu e do Google (noindex).
@@ -105,22 +105,22 @@
         <div class="paineis">
         <!-- BUSCAR -->
         <section class="painel" data-painel="buscar" role="tabpanel">
-            <div class="busca">
-                <svg class="busca-lupa" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-                <input type="search" data-busca placeholder="Nome, CPF ou código" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Buscar inscrita por nome, CPF ou código">
-                <button type="button" class="busca-limpar" data-limpar aria-label="Limpar busca" hidden>×</button>
-            </div>
-            <p class="dica" data-dica></p>
-            <ul class="lista" data-resultados></ul>
-
-            <!-- com a busca vazia: os últimos check-ins, de todos os celulares -->
-            <div class="recentes" data-recentes hidden>
-                <div class="bloco-titulo">
-                    <h2>Últimos check-ins</h2>
-                    <button type="button" class="link" data-ver-todas>ver todos</button>
+            <div class="buscador">
+                <div class="busca">
+                    <svg class="busca-lupa" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    <input type="search" data-busca placeholder="Nome, CPF ou código" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Buscar inscrita por nome, CPF ou código">
+                    <button type="button" class="busca-limpar" data-limpar aria-label="Limpar busca" hidden>×</button>
                 </div>
-                <ul class="lista lista--entradas" data-recentes-lista></ul>
+                <!-- a bolinha de cada botão é a cor da linha na lista -->
+                <div class="filtros filtros--situacao" role="group" aria-label="Mostrar na lista">
+                    <button type="button" class="filtro" data-situacao="todas" aria-pressed="true">Todas <span>0</span></button>
+                    <button type="button" class="filtro filtro--faltam" data-situacao="faltam" aria-pressed="false">Faltam <span>0</span></button>
+                    <button type="button" class="filtro filtro--entraram" data-situacao="entraram" aria-pressed="false">Entraram <span>0</span></button>
+                </div>
             </div>
+            <p class="dica" data-dica hidden></p>
+            <!-- a lista inteira, em ordem alfabética; a busca só estreita -->
+            <ul class="lista" data-resultados></ul>
         </section>
 
         <!-- PRESENTES: histórico completo -->

@@ -6,7 +6,7 @@
    sem CPF inteiro nem telefone. A busca é toda no celular: só confirmar/desfazer vai ao
    servidor, que relê a planilha e avisa se outro celular já confirmou.
 
-   Duas abas: "Buscar" (busca + últimos check-ins) e "Presentes"
+   Duas abas: "Buscar" (a lista inteira, que a busca estreita) e "Presentes"
    (histórico completo, com desfazer). Toda confirmação aparece na hora,
    sem recarregar: o estado local é atualizado com a resposta do servidor.
    ============================================================= */
@@ -16,8 +16,6 @@
     var API = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? 'http://localhost:3000/api' : '/api';
     var ATUALIZAR_MS = 20000;
     var FECHAR_AVISO_MS = 2500;
-    var MAX_RESULTADOS = 40;
-    var RECENTES = 6;
     // o que este celular acabou de gravar vale por cima da lista do servidor
     // durante este tempo: outra instância da Vercel pode responder com uma
     // cópia de segundos atrás, e a entrada "voltaria" a não confirmada
@@ -31,6 +29,8 @@
     var animados = {};    // a entrada nova desliza só uma vez, não a cada redesenho
     var aba = 'buscar';
     var filtro = 'todas';
+    var situacao = 'todas';  // lista da busca: todas, faltam ou entraram
+    var linhas = {};         // codigo -> { chave, li }: as linhas já montadas da lista
     var ultimoCodigo = null;
     var aguardandoDesfazer = null;
     var timerAviso = null;
@@ -308,7 +308,6 @@
     function desenhar() {
         placar();
         buscar();
-        desenharRecentes();
         desenharConfirmadas();
     }
 
@@ -430,7 +429,7 @@
         var digitos = q.replace(/\D/g, '');
         var compacto = q.toUpperCase().replace(/[^A-Z0-9]/g, '');
         if (compacto.length >= 4 && i.codigoBusca.indexOf(compacto) > -1) return true;
-        if (digitos.length >= 3 && digitos.length === q.replace(/[\s.\-]/g, '').length) {
+        if (digitos.length && digitos.length === q.replace(/[\s.\-]/g, '').length) {
             /* Só os 6 números do meio do CPF estão no celular. Vale um pedaço
                deles, ou o CPF digitado desde o começo (do 4º número em diante
                tem de bater com o meio). */
@@ -445,43 +444,79 @@
 
     var busca = $('[data-busca]');
 
+    /* A lista inteira fica sempre na tela, em ordem alfabética: verde em quem
+       já entrou, barra terracota em quem falta. A busca só estreita a lista
+       (desde a primeira letra) e os três botões escolhem todas / faltam /
+       entraram, com a contagem do que a busca achou. */
     function buscar() {
         var q = busca.value.trim();
         var lista = $('[data-resultados]');
         var dica = $('[data-dica]');
         $('[data-limpar]').hidden = !q;
-        lista.textContent = '';
-        $('[data-recentes]').hidden = !!q || !confirmadas().length;
 
-        if (!q) {
-            dica.textContent = 'Busque pelo nome, por números do CPF ou pelo código do ingresso.';
-            dica.hidden = false;
-            return;
-        }
-        if (q.replace(/\s/g, '').length < 3) {
-            dica.textContent = 'Continue digitando: pelo menos 3 letras ou números.';
-            dica.hidden = false;
-            return;
-        }
-        var achados = ingressos.filter(function (i) { return combina(i, q); }).sort(function (a, b) {
+        var achados = (q ? ingressos.filter(function (i) { return combina(i, q); }) : ingressos.slice()).sort(function (a, b) {
             // os ingressos do mesmo CPF ficam juntos e em ordem (1 de 3, 2 de 3...)
             if (a.grupo === b.grupo) return a.posicao - b.posicao;
             return a.grupo[0].busca.localeCompare(b.grupo[0].busca);
         });
-        if (!achados.length) {
-            dica.textContent = 'Ninguém encontrado entre os pagos. Tente outra parte do nome, o CPF ou o código do e-mail.';
-            dica.hidden = false;
-            return;
+        var grupos = {
+            todas: achados,
+            faltam: achados.filter(function (i) { return !i.entrada; }),
+            entraram: achados.filter(function (i) { return i.entrada; })
+        };
+        $$('[data-situacao]').forEach(function (b) {
+            b.setAttribute('aria-pressed', String(b.dataset.situacao === situacao));
+            b.querySelector('span').textContent = grupos[b.dataset.situacao].length;
+        });
+        var mostrar = grupos[situacao];
+
+        var texto = '';
+        if (!ingressos.length) texto = 'Nenhum ingresso pago na lista ainda.';
+        else if (!achados.length) texto = 'Ninguém encontrado entre os pagos. Tente outra parte do nome, o CPF ou o código do e-mail.';
+        else if (!mostrar.length) texto = situacao === 'entraram'
+            ? 'Ninguém ' + (q ? 'desta busca ' : '') + 'fez check-in ainda.'
+            : 'Todas ' + (q ? 'desta busca ' : '') + 'já entraram.';
+        dica.textContent = texto;
+        dica.hidden = !texto;
+
+        /* Mexe só no que mudou: a lista se renova sozinha a cada 20 s, e
+           trocar centenas de linhas no meio de um toque perderia o toque (e
+           travaria celular fraco). Cada linha fica guardada e é reaproveitada;
+           aqui as linhas só entram, saem ou mudam de lugar. */
+        var atual = lista.firstChild;
+        mostrar.forEach(function (i) {
+            var velha = linhas[i.codigo] && linhas[i.codigo].li;
+            var li = linhaGuardada(i);
+            // a linha refeita entra no lugar exato da antiga: quem está
+            // rolando a lista não sai do lugar
+            if (velha !== li && velha === atual) {
+                lista.replaceChild(li, velha);
+                atual = li;
+            }
+            if (li === atual) atual = atual.nextSibling;
+            else lista.insertBefore(li, atual);
+        });
+        while (atual) {
+            var proxima = atual.nextSibling;
+            lista.removeChild(atual);
+            atual = proxima;
         }
-        dica.hidden = achados.length <= MAX_RESULTADOS;
-        dica.textContent = achados.length + ' encontradas: mostrando ' + MAX_RESULTADOS + '. Digite mais para filtrar.';
-        achados.slice(0, MAX_RESULTADOS).forEach(function (i) { lista.appendChild(cartaoBusca(i)); });
     }
 
-    function desenharRecentes() {
-        var lista = $('[data-recentes-lista]');
-        lista.textContent = '';
-        confirmadas().slice(0, RECENTES).forEach(function (i) { lista.appendChild(linhaEntrada(i)); });
+    // a linha de cada ingresso, refeita só quando o que ela mostra muda
+    function linhaGuardada(i) {
+        var chave = [i.nome, i.cpfMeio, i.entrada || '', i.posicao, i.grupo.length, semUso(i)].join('|');
+        var guardada = linhas[i.codigo];
+        if (guardada && guardada.chave === chave) return guardada.li;
+        var li = cartaoBusca(i);
+        linhas[i.codigo] = { chave: chave, li: li };
+        return li;
+    }
+
+    // no celular o teclado cobriria a lista: o cursor só vai sozinho para a
+    // busca no computador, ou quando a pessoa já estava buscando
+    function focarBusca(mesmoNoCelular) {
+        if (mesmoNoCelular || window.matchMedia('(min-width: 1100px)').matches) busca.focus({ preventScroll: true });
     }
 
     function desenharConfirmadas() {
@@ -515,13 +550,18 @@
         $$('[data-aba]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.aba === nome)); });
         $$('[data-painel]').forEach(function (p) { p.hidden = p.dataset.painel !== nome; });
         window.scrollTo(0, 0);
-        if (nome === 'buscar') busca.focus();
+        if (nome === 'buscar') focarBusca();
     }
 
     $$('[data-aba]').forEach(function (b) {
         b.addEventListener('click', function () { irPara(b.dataset.aba); });
     });
-    $('[data-ver-todas]').addEventListener('click', function () { irPara('confirmadas'); });
+    $$('[data-situacao]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            situacao = b.dataset.situacao;
+            buscar();
+        });
+    });
     $$('[data-filtro]').forEach(function (b) {
         b.addEventListener('click', function () {
             filtro = b.dataset.filtro;
@@ -650,10 +690,12 @@
     // mesmo CPF continuam na tela)
     function proxima() {
         var limpar = $('[data-aviso]').classList.contains('aviso--ok') && $('[data-aviso-extra]').hidden;
+        var buscava = Boolean(busca.value.trim());
         fecharAviso();
         if (limpar) busca.value = '';
         buscar();
-        if (aba === 'buscar') busca.focus();
+        // quem fez o check-in rolando a lista continua onde estava
+        if (aba === 'buscar') focarBusca(buscava);
     }
 
     $('[data-aviso-ok]').addEventListener('click', proxima);
@@ -680,7 +722,7 @@
 
     // o selo "agora" some sozinho
     setInterval(function () {
-        if (!$('[data-tela="lista"]').hidden) { desenharRecentes(); desenharConfirmadas(); }
+        if (!$('[data-tela="lista"]').hidden) desenharConfirmadas();
     }, 15000);
 
     iniciar();

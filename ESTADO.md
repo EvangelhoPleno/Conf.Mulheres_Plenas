@@ -31,6 +31,27 @@ link da equipe é o mesmo.
   cartão novo (não carrega em localhost), a entrada com código de verdade
   e um celular de verdade.
 
+### Lista inteira na tela (12/10, à tarde; `?v=9`) — AINDA NÃO PUBLICADO
+
+Pedido do Jadison: a equipe quer acompanhar de olho quem entrou e quem falta.
+- Abaixo da busca fica **a lista toda**, em ordem alfabética (mesmo CPF
+  junto): verde com barra verde em quem entrou, branco com barra terracota
+  em quem falta. A busca só estreita, **desde a 1ª letra** (saíram o mínimo
+  de 3 letras e o teto de 40 resultados).
+- Três botões abaixo da busca: Todas / Faltam / Entraram, com a contagem do
+  que a busca achou.
+- Saiu o bloco "Últimos check-ins" da aba Buscar (a aba Presentes tem tudo).
+- No celular o cursor não vai mais sozinho para a busca (o teclado cobriria
+  a lista); vai só depois de um check-in feito pela busca. Quem faz o
+  check-in rolando a lista fica onde estava.
+- `buscar()` reaproveita as linhas (`linhas`, `linhaGuardada`) e só insere,
+  tira ou troca: redesenhar 459 linhas a cada 20 s perderia toques.
+  Armadilha paga: trocar a linha com `replaceChild` e continuar usando o nó
+  antigo como referência do `insertBefore` estoura; e todo erro dentro do
+  `.then` de `confirmar` aparece na tela como "Sem conexão".
+- Testado local com 459 ingressos simulados (320, 390, 820, 1366 e 1910 px):
+  com a CPU 6x mais lenta, 1ª letra ~0,3 s e limpar a busca ~0,4 s.
+
 ## Auditoria de segurança de 09/10 (noite)
 
 Código inteiro relido (pagamento, webhook, planilha, portaria, páginas),
