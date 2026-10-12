@@ -31,6 +31,41 @@ link da equipe é o mesmo.
   cartão novo (não carrega em localhost), a entrada com código de verdade
   e um celular de verdade.
 
+### Desfazer pede o motivo (12/10, `?v=10`) — no ar (commit `18a732e`)
+
+Pedido do Jadison: desfazer check-in sem motivo vira bagunça.
+- A janela "Desfazer check-in?" tem a lista de motivos (Marquei a pessoa
+  errada / Toquei sem querer / A pessoa ainda não entrou / Teste da equipe /
+  Outro motivo) e o botão Desfazer só libera com um escolhido; "Outro motivo"
+  abre um campo e exige o texto. O "Desfazer" do aviso verde também passa por
+  ela (antes desfazia direto). **Mudar a lista = só os `<label>` do
+  `portaria.html`** (o `value` é o texto gravado); o `value` "Outro motivo"
+  tem de continuar igual ao `MOTIVO_LIVRE` do `portariaService.js`.
+- **Aba nova `Check-ins desfeitos`** (já criada na planilha, vazia): Desfeito
+  em, Nome, Código, Check-in que foi desfeito, Motivo, Detalhe, Desfeito por,
+  E-mail de quem desfez (o da sessão, não digitado). `npm run
+  portaria:desfeitos` cria e refaz o visual sem apagar registro. Se a aba for
+  apagada, o site cria outra sozinho (sem visual) no próximo desfazer. **Não
+  escrever nada fora de A–H nela**: o registro entra "abaixo da última linha
+  com conteúdo" (`appendCells`).
+- **Sem registro não desfaz:** o servidor grava o motivo ANTES de desmarcar;
+  se a gravação falhar, responde erro e o check-in continua. `/api/portaria/
+  desfazer` sem `motivo` devolve 422 (é o que acontece com a página `v=9`
+  guardada num celular: a mensagem manda recarregar). Desfazer o que já está
+  desfeito (outro celular) não registra de novo. Custo: +1 escrita por
+  desfazer (e +1 leitura na 1ª vez de cada instância).
+- Provado: `npm test` 62 verdes + as mesmas 6 de data do Mercado Pago;
+  Chrome sem janela com a API simulada (320, 360, 390, 820, 1440 e celular
+  deitado): motivo pronto, "Outro" sem e com texto, cancelar, Esc, falha do
+  registro, aba Presentes, teclado; **na planilha de verdade, só na aba
+  nova**: criação pelo site, gravação, recuperação com a aba apagada, texto
+  `=1+1` fica texto; linhas de teste apagadas. No ar em 12/10: página com os
+  5 motivos, JS e CSS `v=10` servidos, `/api/saude` `ok:true`, desfazer sem
+  sessão 401 (5 chamadas espaçadas). **Não conferido:** um desfazer de ponta
+  a ponta no ar (o Jadison ia testar ele mesmo), o teclado de um celular de
+  verdade sobre o campo "Outro motivo", e o visual da aba (não abri a
+  planilha no navegador).
+
 ### Lista inteira na tela (12/10, à tarde; `?v=9`) — no ar (commit `5e42f61`)
 
 Pedido do Jadison: a equipe quer acompanhar de olho quem entrou e quem falta.
