@@ -31,7 +31,7 @@ link da equipe é o mesmo.
   cartão novo (não carrega em localhost), a entrada com código de verdade
   e um celular de verdade.
 
-### Lista inteira na tela (12/10, à tarde; `?v=9`) — AINDA NÃO PUBLICADO
+### Lista inteira na tela (12/10, à tarde; `?v=9`) — no ar (commit `5e42f61`)
 
 Pedido do Jadison: a equipe quer acompanhar de olho quem entrou e quem falta.
 - Abaixo da busca fica **a lista toda**, em ordem alfabética (mesmo CPF
@@ -50,7 +50,9 @@ Pedido do Jadison: a equipe quer acompanhar de olho quem entrou e quem falta.
   antigo como referência do `insertBefore` estoura; e todo erro dentro do
   `.then` de `confirmar` aparece na tela como "Sem conexão".
 - Testado local com 459 ingressos simulados (320, 390, 820, 1366 e 1910 px):
-  com a CPU 6x mais lenta, 1ª letra ~0,3 s e limpar a busca ~0,4 s.
+  com a CPU 6x mais lenta, 1ª letra ~0,3 s e limpar a busca ~0,4 s. No ar: página,
+  JS e CSS `v=9` servidos e `/api/saude` `ok:true` (o deploy levou ~3,5 min).
+  **Não conferido:** a lista de verdade (459) num celular de verdade.
 
 ## Auditoria de segurança de 09/10 (noite)
 
