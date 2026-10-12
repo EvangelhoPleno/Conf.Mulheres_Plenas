@@ -980,7 +980,106 @@ button { cursor: pointer; }
 .aviso--ja .aviso-caixa { background: var(--alerta-fundo); }
 .aviso--ja .aviso-detalhe { color: var(--alerta); font-weight: 700; }
 
-.aviso--pergunta .aviso-caixa { padding-top: 28px; }
+/* a pergunta do desfazer tem a lista de motivos: em celular baixo a caixa
+   rola por dentro em vez de sair da tela */
+.aviso--pergunta .aviso-caixa {
+    padding-top: 28px;
+    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.aviso--pergunta .aviso-caixa > * { flex-shrink: 0; }
+
+/* ---------- motivo do desfazer ---------- */
+.motivos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    margin-top: 16px;
+    border: 0;
+    text-align: left;
+}
+
+.motivos legend {
+    margin-bottom: 8px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--texto);
+}
+
+.motivo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 8px 14px;
+    border: 1.5px solid var(--nude);
+    border-radius: 14px;
+    background: var(--papel);
+    font-weight: 500;
+    line-height: 1.25;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.motivo input {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: var(--tijolo);
+}
+
+.motivo:has(input:checked) {
+    border-color: var(--tijolo);
+    background: var(--rosado);
+    font-weight: 700;
+    color: var(--tijolo-escuro);
+}
+
+.motivo:has(input:focus-visible) { outline: 3px solid rgba(133, 53, 30, 0.45); outline-offset: 2px; }
+
+.motivo input:focus-visible { outline: none; }
+
+.motivo-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    width: 100%;
+    margin-top: 6px;
+    text-align: left;
+}
+
+.motivo-texto > span { font-size: 0.86rem; font-weight: 700; color: var(--texto); }
+
+.motivo-texto textarea {
+    width: 100%;
+    min-height: 76px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--nude);
+    border-radius: 14px;
+    background: var(--papel);
+    font: inherit;
+    font-size: 1rem;  /* abaixo de 16px o iPhone dá zoom ao tocar */
+    color: inherit;
+    resize: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.motivo-texto textarea::placeholder { color: #A58B80; }
+
+.motivo-texto textarea:focus {
+    outline: none;
+    border-color: var(--tijolo);
+    background: var(--branco);
+    box-shadow: 0 0 0 4px rgba(133, 53, 30, 0.12);
+}
+
+.aviso--pergunta .entrar-erro { width: 100%; margin-top: 6px; text-align: left; }
 
 /* ---------- toast ---------- */
 .toast {

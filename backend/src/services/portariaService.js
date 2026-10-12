@@ -16,6 +16,12 @@ const { REPETICAO, repetindoSeOcupado } = require('./sheetsService');
 const ABA = 'Portaria';
 // quem pode entrar na página: um e-mail por linha, na coluna A (npm run portaria:usuarios)
 const ABA_USUARIOS = 'Usuários Portaria';
+/* Todo check-in desfeito deixa uma linha aqui, com o motivo: sem o registro
+   o check-in não é desfeito (npm run portaria:desfeitos cria e arruma a aba) */
+const ABA_DESFEITOS = 'Check-ins desfeitos';
+const CABECALHO_DESFEITOS = ['Desfeito em', 'Nome', 'Código do ingresso', 'Check-in que foi desfeito', 'Motivo', 'Detalhe', 'Desfeito por', 'E-mail de quem desfez'];
+// o motivo que exige texto escrito (o mesmo valor está no portaria.html)
+const MOTIVO_LIVRE = 'Outro motivo';
 // colunas da aba (ver backend/scripts/portaria.js): A Nome, B Código,
 // C CPF, D Telefone, E Presente, F Entrada, G Pedido
 const COL = { nome: 0, codigo: 1, cpf: 2, telefone: 3, presente: 4, entrada: 5, pedido: 6 };
@@ -128,6 +134,7 @@ function pagosDosPedidos(valores) {
 function criarArmazemPlanilha() {
     let docPromessa = null;
     let idPromessa = null;
+    let idDesfeitosPromessa = null;
 
     function documento() {
         if (!docPromessa) {
@@ -201,16 +208,43 @@ function criarArmazemPlanilha() {
                     json: { requests: [{ appendCells: { sheetId: sheetId, rows: celulas, fields: 'userEnteredValue,dataValidation' } }] }
                 });
             });
+        },
+        /* Uma linha na aba dos desfeitos, logo abaixo da última. Tudo entra
+           como texto (stringValue): o motivo é digitado na porta e não pode
+           virar fórmula na planilha. */
+        async registrarDesfeito(valores) {
+            const doc = await documento();
+            async function acrescentarRegistro() {
+                const sheetId = await idDosDesfeitos();
+                const celulas = valores.map(function (valor) { return { userEnteredValue: { stringValue: texto(valor) } }; });
+                await repetindoSeOcupado(function () {
+                    return doc.sheetsApi.post(':batchUpdate', {
+                        json: { requests: [{ appendCells: { sheetId: sheetId, rows: [{ values: celulas }], fields: 'userEnteredValue' } }] }
+                    });
+                });
+            }
+            try {
+                await acrescentarRegistro();
+            } catch (erro) {
+                if (!(erro && erro.response && erro.response.status === 400)) throw erro;
+                // a aba foi apagada com esta instância de pé: procura (ou cria) de novo
+                idDesfeitosPromessa = null;
+                await acrescentarRegistro();
+            }
         }
     };
+
+    async function abasDaPlanilha() {
+        const doc = await documento();
+        const meta = await doc.sheetsApi.get('?fields=sheets(properties(sheetId,title))').json();
+        return meta.sheets || [];
+    }
 
     // o número interno da aba não muda: uma leitura por instância
     function idDaAba() {
         if (!idPromessa) {
             idPromessa = (async function () {
-                const doc = await documento();
-                const meta = await doc.sheetsApi.get('?fields=sheets(properties(sheetId,title))').json();
-                const aba = (meta.sheets || []).find(function (s) { return s.properties.title === ABA; });
+                const aba = (await abasDaPlanilha()).find(function (s) { return s.properties.title === ABA; });
                 if (!aba) throw new Error('A planilha não tem a aba "' + ABA + '". Rode "npm run portaria".');
                 return aba.properties.sheetId;
             })().catch(function (erro) {
@@ -220,16 +254,41 @@ function criarArmazemPlanilha() {
         }
         return idPromessa;
     }
+
+    /* A aba dos desfeitos nasce com npm run portaria:desfeitos. Se faltar
+       (nunca criada, ou apagada), é criada aqui só com o cabeçalho, para o
+       desfazer não parar na porta; o visual volta rodando o comando. */
+    function idDosDesfeitos() {
+        if (!idDesfeitosPromessa) {
+            idDesfeitosPromessa = (async function () {
+                const aba = (await abasDaPlanilha()).find(function (s) { return s.properties.title === ABA_DESFEITOS; });
+                if (aba) return aba.properties.sheetId;
+                const doc = await documento();
+                const criada = await doc.sheetsApi.post(':batchUpdate', {
+                    json: { requests: [{ addSheet: { properties: { title: ABA_DESFEITOS, gridProperties: { rowCount: 200, columnCount: CABECALHO_DESFEITOS.length, frozenRowCount: 1 } } } }] }
+                }).json();
+                await gravar("'" + ABA_DESFEITOS + "'!A1", [CABECALHO_DESFEITOS]);
+                console.warn('[portaria] aba "' + ABA_DESFEITOS + '" não existia e foi criada');
+                return criada.replies[0].addSheet.properties.sheetId;
+            })().catch(function (erro) {
+                idDesfeitosPromessa = null;
+                throw erro;
+            });
+        }
+        return idDesfeitosPromessa;
+    }
 }
 
 /* ---------- memória (testes) ---------- */
 function criarArmazemMemoria(pagos) {
     const portaria = [];
     const usuarios = [];  // e-mails da aba Usuários Portaria
+    const desfeitos = []; // linhas da aba Check-ins desfeitos
     return {
         pagos: pagos,
         portaria: portaria,
         usuarios: usuarios,
+        desfeitos: desfeitos,
         async lerUsuarios() { return usuarios.map(function (email) { return [email]; }); },
         async lerTudo() { return { pagos: pagos.slice(), portaria: portaria.map(function (l) { return l.slice(); }) }; },
         async lerPortaria() { return portaria.map(function (l) { return l.slice(); }); },
@@ -237,7 +296,8 @@ function criarArmazemMemoria(pagos) {
             portaria[linha - 2][COL.presente] = presente;
             portaria[linha - 2][COL.entrada] = entrada;
         },
-        async acrescentar(linhas) { linhas.forEach(function (l) { portaria.push(l.slice()); }); }
+        async acrescentar(linhas) { linhas.forEach(function (l) { portaria.push(l.slice()); }); },
+        async registrarDesfeito(valores) { desfeitos.push(valores.map(texto)); }
     };
 }
 
@@ -342,10 +402,26 @@ function criarPortaria(armazem, opcoes) {
             return faltam.length;
         },
 
-        async desfazer(codigo) {
+        /* quem = { motivo, detalhe, por, email }, já conferido na rota. O
+           registro é gravado ANTES de desmarcar: se ele falhar, o check-in
+           continua valendo e a página avisa que não desfez. */
+        async desfazer(codigo, quem) {
             codigo = texto(codigo).toUpperCase();
+            quem = quem || {};
             const achado = acharNaPortaria(await armazem.lerPortaria(), codigo);
             if (!achado) throw naoAchado();
+            // outro celular já desfez: nada a desmarcar nem a registrar de novo
+            if (!marcado(achado.valores[COL.presente])) return { situacao: 'desfeito', codigo: codigo };
+            await armazem.registrarDesfeito([
+                carimbo(agora()),
+                texto(achado.valores[COL.nome]),
+                codigo,
+                texto(achado.valores[COL.entrada]),
+                quem.motivo,
+                quem.detalhe,
+                quem.por,
+                quem.email
+            ]);
             await armazem.marcar(achado.linha, false, '');
             cache.em = 0;
             return { situacao: 'desfeito', codigo: codigo };
@@ -368,4 +444,4 @@ function usarArmazem(armazem, opcoes) {
     return instancia;
 }
 
-module.exports = { ABA_USUARIOS, portaria, usarArmazem, criarArmazemMemoria, pagosDosPedidos, montarLista, carimbo };
+module.exports = { ABA_USUARIOS, ABA_DESFEITOS, CABECALHO_DESFEITOS, MOTIVO_LIVRE, criarArmazemPlanilha, portaria, usarArmazem, criarArmazemMemoria, pagosDosPedidos, montarLista, carimbo };

@@ -14,9 +14,9 @@
     <!-- Fraunces com os mesmos eixos da landing: o arquivo já está no cache de quem abriu o site -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500..900,100,1;1,9..144,500..900,100,1&display=swap" rel="stylesheet">
     <!-- ?v= sobe a cada mudança: o celular da porta não pode ficar com a versão velha -->
-    <link rel="stylesheet" href="portaria.css?v=9">
+    <link rel="stylesheet" href="portaria.css?v=10">
     <script src="config.js"></script>
-    <script src="portaria.js?v=9" defer></script>
+    <script src="portaria.js?v=10" defer></script>
 </head>
 <!-- CHECK-IN do dia da conferência (o arquivo, a API e a planilha seguem com
      o nome antigo, "portaria"). Fora do menu e do Google (noindex).
@@ -157,17 +157,34 @@
         </div>
     </div>
 
-    <!-- confirmação do desfazer (no lugar do confirm() do navegador) -->
+    <!-- confirmação do desfazer (no lugar do confirm() do navegador). Só
+         desfaz com motivo: ele vai para a aba "Check-ins desfeitos" da
+         planilha. Para mudar a lista, mexa só nos <label> abaixo (o value é
+         o texto gravado); "Outro motivo" tem de continuar com esse value,
+         que é o que abre o campo de escrever (MOTIVO_LIVRE no servidor). -->
     <div class="aviso aviso--pergunta" data-pergunta role="alertdialog" aria-modal="true" hidden>
-        <div class="aviso-caixa">
+        <form class="aviso-caixa" data-form-desfazer novalidate>
             <p class="aviso-titulo">Desfazer check-in?</p>
             <p class="aviso-nome" data-pergunta-nome></p>
             <p class="aviso-detalhe" data-pergunta-detalhe></p>
+            <fieldset class="motivos">
+                <legend>Qual o motivo?</legend>
+                <label class="motivo"><input type="radio" name="motivo" value="Marquei a pessoa errada"><span>Marquei a pessoa errada</span></label>
+                <label class="motivo"><input type="radio" name="motivo" value="Toquei sem querer"><span>Toquei sem querer</span></label>
+                <label class="motivo"><input type="radio" name="motivo" value="A pessoa ainda não entrou"><span>A pessoa ainda não entrou</span></label>
+                <label class="motivo"><input type="radio" name="motivo" value="Teste da equipe"><span>Teste da equipe</span></label>
+                <label class="motivo"><input type="radio" name="motivo" value="Outro motivo"><span>Outro motivo</span></label>
+            </fieldset>
+            <label class="motivo-texto" data-motivo-campo hidden>
+                <span>Escreva o motivo</span>
+                <textarea name="detalhe" rows="2" maxlength="200" autocomplete="off" placeholder="O que aconteceu?"></textarea>
+            </label>
+            <p class="entrar-erro" data-erro-desfazer hidden></p>
             <div class="aviso-acoes">
                 <button type="button" class="botao botao--leve" data-pergunta-nao>Cancelar</button>
-                <button type="button" class="botao botao--alerta" data-pergunta-sim>Desfazer</button>
+                <button type="submit" class="botao botao--alerta" data-pergunta-sim disabled>Desfazer</button>
             </div>
-        </div>
+        </form>
     </div>
 
     <div class="toast" data-toast role="status" hidden></div>

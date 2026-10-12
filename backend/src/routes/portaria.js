@@ -9,7 +9,7 @@
    mexe em pedido. */
 const express = require('express');
 const config = require('../config');
-const { portaria } = require('../services/portariaService');
+const { portaria, MOTIVO_LIVRE } = require('../services/portariaService');
 const acesso = require('../services/portariaAcesso');
 const { enviarCodigoPortaria } = require('../services/emailService');
 const { pareceHumano } = require('../utils/antiRobo');
@@ -76,7 +76,9 @@ router.post('/portaria/entrar', ligada, errosPorIp, comEmail, errosPorEmail, hum
 
 async function exigirSessao(req, res, next) {
     const token = String(req.get('authorization') || '').replace(/^Bearer\s+/i, '');
-    if (!(await acesso.lerSessao(token))) return res.status(401).json({ erro: 'Sessão do check-in vencida. Entre de novo.' });
+    const email = await acesso.lerSessao(token);
+    if (!email) return res.status(401).json({ erro: 'Sessão do check-in vencida. Entre de novo.' });
+    req.usuarioPortaria = email;  // o e-mail da sessão não é digitado: vai para o registro dos desfeitos
     next();
 }
 
@@ -92,6 +94,27 @@ function codigoValido(req, res, next) {
     next();
 }
 
+// texto digitado na porta: uma linha só, sem caracteres de controle
+function limpo(valor, maximo) {
+    return String(valor == null ? '' : valor).replace(/[\u0000-\u001F\u007F]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, maximo);
+}
+
+/* Desfazer exige motivo: um dos prontos da página ou "Outro motivo" com o
+   texto escrito. A página antiga (guardada no celular) não manda motivo e
+   cai aqui: a mensagem manda recarregar. */
+function motivoValido(req, res, next) {
+    const motivo = limpo(req.body && req.body.motivo, 60);
+    const detalhe = limpo(req.body && req.body.detalhe, 200);
+    if (motivo.length < 3) {
+        return res.status(422).json({ erro: 'Escolha o motivo para desfazer o check-in. Se a tela não pediu o motivo, recarregue a página.' });
+    }
+    if (motivo === MOTIVO_LIVRE && detalhe.length < 3) {
+        return res.status(422).json({ erro: 'Escreva o motivo para desfazer o check-in.' });
+    }
+    req.motivo = { motivo: motivo, detalhe: detalhe };
+    next();
+}
+
 router.use('/portaria', ligada, errosPorIp, exigirSessao);
 
 router.get('/portaria/lista', async function (req, res) {
@@ -103,8 +126,13 @@ router.post('/portaria/entrada', codigoValido, async function (req, res) {
     res.status(r.situacao === 'ja-entrou' ? 409 : 200).json(r);
 });
 
-router.post('/portaria/desfazer', codigoValido, async function (req, res) {
-    res.json(await portaria().desfazer(req.codigo));
+router.post('/portaria/desfazer', codigoValido, motivoValido, async function (req, res) {
+    res.json(await portaria().desfazer(req.codigo, {
+        motivo: req.motivo.motivo,
+        detalhe: req.motivo.detalhe,
+        por: quem(req),
+        email: req.usuarioPortaria
+    }));
 });
 
 module.exports = router;

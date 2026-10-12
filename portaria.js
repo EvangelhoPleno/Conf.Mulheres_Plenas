@@ -7,7 +7,8 @@
    servidor, que relê a planilha e avisa se outro celular já confirmou.
 
    Duas abas: "Buscar" (a lista inteira, que a busca estreita) e "Presentes"
-   (histórico completo, com desfazer). Toda confirmação aparece na hora,
+   (histórico completo, com desfazer; desfazer pede o motivo, que fica na
+   aba "Check-ins desfeitos" da planilha). Toda confirmação aparece na hora,
    sem recarregar: o estado local é atualizado com a resposta do servidor.
    ============================================================= */
 (function () {
@@ -610,13 +611,30 @@
         });
     }
 
-    /* ---------- desfazer ---------- */
+    /* ---------- desfazer ----------
+       Só desfaz com motivo: um dos prontos ou "Outro motivo" com o texto
+       escrito. O servidor grava o motivo na aba "Check-ins desfeitos" da
+       planilha antes de desmarcar. */
+    var formDesfazer = $('[data-form-desfazer]');
+    var MOTIVO_LIVRE = 'Outro motivo';  // o value do último motivo no portaria.html
+
+    function ajustarMotivo() {
+        var motivo = formDesfazer.motivo.value;
+        $('[data-motivo-campo]').hidden = motivo !== MOTIVO_LIVRE;
+        $('[data-pergunta-sim]').disabled = !motivo;
+        erroEm('[data-erro-desfazer]', '');
+    }
+
     function perguntarDesfazer(i) {
         aguardandoDesfazer = i;
         var e = lerEntrada(i.entrada);
         $('[data-pergunta-nome]').textContent = i.nome;
         $('[data-pergunta-detalhe]').textContent = i.codigo + ' · check-in às ' + (e.hora || i.entrada) + (e.por ? ', por ' + e.por : '');
+        formDesfazer.reset();
+        ajustarMotivo();
+        $('[data-toast]').hidden = true;  // o recado do desfazer anterior cobriria os botões
         $('[data-pergunta]').hidden = false;
+        formDesfazer.scrollTop = 0;
         $('[data-pergunta-nao]').focus();
     }
 
@@ -626,13 +644,29 @@
     }
 
     $('[data-pergunta-nao]').addEventListener('click', fecharPergunta);
-    $('[data-pergunta-sim]').addEventListener('click', function () {
-        if (aguardandoDesfazer) desfazer(aguardandoDesfazer, this);
+    $$('[data-form-desfazer] [name="motivo"]').forEach(function (opcao) {
+        opcao.addEventListener('change', function () {
+            ajustarMotivo();
+            if (opcao.value === MOTIVO_LIVRE) formDesfazer.detalhe.focus();
+        });
+    });
+    formDesfazer.detalhe.addEventListener('input', function () { erroEm('[data-erro-desfazer]', ''); });
+    formDesfazer.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var motivo = formDesfazer.motivo.value;
+        var detalhe = motivo === MOTIVO_LIVRE ? formDesfazer.detalhe.value.replace(/\s+/g, ' ').trim() : '';
+        if (!aguardandoDesfazer || !motivo) return;
+        if (motivo === MOTIVO_LIVRE && detalhe.length < 3) {
+            erroEm('[data-erro-desfazer]', 'Escreva o motivo para desfazer.');
+            formDesfazer.detalhe.focus();
+            return;
+        }
+        desfazer(aguardandoDesfazer, $('[data-pergunta-sim]'), motivo, detalhe);
     });
 
-    function desfazer(i, botao) {
+    function desfazer(i, botao, motivo, detalhe) {
         ocupado(botao, true);
-        api('/portaria/desfazer', { codigo: i.codigo }).then(function (r) {
+        api('/portaria/desfazer', { codigo: i.codigo, por: sessao.por, motivo: motivo, detalhe: detalhe }).then(function (r) {
             ocupado(botao, false);
             i = porCodigo[i.codigo] || i;
             if (r.status !== 200) {
@@ -699,11 +733,11 @@
     }
 
     $('[data-aviso-ok]').addEventListener('click', proxima);
+    // o "Desfazer" do aviso verde também passa pela pergunta do motivo
     $('[data-aviso-desfazer]').addEventListener('click', function () {
-        clearTimeout(timerAviso);
-        $('[data-aviso-tempo]').style.animation = 'none';
         var i = porCodigo[ultimoCodigo];
-        if (i) desfazer(i, this);
+        fecharAviso();
+        if (i) perguntarDesfazer(i);
     });
 
     document.addEventListener('keydown', function (e) {

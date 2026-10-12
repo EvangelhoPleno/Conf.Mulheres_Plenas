@@ -204,12 +204,63 @@ test('pedido recém-pago entra na aba sozinho, uma vez só, com nome em maiúscu
     assert.equal(armazem.portaria.length, 3);
 });
 
-test('desfazer libera o ingresso de novo', async function () {
+test('desfazer libera o ingresso de novo e deixa o motivo na aba dos desfeitos', async function () {
     await chamar('/portaria/entrada', { codigo: ANA, por: 'Carla' });
-    const r = await chamar('/portaria/desfazer', { codigo: ANA });
+    const r = await chamar('/portaria/desfazer', { codigo: ANA, por: 'Dani', motivo: 'Marquei a pessoa errada', detalhe: 'era a irmã' });
     assert.equal(r.status, 200);
     assert.equal(armazem.portaria[0][4], false);
+    assert.equal(armazem.portaria[0][5], '');
+    // quando, nome, código, o check-in desfeito, motivo, detalhe, quem desfez e o e-mail da sessão
+    assert.deepEqual(armazem.desfeitos, [[
+        '16/10 18:42:00', 'Ana Lima', ANA, '16/10 18:42:00 · Carla', 'Marquei a pessoa errada', 'era a irmã', 'Dani', 'porta@exemplo.com'
+    ]]);
     assert.equal((await chamar('/portaria/entrada', { codigo: ANA, por: 'Carla' })).status, 200);
+});
+
+test('desfazer sem motivo, ou "Outro motivo" sem texto: 422 e o check-in continua', async function () {
+    await chamar('/portaria/entrada', { codigo: ANA, por: 'Carla' });
+    // a página antiga, guardada no celular, não manda motivo
+    let r = await chamar('/portaria/desfazer', { codigo: ANA });
+    assert.equal(r.status, 422);
+    assert.match((await r.json()).erro, /recarregue/);
+    assert.equal((await chamar('/portaria/desfazer', { codigo: ANA, motivo: '   ' })).status, 422);
+    assert.equal((await chamar('/portaria/desfazer', { codigo: ANA, motivo: 12 })).status, 422);
+    assert.equal((await chamar('/portaria/desfazer', { codigo: ANA, motivo: 'Outro motivo' })).status, 422);
+    assert.equal((await chamar('/portaria/desfazer', { codigo: ANA, motivo: 'Outro motivo', detalhe: ' \n ' })).status, 422);
+    assert.equal(armazem.portaria[0][4], true);
+    assert.equal(armazem.desfeitos.length, 0);
+
+    r = await chamar('/portaria/desfazer', { codigo: ANA, por: 'Carla', motivo: 'Outro motivo', detalhe: '  =SOMA(A1)\n pulseira  trocada ' + 'x'.repeat(300) });
+    assert.equal(r.status, 200);
+    assert.equal(armazem.portaria[0][4], false);
+    assert.equal(armazem.desfeitos[0][4], 'Outro motivo');
+    // uma linha só, sem quebra, cortado em 200
+    assert.equal(armazem.desfeitos[0][5].length, 200);
+    assert.ok(armazem.desfeitos[0][5].startsWith('=SOMA(A1) pulseira trocada x'));
+});
+
+test('desfazer duas vezes (dois celulares) registra uma vez só', async function () {
+    await chamar('/portaria/entrada', { codigo: ANA, por: 'Carla' });
+    assert.equal((await chamar('/portaria/desfazer', { codigo: ANA, por: 'Carla', motivo: 'Toquei sem querer' })).status, 200);
+    assert.equal((await chamar('/portaria/desfazer', { codigo: ANA, por: 'Dani', motivo: 'Toquei sem querer' })).status, 200);
+    assert.equal(armazem.desfeitos.length, 1);
+    // quem nunca entrou: nada a registrar
+    assert.equal((await chamar('/portaria/desfazer', { codigo: BIA, motivo: 'Teste da equipe' })).status, 404);
+    assert.equal(armazem.desfeitos.length, 1);
+});
+
+test('se o registro do motivo falhar, o check-in não é desfeito', async function () {
+    await chamar('/portaria/entrada', { codigo: ANA, por: 'Carla' });
+    armazem.registrarDesfeito = async function () { throw new Error('Google fora do ar'); };
+    const erroNoLog = console.error;
+    console.error = function () {};
+    try {
+        assert.equal((await chamar('/portaria/desfazer', { codigo: ANA, por: 'Carla', motivo: 'Toquei sem querer' })).status, 500);
+    } finally {
+        console.error = erroNoLog;
+    }
+    assert.equal(armazem.portaria[0][4], true);
+    assert.equal(armazem.portaria[0][5], '16/10 18:42:00 · Carla');
 });
 
 test('código fora do padrão: 422; que não está entre os pagos: 404', async function () {
