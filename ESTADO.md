@@ -5,7 +5,7 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
 
-## Portaria virou "Check-in" na tela (12/10) — AINDA NÃO PUBLICADO
+## Portaria virou "Check-in" na tela (12/10) — no ar (commit `79e6c14`)
 
 Só o nome que a equipe vê e o visual mudaram. **Arquivo (`portaria.html`),
 rotas (`/api/portaria/...`), abas da planilha (`Portaria`, `Usuários
@@ -26,8 +26,10 @@ link da equipe é o mesmo.
   820 e 1440 px): entrar, código errado, busca, check-in, acompanhantes,
   já feito, sem conexão, desfazer, lista vazia; sem rolagem lateral e sem
   erro de JS. `npm test`: 59 verdes e as mesmas 6 falhas de data do Mercado
-  Pago. **Não conferido:** o Turnstile dentro do cartão novo (não carrega em
-  localhost) e um celular de verdade.
+  Pago. No ar em 12/10: página, CSS e JS `v=8` servidos e `/api/saude`
+  `ok:true` (4 chamadas espaçadas). **Não conferido:** o Turnstile dentro do
+  cartão novo (não carrega em localhost), a entrada com código de verdade
+  e um celular de verdade.
 
 ## Auditoria de segurança de 09/10 (noite)
 
