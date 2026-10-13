@@ -5,7 +5,7 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
 
-## Aba Portaria acompanha a aba Pedidos sozinha (13/10)
+## Aba Portaria acompanha a aba Pedidos sozinha (13/10) — no ar (commit `cf05f7f`)
 
 Pedido do Jadison: trocou o nome de uma participante na aba Pedidos
 (`MP26-6FEF-4MGU`, Camila Paeli → Andreia dos Santos Lima) e a aba Portaria
@@ -33,9 +33,10 @@ Pedidos e sempre mostrou o nome certo.)
   linhas, 0 diferenças, 459 caixinhas, painel 459/0); `incluir()` contra a
   aba de verdade com código inventado: linha 461 com as 3 fórmulas, depois
   apagada. `npm test`: 63 verdes + as mesmas 6 de data do Mercado Pago.
-  **A planilha já está certa; a parte do site (`portariaService.js`) ainda
-  não foi publicada**: até o deploy, quem pagar entra na aba com texto fixo
-  (certo na hora, mas sem acompanhar correção até a próxima rodada).
+  No ar em 13/10, 10:21: deploy READY, `/api/saude` `ok:true`, lista sem
+  sessão 401 (2 chamadas espaçadas). **Não conferido:** um pagamento de
+  verdade entrando na aba com as fórmulas pelo site no ar (o mesmo código
+  foi provado local contra a planilha real).
 
 ## Portaria virou "Check-in" na tela (12/10) — no ar (commit `79e6c14`)
 
