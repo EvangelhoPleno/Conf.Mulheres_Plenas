@@ -60,6 +60,26 @@ function linhaDaAba(ingresso, presente, entrada) {
     ];
 }
 
+/* Linha da aba -> células do appendCells. Nome, CPF e telefone da aba são
+   fórmulas que buscam na aba Pedidos pelo código (npm run portaria), com o
+   mesmo texto em todas as linhas: a linha nova leva a fórmula da linha 2
+   (modelo), para também acompanhar uma correção feita em Pedidos. Sem
+   fórmula no modelo (aba antiga, lista vazia), grava o valor. */
+function celulasDaLinha(valores, modelo) {
+    modelo = modelo || [];
+    return valores.map(function (valor, coluna) {
+        if (coluna === COL.presente) {
+            return { userEnteredValue: { boolValue: valor === true }, dataValidation: { condition: { type: 'BOOLEAN' } } };
+        }
+        const formula = texto(modelo[coluna]);
+        // só a fórmula que não depende da linha (ROW()) pode ser copiada como está
+        if ([COL.nome, COL.cpf, COL.telefone].includes(coluna) && formula.charAt(0) === '=' && formula.includes('ROW()')) {
+            return { userEnteredValue: { formulaValue: formula } };
+        }
+        return { userEnteredValue: { stringValue: texto(valor) } };
+    });
+}
+
 /* "16/10 18:42:07 · Ana" no horário de Paragominas (os segundos põem em
    ordem quem entrou no mesmo minuto, no histórico da página) */
 function carimbo(agora, por) {
@@ -135,6 +155,7 @@ function criarArmazemPlanilha() {
     let docPromessa = null;
     let idPromessa = null;
     let idDesfeitosPromessa = null;
+    let formulasPromessa = null;
 
     function documento() {
         if (!docPromessa) {
@@ -189,20 +210,12 @@ function criarArmazemPlanilha() {
         },
         /* Ingresso pago depois da última rodada do npm run portaria: entra
            logo abaixo da última linha da lista, já com a caixinha. É uma
-           gravação só (appendCells leva valor e caixinha juntos). */
+           gravação só (appendCells leva valor, fórmula e caixinha juntos). */
         async acrescentar(linhas) {
             const doc = await documento();
             const sheetId = await idDaAba();
-            const celulas = linhas.map(function (valores) {
-                return {
-                    values: valores.map(function (valor, coluna) {
-                        if (coluna === COL.presente) {
-                            return { userEnteredValue: { boolValue: valor === true }, dataValidation: { condition: { type: 'BOOLEAN' } } };
-                        }
-                        return { userEnteredValue: { stringValue: texto(valor) } };
-                    })
-                };
-            });
+            const modelo = await formulasDaAba();
+            const celulas = linhas.map(function (valores) { return { values: celulasDaLinha(valores, modelo) }; });
             await repetindoSeOcupado(function () {
                 return doc.sheetsApi.post(':batchUpdate', {
                     json: { requests: [{ appendCells: { sheetId: sheetId, rows: celulas, fields: 'userEnteredValue,dataValidation' } }] }
@@ -253,6 +266,21 @@ function criarArmazemPlanilha() {
             });
         }
         return idPromessa;
+    }
+
+    /* As fórmulas da linha 2 (ver celulasDaLinha): uma leitura por instância.
+       Se a leitura falhar, a linha nova entra com os valores, como antes. */
+    function formulasDaAba() {
+        if (!formulasPromessa) {
+            formulasPromessa = lerVarias([ABA + '!A2:D2'], 'FORMULA').then(function (lido) {
+                return lido[0][0] || [];
+            }).catch(function (erro) {
+                formulasPromessa = null;
+                console.error('[portaria] não li as fórmulas da aba ' + ABA + ':', erro.message);
+                return [];
+            });
+        }
+        return formulasPromessa;
     }
 
     /* A aba dos desfeitos nasce com npm run portaria:desfeitos. Se faltar
@@ -444,4 +472,4 @@ function usarArmazem(armazem, opcoes) {
     return instancia;
 }
 
-module.exports = { ABA_USUARIOS, ABA_DESFEITOS, CABECALHO_DESFEITOS, MOTIVO_LIVRE, criarArmazemPlanilha, portaria, usarArmazem, criarArmazemMemoria, pagosDosPedidos, montarLista, carimbo };
+module.exports = { ABA_USUARIOS, ABA_DESFEITOS, CABECALHO_DESFEITOS, MOTIVO_LIVRE, criarArmazemPlanilha, portaria, usarArmazem, criarArmazemMemoria, pagosDosPedidos, montarLista, carimbo, celulasDaLinha };

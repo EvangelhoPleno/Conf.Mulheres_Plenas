@@ -5,6 +5,38 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
 
+## Aba Portaria acompanha a aba Pedidos sozinha (13/10)
+
+Pedido do Jadison: trocou o nome de uma participante na aba Pedidos
+(`MP26-6FEF-4MGU`, Camila Paeli → Andreia dos Santos Lima) e a aba Portaria
+continuou com o nome antigo. A aba era uma foto: nome, CPF e telefone eram
+texto copiado a cada `npm run portaria`. (A página do check-in já lia a aba
+Pedidos e sempre mostrou o nome certo.)
+- **Nome, CPF e telefone (A, C e D) agora são fórmulas** que buscam na aba
+  Pedidos pelo **código do ingresso** (coluna B): corrigiu lá, muda aqui na
+  hora, sem rodar nada. Só a ordem alfabética espera a próxima rodada do
+  `npm run portaria` (ou ordenar pelo filtro). Código, Presente, Entrada e
+  Pedido continuam valores.
+- A busca é pelo código, **não pelo `Pedido_ID`**: 7 pedidos de 2 ingressos
+  foram divididos à mão em duas linhas e repetem o `Pedido_ID` (linhas 7/8,
+  61/62, 77/78, 84/85, 92/93, 136/137 e 150/151 em 13/10), cada linha com o
+  nome de uma pessoa.
+- A fórmula usa `ROW()` e é **igual em todas as linhas**: ordenar pelo
+  filtro não quebra, e o site copia a da linha 2 para quem paga depois
+  (`celulasDaLinha` / `formulasDaAba` no `portariaService.js`; +1 leitura
+  por instância, só na 1ª linha nova). Linha 2 sem fórmula = grava o valor,
+  como antes. **Não escrever nome à mão em A, C ou D**: apaga a fórmula
+  daquela linha (a rodada seguinte refaz).
+- Código apagado da aba Pedidos aparece como "CÓDIGO FORA DA ABA PEDIDOS".
+- Provado em 13/10: aba temporária com as 459 linhas (0 diferenças contra o
+  cálculo antigo, antes e depois de ordenar); aba de verdade refeita (459
+  linhas, 0 diferenças, 459 caixinhas, painel 459/0); `incluir()` contra a
+  aba de verdade com código inventado: linha 461 com as 3 fórmulas, depois
+  apagada. `npm test`: 63 verdes + as mesmas 6 de data do Mercado Pago.
+  **A planilha já está certa; a parte do site (`portariaService.js`) ainda
+  não foi publicada**: até o deploy, quem pagar entra na aba com texto fixo
+  (certo na hora, mas sem acompanhar correção até a próxima rodada).
+
 ## Portaria virou "Check-in" na tela (12/10) — no ar (commit `79e6c14`)
 
 Só o nome que a equipe vê e o visual mudaram. **Arquivo (`portaria.html`),

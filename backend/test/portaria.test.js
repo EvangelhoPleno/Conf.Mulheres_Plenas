@@ -204,6 +204,28 @@ test('pedido recém-pago entra na aba sozinho, uma vez só, com nome em maiúscu
     assert.equal(armazem.portaria.length, 3);
 });
 
+test('linha nova na planilha: nome, CPF e telefone levam a fórmula da linha 2; sem fórmula, o valor', function () {
+    const { celulasDaLinha } = require('../src/services/portariaService');
+    const linha = ['CAROL CONCEIÇÃO', 'MP26-CCCC-CCCC', '390.533.447-05', '(91) 98187-7494', true, '16/10 18:42:00 · Ana', 'MPc'];
+    const valor = function (celulas) { return celulas.map(function (c) { return c.userEnteredValue; }); };
+    const fNome = '=UPPER(INDEX(Pedidos!$C:$C;MATCH("*"&INDEX($B:$B;ROW())&"*";Pedidos!$M:$M;0)))';
+    const fCpf = '=INDEX(Pedidos!$D:$D;ROW())';
+
+    // linha 2 com fórmula em A e C, telefone escrito à mão em D e fórmula presa à linha em B
+    const celulas = celulasDaLinha(linha, [fNome, '=B2', fCpf, '(91) 90000-0000']);
+    assert.deepEqual(valor(celulas), [
+        { formulaValue: fNome }, { stringValue: 'MP26-CCCC-CCCC' }, { formulaValue: fCpf }, { stringValue: '(91) 98187-7494' },
+        { boolValue: true }, { stringValue: '16/10 18:42:00 · Ana' }, { stringValue: 'MPc' }
+    ]);
+    assert.deepEqual(celulas[4].dataValidation, { condition: { type: 'BOOLEAN' } });
+
+    // aba antiga (só valores), fórmula que cita a própria linha, ou leitura que falhou
+    assert.deepEqual(valor(celulasDaLinha(linha, ['ANA LIMA', 'MP26-AAAA-AAAA', '111.444.777-35', ''])).slice(0, 4),
+        [{ stringValue: 'CAROL CONCEIÇÃO' }, { stringValue: 'MP26-CCCC-CCCC' }, { stringValue: '390.533.447-05' }, { stringValue: '(91) 98187-7494' }]);
+    assert.deepEqual(valor(celulasDaLinha(linha, ['=UPPER(Pedidos!C5)']))[0], { stringValue: 'CAROL CONCEIÇÃO' });
+    assert.deepEqual(valor(celulasDaLinha(linha))[0], { stringValue: 'CAROL CONCEIÇÃO' });
+});
+
 test('desfazer libera o ingresso de novo e deixa o motivo na aba dos desfeitos', async function () {
     await chamar('/portaria/entrada', { codigo: ANA, por: 'Carla' });
     const r = await chamar('/portaria/desfazer', { codigo: ANA, por: 'Dani', motivo: 'Marquei a pessoa errada', detalhe: 'era a irmã' });

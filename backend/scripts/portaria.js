@@ -7,6 +7,9 @@
    refaz o visual e GUARDA as presenças já marcadas (casadas pelo código do
    ingresso, não pela linha). Pedido reembolsado sai da lista. A aba Pedidos
    não é tocada.
+   Nome, CPF e telefone (A, C e D) são FÓRMULAS que buscam na aba Pedidos
+   pelo código do ingresso: corrigiu um nome lá, muda aqui na hora, sem rodar
+   nada. Só a ordem alfabética espera a próxima rodada.
    Não rodar enquanto a portaria estiver marcando presença: a regravação da
    lista apagaria uma marcação feita no meio dela.
    A página portaria.html grava aqui (backend/src/services/portariaService.js),
@@ -64,6 +67,42 @@ function formatarTelefone(valor) {
     if (d.length === 11) return d.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
     if (d.length === 10) return d.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
     return texto(valor);
+}
+
+// 0 -> A, 25 -> Z, 26 -> AA
+function letra(indice) {
+    let s = '';
+    for (let n = indice + 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + (n - 1) % 26) + s;
+    return s;
+}
+
+/* Fórmulas de Nome, CPF e Telefone: acham a linha da aba Pedidos pelo código
+   do ingresso (coluna B) e devolvem o valor no formato de sempre (nome em
+   maiúsculas, CPF e telefone com pontuação). A busca é pelo CÓDIGO, não pelo
+   Pedido_ID: pedido de 2 ingressos dividido à mão em duas linhas repete o
+   Pedido_ID, e cada linha tem o nome de uma pessoa.
+   A linha vem de ROW(), não de "B2": o texto da fórmula é igual em todas as
+   linhas, então ordenar pelo filtro não a quebra e o site copia a da linha 2
+   para quem paga depois (portariaService, acrescentar). */
+function formulas(abaPedidos, cabecalho, sep) {
+    const coluna = function (nome) {
+        const i = cabecalho.indexOf(nome);
+        if (i < 0) throw new Error('Aba "' + abaPedidos + '" sem a coluna ' + nome);
+        return "'" + abaPedidos.replace(/'/g, "''") + "'!$" + letra(i) + ':$' + letra(i);
+    };
+    const valor = function (nome) {
+        return 'INDEX(' + coluna(nome) + ';MATCH("*"&INDEX($B:$B;ROW())&"*";' + coluna('Codigos_Ingresso') + ';0))';
+    };
+    // escritas com ";" (pt_BR); nenhuma tem ";" dentro de texto, então trocar é seguro
+    const comSep = function (formula) { return formula.split(';').join(sep); };
+    return {
+        nome: comSep('=IFERROR(UPPER(TRIM(' + valor('Nome_Cliente') + '));"CÓDIGO FORA DA ABA PEDIDOS")'),
+        cpf: comSep('=IFERROR(LET(d;REGEXREPLACE(TO_TEXT(' + valor('CPF') + ');"\\D";"");'
+            + 'IF(LEN(d)=11;REGEXREPLACE(d;"(\\d{3})(\\d{3})(\\d{3})(\\d{2})";"$1.$2.$3-$4");d));"")'),
+        telefone: comSep('=IFERROR(LET(d;REGEXREPLACE(REGEXREPLACE(TO_TEXT(' + valor('Telefone') + ');"\\D";"");"^55(\\d{10,11})$";"$1");'
+            + 'IFS(LEN(d)=11;REGEXREPLACE(d;"(\\d{2})(\\d{5})(\\d{4})";"($1) $2-$3");'
+            + 'LEN(d)=10;REGEXREPLACE(d;"(\\d{2})(\\d{4})(\\d{4})";"($1) $2-$3");TRUE;d));"")')
+    };
 }
 
 async function lerValores(doc, intervalo) {
@@ -209,7 +248,7 @@ async function formatarAba(doc, id, fim, linhasAba) {
             addProtectedRange: {
                 protectedRange: {
                     range: intervalo(id, 0, null, 0, COL_PRESENTE),
-                    description: 'Dados da aba Pedidos: corrija lá e rode npm run portaria',
+                    description: 'Nome, CPF e telefone vêm da aba Pedidos por fórmula: corrija lá, aqui muda sozinho',
                     warningOnly: true
                 }
             }
@@ -353,17 +392,24 @@ async function main() {
 
     // 4. grava a lista (e limpa o que sobrou da rodada anterior) e o painel
     const sep = /^(en|ja|zh|ko|th|he)/i.test(String(doc.locale || '')) ? ',' : ';';
+    const f = formulas(config.google.aba, pedidos.headerValues, sep);
+    // RAW: código, presença, hora e pedido entram como estão (null = não toca a célula)
+    const fixos = pagos.map(function (l) { return [null, l[1], null, null, l[COL_PRESENTE], l[COL_ENTRADA], l[6]]; });
     await doc.sheetsApi.post('values:batchClear', { json: { ranges: [NOME_ABA + '!A2:G', NOME_ABA + '!I1:J12'] } });
     await doc.sheetsApi.post('values:batchUpdate', {
         json: {
             valueInputOption: 'RAW',
-            data: [{ range: NOME_ABA + '!A1:G' + fim, values: [CABECALHO].concat(pagos) }]
+            data: [{ range: NOME_ABA + '!A1:G' + fim, values: [CABECALHO].concat(fixos) }]
         }
     });
+    const dinamicos = !pagos.length ? [] : [
+        { range: NOME_ABA + '!A2:A' + fim, values: pagos.map(function () { return [f.nome]; }) },
+        { range: NOME_ABA + '!C2:D' + fim, values: pagos.map(function () { return [f.cpf, f.telefone]; }) }
+    ];
     await doc.sheetsApi.post('values:batchUpdate', {
         json: {
             valueInputOption: 'USER_ENTERED',
-            data: [{
+            data: dinamicos.concat([{
                 range: NOME_ABA + '!I1:J7',
                 values: [
                     ['Painel da portaria', ''],
@@ -374,7 +420,7 @@ async function main() {
                     ['=REPT("█"' + sep + 'ROUND(J5*24))&REPT("░"' + sep + '24-ROUND(J5*24))', ''],
                     ['Atualiza sozinho a cada entrada confirmada na página da portaria.', '']
                 ]
-            }]
+            }])
         }
     });
 
