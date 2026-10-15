@@ -22,8 +22,9 @@ Pedido do Jadison: as pessoas do PDF `CONFERÊNCIA DE MULHERES PLENAS 🤎.pdf`
   Buscar**, em ordem alfabética com as inscritas, num **cartão creme com
   barra e selo dourados** ("✦ Check-in especial"; abaixo de 480 px só
   "✦ Especial"). Depois do check-in o cartão fica verde como os outros, com o
-  selo dourado; aparece também em Presentes. O placar conta todo mundo
-  (inscritas + especiais: 459 + 66 = 525). Por dentro o "código" delas é
+  selo dourado; aparece também em Presentes. Placar (`?v=13`): o anel e
+  "X de 525 já entraram" contam todo mundo; no lugar do "faltam" ficam
+  **Inscritas** (x/459) e **Conf. Especiais** (x/66, em dourado), separadas. Por dentro o "código" delas é
   `ESP:<nome sem acento>`, só na página. Desfazer pede motivo (vai para
   `Check-ins desfeitos` com "Check-in especial" na coluna do código). A 1ª
   versão (`3e1ea6e`, 3ª aba "Especial") foi substituída.

@@ -14,9 +14,9 @@
     <!-- Fraunces com os mesmos eixos da landing: o arquivo já está no cache de quem abriu o site -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500..900,100,1;1,9..144,500..900,100,1&display=swap" rel="stylesheet">
     <!-- ?v= sobe a cada mudança: o celular da porta não pode ficar com a versão velha -->
-    <link rel="stylesheet" href="portaria.css?v=12">
+    <link rel="stylesheet" href="portaria.css?v=13">
     <script src="config.js"></script>
-    <script src="portaria.js?v=12" defer></script>
+    <script src="portaria.js?v=13" defer></script>
 </head>
 <!-- CHECK-IN do dia da conferência (o arquivo, a API e a planilha seguem com
      o nome antigo, "portaria"). Fora do menu e do Google (noindex).
@@ -89,9 +89,10 @@
                     <p class="placar-numeros"><strong data-presentes>0</strong> <span>de <b data-total>0</b></span></p>
                     <p class="placar-rotulo">já entraram</p>
                 </div>
-                <div class="placar-bloco placar-bloco--faltam">
-                    <p class="placar-numeros"><strong data-faltam>0</strong></p>
-                    <p class="placar-rotulo">faltam</p>
+                <!-- o total soma as duas listas; aqui cada uma separada -->
+                <div class="placar-bloco placar-bloco--faltam placar-lados">
+                    <p class="placar-lado"><span class="placar-conta"><strong data-ins-presentes>0</strong>/<b data-ins-total>0</b></span> <span class="placar-rotulo">Inscritas</span></p>
+                    <p class="placar-lado placar-lado--especial"><span class="placar-conta"><strong data-esp-presentes>0</strong>/<b data-esp-total>0</b></span> <span class="placar-rotulo">Conf. Especiais</span></p>
                 </div>
             </div>
             <nav class="abas" role="tablist" aria-label="Telas do check-in">

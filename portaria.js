@@ -339,13 +339,19 @@
         s.textContent = ok ? 'ao vivo' : 'sem conexão';
     }
 
-    // conta todo mundo da lista: inscritas e a lista especial
+    /* o total e o anel contam todo mundo; ao lado, as inscritas (ingresso
+       pago) e as convidadas especiais, cada uma com o próprio número */
     function placar() {
         var presentes = ingressos.filter(function (i) { return i.entrada; }).length;
         var pct = ingressos.length ? Math.round((presentes / ingressos.length) * 100) : 0;
+        var especiais = ingressos.filter(function (i) { return i.especial; });
+        var espDentro = especiais.filter(function (i) { return i.entrada; }).length;
         $('[data-presentes]').textContent = presentes;
         $('[data-total]').textContent = ingressos.length;
-        $('[data-faltam]').textContent = ingressos.length - presentes;
+        $('[data-ins-presentes]').textContent = presentes - espDentro;
+        $('[data-ins-total]').textContent = ingressos.length - especiais.length;
+        $('[data-esp-presentes]').textContent = espDentro;
+        $('[data-esp-total]').textContent = especiais.length;
         $('[data-porcento]').textContent = pct + '%';
         // o anel tem pathLength 100: o traço é a própria porcentagem
         var anel = $('[data-anel]');

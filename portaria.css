@@ -459,6 +459,40 @@ button { cursor: pointer; }
 
 .placar-numeros b { color: var(--papel); font-weight: 700; font-variant-numeric: tabular-nums; }
 
+/* ao lado do total: inscritas e conf. especiais, uma por linha */
+.placar-lados { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+
+.placar-lado {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1;
+}
+
+.placar-conta {
+    color: var(--nude);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.placar-conta strong {
+    font-family: var(--fonte-titulo);
+    font-variation-settings: "SOFT" 100, "WONK" 0;
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: var(--papel);
+    font-variant-numeric: lining-nums tabular-nums;
+}
+
+.placar-conta b { font-weight: 700; color: var(--nude-claro); }
+
+.placar-lado .placar-rotulo { margin-top: 2px; font-size: 0.58rem; letter-spacing: 0.1em; white-space: nowrap; }
+
+/* o dourado do cartão especial também aqui */
+.placar-lado--especial .placar-conta strong,
+.placar-lado--especial .placar-rotulo { color: var(--dourado-claro); }
+
 .placar-rotulo {
     margin-top: 4px;
     font-size: 0.66rem;
@@ -1167,6 +1201,10 @@ button { cursor: pointer; }
     .placar-bloco--faltam { padding-left: 22px; }
     .placar-bloco--faltam .placar-numeros strong { font-size: 1.9rem; }
     .placar-rotulo { font-size: 0.7rem; }
+    .placar-lados { flex-direction: row; gap: 22px; }
+    .placar-conta { font-size: 0.95rem; }
+    .placar-conta strong { font-size: 1.7rem; }
+    .placar-lado .placar-rotulo { margin-top: 5px; font-size: 0.64rem; }
     .abas { margin-top: 18px; }
     .aba { font-size: 1rem; min-height: 46px; }
 
@@ -1206,6 +1244,8 @@ button { cursor: pointer; }
     .placar-bloco--faltam { margin-left: 6px; padding-left: 28px; text-align: left; }
     .placar-bloco--faltam .placar-numeros { justify-content: flex-start; }
     .placar-bloco--faltam .placar-numeros strong { font-size: 2.4rem; }
+    .placar-lados, .placar-lado { align-items: flex-start; }
+    .placar-conta strong { font-size: 1.9rem; }
     .topo-sinal { grid-column: 3; grid-row: 1; justify-self: end; }
     .abas { display: none; }
 
