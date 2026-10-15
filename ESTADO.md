@@ -17,11 +17,16 @@ Pedido do Jadison: as pessoas do PDF `CONFERÊNCIA DE MULHERES PLENAS 🤎.pdf`
   faltam (sem olhar acento/maiúscula) e refaz o visual; nunca apaga check-in.
   **Incluir alguém na hora = escrever o nome na coluna A**, numa linha vazia
   (há 40 de folga com caixinha); a página mostra em até 20 s.
-- **Página: 3ª aba "Especial"** (no computador, as abas viram Inscritas /
-  Especial). Só os nomes, busca pelo nome, Todas/Faltam/Entraram, check-in
-  num toque, "já entrou" em outro celular, desfazer com motivo (vai para
-  `Check-ins desfeitos` com "Check-in especial" na coluna do código). O placar
-  do topo conta a lista da aba aberta.
+- **Página (refeita no mesmo dia, `?v=12`, a pedido do Jadison): sem aba
+  nova.** A tela é a de antes; os nomes especiais entram **na mesma lista do
+  Buscar**, em ordem alfabética com as inscritas, num **cartão creme com
+  barra e selo dourados** ("✦ Check-in especial"; abaixo de 480 px só
+  "✦ Especial"). Depois do check-in o cartão fica verde como os outros, com o
+  selo dourado; aparece também em Presentes. O placar conta todo mundo
+  (inscritas + especiais: 459 + 66 = 525). Por dentro o "código" delas é
+  `ESP:<nome sem acento>`, só na página. Desfazer pede motivo (vai para
+  `Check-ins desfeitos` com "Check-in especial" na coluna do código). A 1ª
+  versão (`3e1ea6e`, 3ª aba "Especial") foi substituída.
 - Sem código: a página manda **linha + nome**; o servidor usa a linha se o
   nome ainda bate, senão o 1º com o mesmo nome (linhas inseridas/ordenadas
   não quebram). Nome apagado → 404 "atualize a página".

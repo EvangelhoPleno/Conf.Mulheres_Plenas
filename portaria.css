@@ -22,6 +22,14 @@
     --verde-fundo: #E7F3E8;
     --alerta: #A12A1A;
     --alerta-fundo: #F8E0DC;
+    /* dourado discreto: só no cartão do check-in especial */
+    --dourado: #C29A48;
+    --dourado-claro: #E4C77F;
+    --dourado-escuro: #3F2B09;
+    --dourado-texto: #7A5A1E;
+    --dourado-fundo: #FFFBF2;
+    --dourado-fundo-2: #F7ECD2;
+    --dourado-linha: rgba(194, 154, 72, 0.5);
     --sombra: 0 1px 2px rgba(62, 26, 16, 0.05), 0 6px 20px -8px rgba(62, 26, 16, 0.14);
     --sombra-alta: 0 2px 6px rgba(62, 26, 16, 0.06), 0 24px 48px -16px rgba(62, 26, 16, 0.28);
     --capa: linear-gradient(155deg, #93401F 0%, #85351E 42%, #6A2814 100%);
@@ -503,31 +511,6 @@ button { cursor: pointer; }
 
 .aba[aria-selected="true"] .aba-conta { background: var(--tijolo); color: var(--papel); }
 
-/* o 1º botão: "Buscar" no celular, "Inscritas" no computador */
-.so-computador { display: none; }
-
-/* ---------- check-in especial (convidadas, líderes e mídia) ---------- */
-.painel--especial { flex: 1; }
-
-.especial-titulo {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 2px 10px;
-    font-family: var(--fonte-titulo);
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--tijolo);
-}
-
-.especial-titulo small {
-    font-family: var(--fonte);
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    color: var(--rotulo);
-}
-
 /* ---------- painéis ---------- */
 /* ocupa o que sobra da tela: o rodapé fica sempre embaixo */
 .paineis { flex: 1; }
@@ -702,6 +685,49 @@ button { cursor: pointer; }
 
 .item > .botao-desfazer { align-self: center; }
 
+/* ---------- check-in especial (convidadas, líderes e mídia) ----------
+   Mesmo cartão, em tom creme com a barra e o selo dourados. Depois do
+   check-in fica verde como os outros; o selo continua dourado. */
+.item--especial {
+    background: linear-gradient(135deg, var(--dourado-fundo) 0%, var(--dourado-fundo-2) 100%);
+    box-shadow: 0 0 0 1px var(--dourado-linha), var(--sombra);
+}
+
+.item--especial::before { background: linear-gradient(180deg, var(--dourado-claro), var(--dourado)); }
+
+.item--especial .item-avatar {
+    background: var(--dourado-fundo-2);
+    box-shadow: inset 0 0 0 1.5px var(--dourado-claro);
+    color: var(--dourado-texto);
+}
+
+.item-especial {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 5px;
+    padding: 3px 10px 3px 8px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--dourado) 0%, var(--dourado-claro) 50%, var(--dourado) 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--dourado-escuro);
+}
+
+.item-especial::before { content: '✦'; margin-right: 5px; font-size: 0.72rem; line-height: 1; }
+
+.item-especial-check { white-space: pre; }
+
+@media (max-width: 479.98px) {
+    .item--especial .item-especial-check { display: none; }
+}
+
+.entrada--especial { box-shadow: 0 0 0 1px var(--dourado-linha), var(--sombra); }
+
 .item-confirmar {
     flex: none;
     align-self: center;
@@ -754,14 +780,6 @@ button { cursor: pointer; }
     .filtros--situacao { gap: 4px; }
     .filtros--situacao .filtro { gap: 5px; padding: 0 6px; font-size: 0.76rem; }
 }
-
-/* três abas (Buscar, Presentes, Especial): no celular, mais justas */
-@media (max-width: 767.98px) {
-    .abas { gap: 2px; padding: 3px; }
-    .aba { flex: 1 1 auto; gap: 5px; padding: 0 6px; font-size: 0.86rem; }
-    .aba-conta { min-width: 22px; padding: 2px 6px; font-size: 0.72rem; }
-}
-
 /* ---------- histórico ---------- */
 .painel-titulo {
     font-family: var(--fonte-titulo);
@@ -1189,13 +1207,7 @@ button { cursor: pointer; }
     .placar-bloco--faltam .placar-numeros { justify-content: flex-start; }
     .placar-bloco--faltam .placar-numeros strong { font-size: 2.4rem; }
     .topo-sinal { grid-column: 3; grid-row: 1; justify-self: end; }
-    /* Buscar e Presentes ficam lado a lado: as abas só trocam entre as
-       inscritas e o check-in especial */
-    .abas { grid-column: 1 / -1; grid-row: 2; justify-self: center; width: 100%; max-width: 440px; margin: -6px 0 0; }
-    .aba[data-aba="confirmadas"] { display: none; }
-    .aba { min-height: 40px; font-size: 0.95rem; }
-    .so-celular { display: none; }
-    .so-computador { display: inline; }
+    .abas { display: none; }
 
     .paineis {
         flex: 1;
@@ -1225,9 +1237,6 @@ button { cursor: pointer; }
         border-left: 1px solid var(--linha);
     }
     .painel-titulo { display: block; margin-bottom: 14px; font-size: 1.6rem; }
-    .painel--especial { min-height: 0; }
-    .painel--especial .buscador { max-width: 760px; }
-    .painel--especial .especial-titulo { font-size: 1.6rem; }
 
     .lista { grid-template-columns: minmax(0, 1fr); }
     .item { padding: 16px 18px; }
@@ -1239,9 +1248,4 @@ button { cursor: pointer; }
 /* telas bem largas: os resultados da busca em duas colunas */
 @media (min-width: 1500px) {
     [data-resultados] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-/* a lista especial ocupa a largura toda no computador: várias colunas */
-@media (min-width: 1100px) {
-    [data-especial] { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
 }
