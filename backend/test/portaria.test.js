@@ -307,10 +307,10 @@ test('carimbo no horário de Paragominas', function () {
 });
 
 test('check-in especial: lista só com o nome, confirmar, já entrou e desfazer com motivo', async function () {
-    armazem.especial.push(['Pra. Safira', 'FALSE', ''], ['', '', ''], ['Gê', 'FALSE', '']);
+    armazem.especial.push(['Pra. Safira', 'FALSE', '', 'Líder'], ['', '', ''], ['Gê', 'FALSE', '']);
     let lista = await (await chamar('/portaria/lista')).json();
     assert.deepEqual(lista.especial, {
-        pessoas: [{ linha: 3 + 1, nome: 'Gê', entrada: null }, { linha: 2, nome: 'Pra. Safira', entrada: null }],
+        pessoas: [{ linha: 4, nome: 'Gê', categoria: '', entrada: null }, { linha: 2, nome: 'Pra. Safira', categoria: 'Líder', entrada: null }],
         total: 2,
         presentes: 0
     });

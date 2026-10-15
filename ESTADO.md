@@ -10,7 +10,10 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 Pedido do Jadison: as pessoas do PDF `CONFERÊNCIA DE MULHERES PLENAS 🤎.pdf`
 (na pasta de cima, fora do Git) entram sem ingresso e também fazem check-in.
 - **Aba nova `Check-in especial`** na planilha: A Nome, B Entrou (caixinha),
-  C Entrada ("16/10 18:42:07 · Ana"). Linha verde em quem entrou. Criada com
+  C Entrada ("16/10 18:42:07 · Ana"), D Grupo (48 "Líder", 3 "Mídia", os 15
+  da 2ª lista vazios; vira a etiqueta ao lado do selo dourado no cartão,
+  `?v=14`). No `.txt`, `# grupo: Líder` vale para os nomes de baixo e rodar
+  o comando acerta o Grupo de quem já está. Linha verde em quem entrou. Criada com
   `npm run portaria:especial -- ../convidados-especiais.txt` (66 nomes: 48
   líderes, 15 da 2ª lista do PDF, sem título, e 3 da mídia). O `.txt` fica
   **fora do repositório público**. Rodar de novo só acrescenta nomes que

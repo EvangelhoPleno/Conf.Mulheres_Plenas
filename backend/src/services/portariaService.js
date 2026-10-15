@@ -26,12 +26,13 @@ const MOTIVO_LIVRE = 'Outro motivo';
 // C CPF, D Telefone, E Presente, F Entrada, G Pedido
 const COL = { nome: 0, codigo: 1, cpf: 2, telefone: 3, presente: 4, entrada: 5, pedido: 6 };
 /* Check-in especial: convidadas, líderes e mídia, que não compraram
-   ingresso. Só o nome e a confirmação: A Nome, B Entrou (caixinha), C Entrada
-   (npm run portaria:especial cria a aba; incluir alguém = escrever o nome na
-   coluna A). Sem código: a pessoa é achada pelo nome, conferido na linha. */
+   ingresso. Só o nome e a confirmação: A Nome, B Entrou (caixinha), C Entrada,
+   D Grupo (Líder, Mídia ou vazio; vai para o cartão). npm run
+   portaria:especial cria a aba; incluir alguém = escrever o nome na coluna A.
+   Sem código: a pessoa é achada pelo nome, conferido na linha. */
 const ABA_ESPECIAL = 'Check-in especial';
-const CABECALHO_ESPECIAL = ['Nome', 'Entrou', 'Entrada'];
-const INTERVALO_ESPECIAL = "'" + ABA_ESPECIAL + "'!A2:C";
+const CABECALHO_ESPECIAL = ['Nome', 'Entrou', 'Entrada', 'Grupo'];
+const INTERVALO_ESPECIAL = "'" + ABA_ESPECIAL + "'!A2:D";
 // o que vai na coluna "Código do ingresso" da aba dos desfeitos
 const CODIGO_ESPECIAL = 'Check-in especial';
 
@@ -147,7 +148,13 @@ function listaEspecial(linhas) {
     linhas.forEach(function (l, i) {
         const nome = texto(l[0]).replace(/\s+/g, ' ');
         if (!nome) return;
-        pessoas.push({ linha: i + 2, nome: nome, entrada: marcado(l[1]) ? (texto(l[2]) || 'sim') : null });
+        pessoas.push({
+            linha: i + 2,
+            nome: nome,
+            // "categoria", não "grupo": na página, grupo é o dos ingressos do mesmo CPF
+            categoria: texto(l[3]).replace(/\s+/g, ' ').slice(0, 30),
+            entrada: marcado(l[1]) ? (texto(l[2]) || 'sim') : null
+        });
     });
     return pessoas.sort(function (a, b) {
         return a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' });

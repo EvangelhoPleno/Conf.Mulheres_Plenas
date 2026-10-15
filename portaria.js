@@ -377,11 +377,15 @@
     function linhaDetalhe(i) {
         // a lista especial só tem o nome: no lugar do código, o selo dourado
         if (i.especial) {
-            var selo = el('p', 'item-especial');
-            // no celular bem estreito fica só "Especial"
+            var marcas = el('p', 'item-marcas');
+            var selo = el('span', 'item-especial');
+            // no celular fica só "Especial"
             selo.appendChild(el('span', 'item-especial-check', 'Check-in '));
             selo.appendChild(document.createTextNode('especial'));
-            return selo;
+            marcas.appendChild(selo);
+            // Líder ou Mídia (coluna Grupo da planilha); sem grupo, só o selo
+            if (i.categoria) marcas.appendChild(el('span', 'item-categoria', i.categoria));
+            return marcas;
         }
         var det = el('p', 'item-detalhe');
         det.appendChild(el('span', 'item-codigo', i.codigo));
@@ -542,7 +546,7 @@
 
     // a linha de cada ingresso, refeita só quando o que ela mostra muda
     function linhaGuardada(i) {
-        var chave = [i.nome, i.cpfMeio, i.entrada || '', i.posicao, i.grupo.length, semUso(i)].join('|');
+        var chave = [i.nome, i.cpfMeio, i.categoria || '', i.entrada || '', i.posicao, i.grupo.length, semUso(i)].join('|');
         var guardada = linhas[i.codigo];
         if (guardada && guardada.chave === chave) return guardada.li;
         var li = cartaoBusca(i);
