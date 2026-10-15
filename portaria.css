@@ -503,6 +503,31 @@ button { cursor: pointer; }
 
 .aba[aria-selected="true"] .aba-conta { background: var(--tijolo); color: var(--papel); }
 
+/* o 1º botão: "Buscar" no celular, "Inscritas" no computador */
+.so-computador { display: none; }
+
+/* ---------- check-in especial (convidadas, líderes e mídia) ---------- */
+.painel--especial { flex: 1; }
+
+.especial-titulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 10px;
+    font-family: var(--fonte-titulo);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--tijolo);
+}
+
+.especial-titulo small {
+    font-family: var(--fonte);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--rotulo);
+}
+
 /* ---------- painéis ---------- */
 /* ocupa o que sobra da tela: o rodapé fica sempre embaixo */
 .paineis { flex: 1; }
@@ -728,6 +753,13 @@ button { cursor: pointer; }
     .entrar-form input::placeholder { font-size: 0.88rem; }
     .filtros--situacao { gap: 4px; }
     .filtros--situacao .filtro { gap: 5px; padding: 0 6px; font-size: 0.76rem; }
+}
+
+/* três abas (Buscar, Presentes, Especial): no celular, mais justas */
+@media (max-width: 767.98px) {
+    .abas { gap: 2px; padding: 3px; }
+    .aba { flex: 1 1 auto; gap: 5px; padding: 0 6px; font-size: 0.86rem; }
+    .aba-conta { min-width: 22px; padding: 2px 6px; font-size: 0.72rem; }
 }
 
 /* ---------- histórico ---------- */
@@ -1157,7 +1189,13 @@ button { cursor: pointer; }
     .placar-bloco--faltam .placar-numeros { justify-content: flex-start; }
     .placar-bloco--faltam .placar-numeros strong { font-size: 2.4rem; }
     .topo-sinal { grid-column: 3; grid-row: 1; justify-self: end; }
-    .abas { display: none; }
+    /* Buscar e Presentes ficam lado a lado: as abas só trocam entre as
+       inscritas e o check-in especial */
+    .abas { grid-column: 1 / -1; grid-row: 2; justify-self: center; width: 100%; max-width: 440px; margin: -6px 0 0; }
+    .aba[data-aba="confirmadas"] { display: none; }
+    .aba { min-height: 40px; font-size: 0.95rem; }
+    .so-celular { display: none; }
+    .so-computador { display: inline; }
 
     .paineis {
         flex: 1;
@@ -1187,6 +1225,9 @@ button { cursor: pointer; }
         border-left: 1px solid var(--linha);
     }
     .painel-titulo { display: block; margin-bottom: 14px; font-size: 1.6rem; }
+    .painel--especial { min-height: 0; }
+    .painel--especial .buscador { max-width: 760px; }
+    .painel--especial .especial-titulo { font-size: 1.6rem; }
 
     .lista { grid-template-columns: minmax(0, 1fr); }
     .item { padding: 16px 18px; }
@@ -1198,4 +1239,9 @@ button { cursor: pointer; }
 /* telas bem largas: os resultados da busca em duas colunas */
 @media (min-width: 1500px) {
     [data-resultados] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* a lista especial ocupa a largura toda no computador: várias colunas */
+@media (min-width: 1100px) {
+    [data-especial] { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
 }

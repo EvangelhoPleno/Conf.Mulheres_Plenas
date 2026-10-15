@@ -1,9 +1,41 @@
-# Estado do projeto — 05/10/2026
+# Estado do projeto — 15/10/2026
 
 Resumo para retomar o trabalho sem reler o histórico. Evento: **Conferência
 Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
+
+## Check-in especial (15/10): convidadas, líderes e mídia
+
+Pedido do Jadison: as pessoas do PDF `CONFERÊNCIA DE MULHERES PLENAS 🤎.pdf`
+(na pasta de cima, fora do Git) entram sem ingresso e também fazem check-in.
+- **Aba nova `Check-in especial`** na planilha: A Nome, B Entrou (caixinha),
+  C Entrada ("16/10 18:42:07 · Ana"). Linha verde em quem entrou. Criada com
+  `npm run portaria:especial -- ../convidados-especiais.txt` (66 nomes: 48
+  líderes, 15 da 2ª lista do PDF, sem título, e 3 da mídia). O `.txt` fica
+  **fora do repositório público**. Rodar de novo só acrescenta nomes que
+  faltam (sem olhar acento/maiúscula) e refaz o visual; nunca apaga check-in.
+  **Incluir alguém na hora = escrever o nome na coluna A**, numa linha vazia
+  (há 40 de folga com caixinha); a página mostra em até 20 s.
+- **Página: 3ª aba "Especial"** (no computador, as abas viram Inscritas /
+  Especial). Só os nomes, busca pelo nome, Todas/Faltam/Entraram, check-in
+  num toque, "já entrou" em outro celular, desfazer com motivo (vai para
+  `Check-ins desfeitos` com "Check-in especial" na coluna do código). O placar
+  do topo conta a lista da aba aberta.
+- Sem código: a página manda **linha + nome**; o servidor usa a linha se o
+  nome ainda bate, senão o 1º com o mesmo nome (linhas inseridas/ordenadas
+  não quebram). Nome apagado → 404 "atualize a página".
+- **Cota:** a aba especial vem na MESMA leitura da lista (batchGet de 3
+  intervalos), sem leitura a mais. Se a aba for apagada, o Google recusa o
+  batchGet (400): o servidor lê de novo sem ela e não tenta por 1 min — o
+  check-in das inscritas não para (provado na planilha real antes de criar
+  a aba). Confirmar/desfazer especial: 1 leitura + 1 escrita.
+- Rotas: `POST /api/portaria/especial/entrada|desfazer` `{ linha, nome }`.
+- Provado: `npm test` 65 verdes + as mesmas 6 de data do Mercado Pago (2
+  testes novos); Chrome sem janela com a API simulada (320, 390, 820, 1440):
+  66 nomes, busca, check-in, desfazer com motivo, volta ao placar das
+  inscritas, sem rolagem lateral, zero erro de JS; na planilha real, marcar e
+  "já entrou" na linha da Aline, depois desmarcada à mão.
 
 ## Aba Portaria acompanha a aba Pedidos sozinha (13/10) — no ar (commit `cf05f7f`)
 

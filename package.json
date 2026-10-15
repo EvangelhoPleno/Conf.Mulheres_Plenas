@@ -16,6 +16,7 @@
     "portaria": "node backend/scripts/portaria.js",
     "portaria:usuarios": "node backend/scripts/usuarios-portaria.js",
     "portaria:desfeitos": "node backend/scripts/desfeitos-portaria.js",
+    "portaria:especial": "node backend/scripts/especial-portaria.js",
     "mercadopago:testar": "node backend/scripts/testar-mercadopago.js",
     "mercadopago:ensaio-cartao": "node backend/scripts/ensaio-cartao.js",
     "email:testar": "node backend/scripts/testar-email.js",

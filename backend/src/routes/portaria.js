@@ -115,6 +115,18 @@ function motivoValido(req, res, next) {
     next();
 }
 
+/* Check-in especial: a pessoa é a linha + o nome que a página mostrou
+   (a aba não tem código; o servidor confere o nome na planilha) */
+function pessoaEspecial(req, res, next) {
+    const linha = Number(req.body && req.body.linha);
+    const nome = limpo(req.body && req.body.nome, 120);
+    if (!Number.isInteger(linha) || linha < 2 || linha > 5000 || !nome) {
+        return res.status(422).json({ erro: 'Pessoa inválida. Atualize a página.' });
+    }
+    req.especial = { linha: linha, nome: nome };
+    next();
+}
+
 router.use('/portaria', ligada, errosPorIp, exigirSessao);
 
 router.get('/portaria/lista', async function (req, res) {
@@ -128,6 +140,20 @@ router.post('/portaria/entrada', codigoValido, async function (req, res) {
 
 router.post('/portaria/desfazer', codigoValido, motivoValido, async function (req, res) {
     res.json(await portaria().desfazer(req.codigo, {
+        motivo: req.motivo.motivo,
+        detalhe: req.motivo.detalhe,
+        por: quem(req),
+        email: req.usuarioPortaria
+    }));
+});
+
+router.post('/portaria/especial/entrada', pessoaEspecial, async function (req, res) {
+    const r = await portaria().confirmarEspecial(req.especial.linha, req.especial.nome, quem(req));
+    res.status(r.situacao === 'ja-entrou' ? 409 : 200).json(r);
+});
+
+router.post('/portaria/especial/desfazer', pessoaEspecial, motivoValido, async function (req, res) {
+    res.json(await portaria().desfazerEspecial(req.especial.linha, req.especial.nome, {
         motivo: req.motivo.motivo,
         detalhe: req.motivo.detalhe,
         por: quem(req),

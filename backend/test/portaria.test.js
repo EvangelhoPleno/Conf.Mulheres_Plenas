@@ -305,3 +305,51 @@ test('só PAGO entra na lista, um item por código', function () {
 test('carimbo no horário de Paragominas', function () {
     assert.equal(carimbo(new Date('2026-10-17T00:30:05Z'), 'Ana'), '16/10 21:30:05 · Ana');
 });
+
+test('check-in especial: lista só com o nome, confirmar, já entrou e desfazer com motivo', async function () {
+    armazem.especial.push(['Pra. Safira', 'FALSE', ''], ['', '', ''], ['Gê', 'FALSE', '']);
+    let lista = await (await chamar('/portaria/lista')).json();
+    assert.deepEqual(lista.especial, {
+        pessoas: [{ linha: 3 + 1, nome: 'Gê', entrada: null }, { linha: 2, nome: 'Pra. Safira', entrada: null }],
+        total: 2,
+        presentes: 0
+    });
+
+    let r = await chamar('/portaria/especial/entrada', { linha: 4, nome: 'Gê', por: 'Ana' });
+    assert.equal(r.status, 200);
+    assert.equal((await r.json()).entrada, '16/10 18:42:00 · Ana');
+    assert.deepEqual(armazem.especial[2], ['Gê', true, '16/10 18:42:00 · Ana']);
+
+    // outro celular: "já entrou", sem gravar de novo
+    r = await chamar('/portaria/especial/entrada', { linha: 4, nome: 'Gê', por: 'Bia' });
+    assert.equal(r.status, 409);
+    assert.equal((await r.json()).entrada, '16/10 18:42:00 · Ana');
+    lista = await (await chamar('/portaria/lista')).json();
+    assert.equal(lista.especial.presentes, 1);
+    // o check-in especial não mexe na lista dos ingressos
+    assert.equal(lista.presentes, 0);
+
+    assert.equal((await chamar('/portaria/especial/desfazer', { linha: 4, nome: 'Gê' })).status, 422);
+    r = await chamar('/portaria/especial/desfazer', { linha: 4, nome: 'Gê', por: 'Dani', motivo: 'Toquei sem querer' });
+    assert.equal(r.status, 200);
+    assert.deepEqual(armazem.especial[2], ['Gê', false, '']);
+    assert.deepEqual(armazem.desfeitos, [[
+        '16/10 18:42:00', 'Gê', 'Check-in especial', '16/10 18:42:00 · Ana', 'Toquei sem querer', '', 'Dani', 'porta@exemplo.com'
+    ]]);
+});
+
+test('check-in especial: linha mudou na planilha vale o nome; nome apagado ou inválido não grava', async function () {
+    armazem.especial.push(['Nova Pessoa', 'FALSE', ''], ['Pra.  SAFIRA', 'FALSE', '']);
+    // a página viu Safira na linha 2, mas alguém inseriu uma linha acima
+    const r = await chamar('/portaria/especial/entrada', { linha: 2, nome: 'pra. Safira', por: 'Ana' });
+    assert.equal(r.status, 200);
+    assert.equal((await r.json()).linha, 3);
+    assert.equal(armazem.especial[0][1], 'FALSE');
+    assert.equal(armazem.especial[1][1], true);
+
+    assert.equal((await chamar('/portaria/especial/entrada', { linha: 2, nome: 'Ninguém', por: 'Ana' })).status, 404);
+    assert.equal((await chamar('/portaria/especial/entrada', { linha: 1, nome: 'Nova Pessoa' })).status, 422);
+    assert.equal((await chamar('/portaria/especial/entrada', { linha: '2', nome: '' })).status, 422);
+    assert.equal((await chamar('/portaria/especial/entrada', { linha: 2, nome: 'Nova Pessoa' }, {})).status, 401);
+    assert.equal(armazem.especial[0][1], 'FALSE');
+});

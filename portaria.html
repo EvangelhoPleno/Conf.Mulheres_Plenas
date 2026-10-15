@@ -14,9 +14,9 @@
     <!-- Fraunces com os mesmos eixos da landing: o arquivo já está no cache de quem abriu o site -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,500..900,100,1;1,9..144,500..900,100,1&display=swap" rel="stylesheet">
     <!-- ?v= sobe a cada mudança: o celular da porta não pode ficar com a versão velha -->
-    <link rel="stylesheet" href="portaria.css?v=10">
+    <link rel="stylesheet" href="portaria.css?v=11">
     <script src="config.js"></script>
-    <script src="portaria.js?v=10" defer></script>
+    <script src="portaria.js?v=11" defer></script>
 </head>
 <!-- CHECK-IN do dia da conferência (o arquivo, a API e a planilha seguem com
      o nome antigo, "portaria"). Fora do menu e do Google (noindex).
@@ -95,8 +95,10 @@
                 </div>
             </div>
             <nav class="abas" role="tablist" aria-label="Telas do check-in">
-                <button type="button" role="tab" class="aba" data-aba="buscar" aria-selected="true">Buscar</button>
+                <!-- no computador, Buscar e Presentes ficam lado a lado: o botão vira "Inscritas" -->
+                <button type="button" role="tab" class="aba" data-aba="buscar" aria-selected="true"><span class="so-celular">Buscar</span><span class="so-computador">Inscritas</span></button>
                 <button type="button" role="tab" class="aba" data-aba="confirmadas" aria-selected="false">Presentes <span class="aba-conta" data-conta>0</span></button>
+                <button type="button" role="tab" class="aba" data-aba="especial" aria-selected="false">Especial <span class="aba-conta" data-conta-especial>0</span></button>
             </nav>
         </header>
 
@@ -134,6 +136,26 @@
             <ul class="lista lista--entradas" data-confirmadas></ul>
         </section>
         </div>
+
+        <!-- CHECK-IN ESPECIAL: convidadas, líderes e mídia, sem ingresso. Só
+             os nomes da aba "Check-in especial" da planilha -->
+        <section class="painel painel--especial" data-painel="especial" role="tabpanel" hidden>
+            <div class="buscador">
+                <h2 class="especial-titulo">Check-in especial <small>convidadas, líderes e mídia</small></h2>
+                <div class="busca">
+                    <svg class="busca-lupa" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    <input type="search" data-busca-especial placeholder="Nome" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Buscar na lista especial pelo nome">
+                    <button type="button" class="busca-limpar" data-limpar-especial aria-label="Limpar busca" hidden>×</button>
+                </div>
+                <div class="filtros filtros--situacao" role="group" aria-label="Mostrar na lista especial">
+                    <button type="button" class="filtro" data-situacao-especial="todas" aria-pressed="true">Todas <span>0</span></button>
+                    <button type="button" class="filtro filtro--faltam" data-situacao-especial="faltam" aria-pressed="false">Faltam <span>0</span></button>
+                    <button type="button" class="filtro filtro--entraram" data-situacao-especial="entraram" aria-pressed="false">Entraram <span>0</span></button>
+                </div>
+            </div>
+            <p class="dica" data-dica-especial hidden></p>
+            <ul class="lista" data-especial></ul>
+        </section>
 
         <footer class="rodape">
             <span>no check-in: <strong data-por></strong></span>

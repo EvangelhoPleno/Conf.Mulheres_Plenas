@@ -25,6 +25,15 @@ const MOTIVO_LIVRE = 'Outro motivo';
 // colunas da aba (ver backend/scripts/portaria.js): A Nome, B Código,
 // C CPF, D Telefone, E Presente, F Entrada, G Pedido
 const COL = { nome: 0, codigo: 1, cpf: 2, telefone: 3, presente: 4, entrada: 5, pedido: 6 };
+/* Check-in especial: convidadas, líderes e mídia, que não compraram
+   ingresso. Só o nome e a confirmação: A Nome, B Entrou (caixinha), C Entrada
+   (npm run portaria:especial cria a aba; incluir alguém = escrever o nome na
+   coluna A). Sem código: a pessoa é achada pelo nome, conferido na linha. */
+const ABA_ESPECIAL = 'Check-in especial';
+const CABECALHO_ESPECIAL = ['Nome', 'Entrou', 'Entrada'];
+const INTERVALO_ESPECIAL = "'" + ABA_ESPECIAL + "'!A2:C";
+// o que vai na coluna "Código do ingresso" da aba dos desfeitos
+const CODIGO_ESPECIAL = 'Check-in especial';
 
 function texto(valor) {
     return String(valor == null ? '' : valor).trim();
@@ -126,6 +135,25 @@ function visaoDaPorta() {
     };
 }
 
+// "Pra.  Débora" e "pra. debora" são o mesmo nome
+function chaveDoNome(nome) {
+    return texto(nome).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').toLowerCase();
+}
+
+/* linhas da aba Check-in especial (a partir da 2) -> pessoas, em ordem
+   alfabética; linha sem nome fica de fora */
+function listaEspecial(linhas) {
+    const pessoas = [];
+    linhas.forEach(function (l, i) {
+        const nome = texto(l[0]).replace(/\s+/g, ' ');
+        if (!nome) return;
+        pessoas.push({ linha: i + 2, nome: nome, entrada: marcado(l[1]) ? (texto(l[2]) || 'sim') : null });
+    });
+    return pessoas.sort(function (a, b) {
+        return a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' });
+    });
+}
+
 /* linhas da aba Pedidos (valores, 1ª linha = cabeçalho) -> ingressos pagos */
 function pagosDosPedidos(valores) {
     const cab = (valores[0] || []).map(texto);
@@ -156,6 +184,8 @@ function criarArmazemPlanilha() {
     let idPromessa = null;
     let idDesfeitosPromessa = null;
     let formulasPromessa = null;
+    // aba Check-in especial ausente: a lista sai sem ela por 1 minuto
+    let semEspecialAte = 0;
 
     function documento() {
         if (!docPromessa) {
@@ -193,10 +223,37 @@ function criarArmazemPlanilha() {
     }
 
     return {
-        // [pagos, linhas da Portaria a partir da 2]
+        /* pagos + linhas da Portaria e do Check-in especial (a partir da 2),
+           numa leitura só. Sem a aba especial o Google recusa a leitura
+           inteira (400): lê de novo sem ela, e a porta não para. */
         async lerTudo() {
-            const [pedidos, portaria] = await lerVarias([config.google.aba + '!A:Q', ABA + '!A2:G'], 'FORMATTED_VALUE');
-            return { pagos: pagosDosPedidos(pedidos), portaria: portaria };
+            const intervalos = [config.google.aba + '!A:Q', ABA + '!A2:G'];
+            const comEspecial = Date.now() >= semEspecialAte;
+            if (comEspecial) intervalos.push(INTERVALO_ESPECIAL);
+            let lido;
+            try {
+                lido = await lerVarias(intervalos, 'FORMATTED_VALUE');
+            } catch (erro) {
+                if (!comEspecial || !(erro && erro.response && erro.response.status === 400)) throw erro;
+                console.error('[portaria] sem a aba "' + ABA_ESPECIAL + '": rode npm run portaria:especial');
+                semEspecialAte = Date.now() + 60000;
+                lido = await lerVarias(intervalos.slice(0, 2), 'FORMATTED_VALUE');
+            }
+            return { pagos: pagosDosPedidos(lido[0]), portaria: lido[1], especial: lido[2] || [] };
+        },
+        async lerEspecial() {
+            try {
+                return (await lerVarias([INTERVALO_ESPECIAL], 'FORMATTED_VALUE'))[0];
+            } catch (erro) {
+                if (!(erro && erro.response && erro.response.status === 400)) throw erro;
+                const semAba = new Error('A planilha não tem a aba "' + ABA_ESPECIAL + '".');
+                semAba.status = 503;
+                semAba.publico = 'A lista do check-in especial não está na planilha. Avise a organização.';
+                throw semAba;
+            }
+        },
+        async marcarEspecial(linha, presente, entrada) {
+            await gravar("'" + ABA_ESPECIAL + "'!B" + linha + ':C' + linha, [[presente, entrada]]);
         },
         async lerPortaria() {
             return (await lerVarias([ABA + '!A2:G'], 'FORMATTED_VALUE'))[0];
@@ -312,13 +369,26 @@ function criarArmazemMemoria(pagos) {
     const portaria = [];
     const usuarios = [];  // e-mails da aba Usuários Portaria
     const desfeitos = []; // linhas da aba Check-ins desfeitos
+    const especial = [];  // linhas da aba Check-in especial (Nome, Entrou, Entrada)
     return {
         pagos: pagos,
         portaria: portaria,
         usuarios: usuarios,
         desfeitos: desfeitos,
+        especial: especial,
         async lerUsuarios() { return usuarios.map(function (email) { return [email]; }); },
-        async lerTudo() { return { pagos: pagos.slice(), portaria: portaria.map(function (l) { return l.slice(); }) }; },
+        async lerTudo() {
+            return {
+                pagos: pagos.slice(),
+                portaria: portaria.map(function (l) { return l.slice(); }),
+                especial: especial.map(function (l) { return l.slice(); })
+            };
+        },
+        async lerEspecial() { return especial.map(function (l) { return l.slice(); }); },
+        async marcarEspecial(linha, presente, entrada) {
+            especial[linha - 2][1] = presente;
+            especial[linha - 2][2] = entrada;
+        },
         async lerPortaria() { return portaria.map(function (l) { return l.slice(); }); },
         async marcar(linha, presente, entrada) {
             portaria[linha - 2][COL.presente] = presente;
@@ -353,6 +423,21 @@ function criarPortaria(armazem, opcoes) {
         return i < 0 ? null : { linha: i + 2, valores: linhas[i] };
     }
 
+    /* A página manda a linha e o nome que viu. Vale a linha se o nome
+       ainda bate; senão (linhas inseridas ou ordenadas na planilha), a
+       primeira com o mesmo nome. */
+    function acharEspecial(linhas, linha, nome) {
+        const chave = chaveDoNome(nome);
+        const naLinha = linhas[linha - 2];
+        if (naLinha && chave && chaveDoNome(naLinha[0]) === chave) return { linha: linha, valores: naLinha };
+        const i = linhas.findIndex(function (l) { return chave && chaveDoNome(l[0]) === chave; });
+        if (i >= 0) return { linha: i + 2, valores: linhas[i] };
+        const erro = new Error('Nome fora da aba ' + ABA_ESPECIAL + '.');
+        erro.status = 404;
+        erro.publico = 'Este nome não está mais na lista do check-in especial. Atualize a página.';
+        throw erro;
+    }
+
     function naoAchado() {
         const erro = new Error('Ingresso não encontrado entre os pagos.');
         erro.status = 404;
@@ -380,11 +465,51 @@ function criarPortaria(armazem, opcoes) {
         async listar() {
             const dados = await lerTudo(false);
             const ingressos = montarLista(dados.pagos, dados.portaria).map(visaoDaPorta());
+            const pessoas = listaEspecial(dados.especial || []);
             return {
                 ingressos: ingressos,
                 total: ingressos.length,
-                presentes: ingressos.filter(function (i) { return i.entrada; }).length
+                presentes: ingressos.filter(function (i) { return i.entrada; }).length,
+                especial: {
+                    pessoas: pessoas,
+                    total: pessoas.length,
+                    presentes: pessoas.filter(function (p) { return p.entrada; }).length
+                }
             };
+        },
+
+        /* Check-in especial: relê a aba antes de gravar, como o confirmar.
+           Outro celular já marcou: devolve quando e quem, sem gravar. */
+        async confirmarEspecial(linha, nome, por) {
+            const achado = acharEspecial(await armazem.lerEspecial(), linha, nome);
+            const quem = texto(achado.valores[0]).replace(/\s+/g, ' ');
+            if (marcado(achado.valores[1])) {
+                return { situacao: 'ja-entrou', linha: achado.linha, nome: quem, entrada: texto(achado.valores[2]) || 'sim' };
+            }
+            const entrada = carimbo(agora(), por);
+            await armazem.marcarEspecial(achado.linha, true, entrada);
+            cache.em = 0;
+            return { situacao: 'confirmado', linha: achado.linha, nome: quem, entrada: entrada };
+        },
+
+        // como o desfazer: o motivo vai para a aba dos desfeitos antes de desmarcar
+        async desfazerEspecial(linha, nome, quem) {
+            quem = quem || {};
+            const achado = acharEspecial(await armazem.lerEspecial(), linha, nome);
+            if (!marcado(achado.valores[1])) return { situacao: 'desfeito', linha: achado.linha };
+            await armazem.registrarDesfeito([
+                carimbo(agora()),
+                texto(achado.valores[0]),
+                CODIGO_ESPECIAL,
+                texto(achado.valores[2]),
+                quem.motivo,
+                quem.detalhe,
+                quem.por,
+                quem.email
+            ]);
+            await armazem.marcarEspecial(achado.linha, false, '');
+            cache.em = 0;
+            return { situacao: 'desfeito', linha: achado.linha };
         },
 
         /* Relê a Portaria antes de gravar: se outro celular já confirmou
@@ -472,4 +597,4 @@ function usarArmazem(armazem, opcoes) {
     return instancia;
 }
 
-module.exports = { ABA_USUARIOS, ABA_DESFEITOS, CABECALHO_DESFEITOS, MOTIVO_LIVRE, criarArmazemPlanilha, portaria, usarArmazem, criarArmazemMemoria, pagosDosPedidos, montarLista, carimbo, celulasDaLinha };
+module.exports = { ABA_USUARIOS, ABA_DESFEITOS, CABECALHO_DESFEITOS, ABA_ESPECIAL, CABECALHO_ESPECIAL, chaveDoNome, MOTIVO_LIVRE, criarArmazemPlanilha, portaria, usarArmazem, criarArmazemMemoria, pagosDosPedidos, montarLista, carimbo, celulasDaLinha };

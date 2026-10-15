@@ -32,7 +32,14 @@
     var filtro = 'todas';
     var situacao = 'todas';  // lista da busca: todas, faltam ou entraram
     var linhas = {};         // codigo -> { chave, li }: as linhas já montadas da lista
-    var ultimoCodigo = null;
+    /* Check-in especial (aba "Especial"): convidadas, líderes e mídia, só o
+       nome. Cada pessoa é { linha, nome, entrada, especial: true }; a chave
+       é o nome sem acento (o servidor confere linha + nome na planilha). */
+    var especiais = [];
+    var locaisEsp = {};      // chave -> { entrada, em }
+    var linhasEsp = {};      // chave -> { assinatura, li }
+    var situacaoEsp = 'todas';
+    var ultimo = null;       // a pessoa do último aviso (para o "Desfazer" dele)
     var aguardandoDesfazer = null;
     var timerAviso = null;
     var timerLista = null;
@@ -217,6 +224,7 @@
             }
             if (dados.status !== 200) throw new Error(dados.erro || 'falhou');
             receber(dados.ingressos);
+            receberEspecial(dados.especial ? dados.especial.pessoas : []);
             sinal(true);
             desenhar();
             agendar();
@@ -246,10 +254,29 @@
         agrupar();
     }
 
+    function receberEspecial(lista) {
+        var agora = Date.now();
+        especiais = lista.map(function (p) {
+            p.especial = true;
+            p.busca = normalizar(p.nome);
+            p.chave = p.busca;
+            var local = locaisEsp[p.chave];
+            if (local && agora - local.em < LOCAL_VALE_MS) p.entrada = local.entrada;
+            return p;
+        });
+    }
+
     function gravarLocal(i, entrada) {
         i.entrada = entrada;
         i.novo = entrada ? Date.now() : 0;
-        locais[i.codigo] = { entrada: entrada, em: Date.now() };
+        if (i.especial) locaisEsp[i.chave] = { entrada: entrada, em: Date.now() };
+        else locais[i.codigo] = { entrada: entrada, em: Date.now() };
+    }
+
+    // a lista pode ter sido renovada durante a chamada: pega a versão atual
+    function atual(i) {
+        if (!i.especial) return porCodigo[i.codigo] || i;
+        return especiais.filter(function (p) { return p.chave === i.chave; })[0] || i;
     }
 
     function agendar() {
@@ -310,6 +337,7 @@
         placar();
         buscar();
         desenharConfirmadas();
+        buscarEspecial();
     }
 
     function sinal(ok) {
@@ -318,12 +346,17 @@
         s.textContent = ok ? 'ao vivo' : 'sem conexão';
     }
 
+    // o placar do topo conta a lista da aba aberta: inscritas ou especial
     function placar() {
         var presentes = ingressos.filter(function (i) { return i.entrada; }).length;
-        var pct = ingressos.length ? Math.round((presentes / ingressos.length) * 100) : 0;
-        $('[data-presentes]').textContent = presentes;
-        $('[data-total]').textContent = ingressos.length;
-        $('[data-faltam]').textContent = ingressos.length - presentes;
+        var presentesEsp = especiais.filter(function (p) { return p.entrada; }).length;
+        $('[data-conta-especial]').textContent = presentesEsp;
+        var base = aba === 'especial' ? especiais : ingressos;
+        var dentro = aba === 'especial' ? presentesEsp : presentes;
+        var pct = base.length ? Math.round((dentro / base.length) * 100) : 0;
+        $('[data-presentes]').textContent = dentro;
+        $('[data-total]').textContent = base.length;
+        $('[data-faltam]').textContent = base.length - dentro;
         $('[data-porcento]').textContent = pct + '%';
         // o anel tem pathLength 100: o traço é a própria porcentagem
         var anel = $('[data-anel]');
@@ -377,9 +410,12 @@
         li.appendChild(avatar);
         var info = el('div', 'item-info');
         info.appendChild(el('p', 'item-nome', i.nome));
-        info.appendChild(linhaDetalhe(i));
-        var g = seloGrupo(i);
-        if (g) info.appendChild(g);
+        // a lista especial só tem o nome: sem código, CPF nem acompanhantes
+        if (!i.especial) {
+            info.appendChild(linhaDetalhe(i));
+            var g = seloGrupo(i);
+            if (g) info.appendChild(g);
+        }
         li.appendChild(info);
 
         if (i.entrada) {
@@ -514,6 +550,81 @@
         return li;
     }
 
+    /* ---------- check-in especial ----------
+       Mesma ideia da busca: a lista inteira em ordem alfabética, a busca
+       (pelo nome) só estreita, e as linhas são reaproveitadas. */
+    var buscaEsp = $('[data-busca-especial]');
+
+    function buscarEspecial() {
+        var q = normalizar(buscaEsp.value);
+        var lista = $('[data-especial]');
+        var dica = $('[data-dica-especial]');
+        $('[data-limpar-especial]').hidden = !q;
+
+        var partes = q.split(' ');
+        var achados = q ? especiais.filter(function (p) {
+            return partes.every(function (parte) { return p.busca.indexOf(parte) > -1; });
+        }) : especiais;
+        var grupos = {
+            todas: achados,
+            faltam: achados.filter(function (p) { return !p.entrada; }),
+            entraram: achados.filter(function (p) { return p.entrada; })
+        };
+        $$('[data-situacao-especial]').forEach(function (b) {
+            b.setAttribute('aria-pressed', String(b.dataset.situacaoEspecial === situacaoEsp));
+            b.querySelector('span').textContent = grupos[b.dataset.situacaoEspecial].length;
+        });
+        var mostrar = grupos[situacaoEsp];
+
+        var texto = '';
+        if (!especiais.length) texto = 'A lista especial está vazia. Os nomes ficam na aba "Check-in especial" da planilha.';
+        else if (!achados.length) texto = 'Ninguém com esse nome na lista especial. Se a pessoa comprou ingresso, procure na aba Buscar.';
+        else if (!mostrar.length) texto = situacaoEsp === 'entraram'
+            ? 'Ninguém ' + (q ? 'desta busca ' : '') + 'fez check-in ainda.'
+            : 'Todas ' + (q ? 'desta busca ' : '') + 'já entraram.';
+        dica.textContent = texto;
+        dica.hidden = !texto;
+
+        var atualLi = lista.firstChild;
+        mostrar.forEach(function (p) {
+            var velha = linhasEsp[p.chave] && linhasEsp[p.chave].li;
+            var li = linhaGuardadaEsp(p);
+            if (velha !== li && velha === atualLi) {
+                lista.replaceChild(li, velha);
+                atualLi = li;
+            }
+            if (li === atualLi) atualLi = atualLi.nextSibling;
+            else lista.insertBefore(li, atualLi);
+        });
+        while (atualLi) {
+            var proxima = atualLi.nextSibling;
+            lista.removeChild(atualLi);
+            atualLi = proxima;
+        }
+    }
+
+    function linhaGuardadaEsp(p) {
+        var assinatura = [p.nome, p.linha, p.entrada || ''].join('|');
+        var guardada = linhasEsp[p.chave];
+        if (guardada && guardada.assinatura === assinatura) return guardada.li;
+        var li = cartaoBusca(p);
+        linhasEsp[p.chave] = { assinatura: assinatura, li: li };
+        return li;
+    }
+
+    buscaEsp.addEventListener('input', buscarEspecial);
+    $('[data-limpar-especial]').addEventListener('click', function () {
+        buscaEsp.value = '';
+        buscarEspecial();
+        buscaEsp.focus();
+    });
+    $$('[data-situacao-especial]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            situacaoEsp = b.dataset.situacaoEspecial;
+            buscarEspecial();
+        });
+    });
+
     // no celular o teclado cobriria a lista: o cursor só vai sozinho para a
     // busca no computador, ou quando a pessoa já estava buscando
     function focarBusca(mesmoNoCelular) {
@@ -550,8 +661,12 @@
         aba = nome;
         $$('[data-aba]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.aba === nome)); });
         $$('[data-painel]').forEach(function (p) { p.hidden = p.dataset.painel !== nome; });
+        // no computador Buscar e Presentes ficam sempre lado a lado: some o par inteiro
+        $('.paineis').hidden = nome === 'especial';
+        placar();
         window.scrollTo(0, 0);
         if (nome === 'buscar') focarBusca();
+        else if (nome === 'especial' && window.matchMedia('(min-width: 1100px)').matches) buscaEsp.focus({ preventScroll: true });
     }
 
     $$('[data-aba]').forEach(function (b) {
@@ -579,16 +694,23 @@
 
     function confirmar(i, botao) {
         ocupado(botao, true);
-        api('/portaria/entrada', { codigo: i.codigo, por: sessao.por }).then(function (r) {
+        var pedido = i.especial
+            ? api('/portaria/especial/entrada', { linha: i.linha, nome: i.nome, por: sessao.por })
+            : api('/portaria/entrada', { codigo: i.codigo, por: sessao.por });
+        pedido.then(function (r) {
             ocupado(botao, false);
-            i = porCodigo[i.codigo] || i;  // a lista pode ter sido renovada no meio
+            i = atual(i);
             if (r.status === 200 || r.status === 409) {
                 gravarLocal(i, r.entrada);
                 if (r.status === 409) i.novo = 0;
-                ultimoCodigo = i.codigo;
+                ultimo = i;
                 desenhar();
                 sinal(true);
-                if (r.status === 200) {
+                if (i.especial) {
+                    var h = lerEntrada(r.entrada);
+                    if (r.status === 200) aviso('ok', 'Check-in confirmado', i.nome, 'às ' + h.hora + ' · check-in especial', true, '');
+                    else aviso('ja', 'Check-in já feito', i.nome, 'Entrou às ' + (h.hora || r.entrada) + '.' + (h.por ? ' Check-in feito por ' + h.por + '.' : ''), false);
+                } else if (r.status === 200) {
                     var resta = semUso(i);
                     aviso('ok', 'Check-in confirmado', i.nome, 'às ' + lerEntrada(r.entrada).hora + ' · ' + i.codigo, true,
                         resta ? 'Este CPF tem mais ' + resta + (resta > 1 ? ' ingressos' : ' ingresso') + ' sem uso (acompanhantes).' : '');
@@ -629,7 +751,7 @@
         aguardandoDesfazer = i;
         var e = lerEntrada(i.entrada);
         $('[data-pergunta-nome]').textContent = i.nome;
-        $('[data-pergunta-detalhe]').textContent = i.codigo + ' · check-in às ' + (e.hora || i.entrada) + (e.por ? ', por ' + e.por : '');
+        $('[data-pergunta-detalhe]').textContent = (i.especial ? 'Check-in especial' : i.codigo) + ' · check-in às ' + (e.hora || i.entrada) + (e.por ? ', por ' + e.por : '');
         formDesfazer.reset();
         ajustarMotivo();
         $('[data-toast]').hidden = true;  // o recado do desfazer anterior cobriria os botões
@@ -666,9 +788,12 @@
 
     function desfazer(i, botao, motivo, detalhe) {
         ocupado(botao, true);
-        api('/portaria/desfazer', { codigo: i.codigo, por: sessao.por, motivo: motivo, detalhe: detalhe }).then(function (r) {
+        var pedido = i.especial
+            ? api('/portaria/especial/desfazer', { linha: i.linha, nome: i.nome, por: sessao.por, motivo: motivo, detalhe: detalhe })
+            : api('/portaria/desfazer', { codigo: i.codigo, por: sessao.por, motivo: motivo, detalhe: detalhe });
+        pedido.then(function (r) {
             ocupado(botao, false);
-            i = porCodigo[i.codigo] || i;
+            i = atual(i);
             if (r.status !== 200) {
                 fecharPergunta();
                 aviso('erro', 'Não desfez', i.nome, r.erro || 'Tente de novo.', false);
@@ -678,7 +803,8 @@
             fecharPergunta();
             fecharAviso();
             desenhar();
-            toast('Check-in de ' + i.nome.split(' ')[0] + ' desfeito.');
+            // na lista especial o nome pode ser "Pra. Safira": vai inteiro
+            toast('Check-in de ' + (i.especial ? i.nome : i.nome.split(' ')[0]) + ' desfeito.');
         }).catch(function () {
             ocupado(botao, false);
             fecharPergunta();
@@ -724,18 +850,21 @@
     // mesmo CPF continuam na tela)
     function proxima() {
         var limpar = $('[data-aviso]').classList.contains('aviso--ok') && $('[data-aviso-extra]').hidden;
-        var buscava = Boolean(busca.value.trim());
+        var campo = aba === 'especial' ? buscaEsp : busca;
+        var buscava = Boolean(campo.value.trim());
         fecharAviso();
-        if (limpar) busca.value = '';
+        if (limpar) campo.value = '';
         buscar();
+        buscarEspecial();
         // quem fez o check-in rolando a lista continua onde estava
         if (aba === 'buscar') focarBusca(buscava);
+        else if (aba === 'especial' && buscava) buscaEsp.focus({ preventScroll: true });
     }
 
     $('[data-aviso-ok]').addEventListener('click', proxima);
     // o "Desfazer" do aviso verde também passa pela pergunta do motivo
     $('[data-aviso-desfazer]').addEventListener('click', function () {
-        var i = porCodigo[ultimoCodigo];
+        var i = ultimo && atual(ultimo);
         fecharAviso();
         if (i) perguntarDesfazer(i);
     });
