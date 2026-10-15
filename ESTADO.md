@@ -5,7 +5,7 @@ Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
 
-## Check-in especial (15/10): convidadas, líderes e mídia
+## Check-in especial (15/10): convidadas, líderes e mídia — no ar (commit `3e1ea6e`)
 
 Pedido do Jadison: as pessoas do PDF `CONFERÊNCIA DE MULHERES PLENAS 🤎.pdf`
 (na pasta de cima, fora do Git) entram sem ingresso e também fazem check-in.
@@ -35,7 +35,10 @@ Pedido do Jadison: as pessoas do PDF `CONFERÊNCIA DE MULHERES PLENAS 🤎.pdf`
   testes novos); Chrome sem janela com a API simulada (320, 390, 820, 1440):
   66 nomes, busca, check-in, desfazer com motivo, volta ao placar das
   inscritas, sem rolagem lateral, zero erro de JS; na planilha real, marcar e
-  "já entrou" na linha da Aline, depois desmarcada à mão.
+  "já entrou" na linha da Aline, depois desmarcada à mão. No ar em 15/10:
+  página e JS `v=11` servidos, `/api/saude` `ok:true`, rota especial sem
+  sessão 401. **Não conferido:** um celular de verdade e um check-in especial
+  pelo site no ar.
 
 ## Aba Portaria acompanha a aba Pedidos sozinha (13/10) — no ar (commit `cf05f7f`)
 
