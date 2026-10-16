@@ -425,6 +425,32 @@ function criarPortaria(armazem, opcoes) {
         return dados;
     }
 
+    /* O que acabou de ser gravado vai também para a cópia em memória, em vez
+       de jogá-la fora: com 5 celulares na fila, jogar fora a cada check-in
+       fazia a lista ser relida a cada toque (estourava as 60 leituras/min). */
+    function anotar(qual, achar, presente, entrada) {
+        const linhas = cache.dados && cache.dados[qual];
+        const linha = linhas && linhas.find(achar);
+        if (!linha) { cache.em = 0; return; }
+        const [colPresente, colEntrada] = qual === 'portaria' ? [COL.presente, COL.entrada] : [1, 2];
+        linha[colPresente] = presente;
+        linha[colEntrada] = entrada;
+    }
+    function porCodigo(codigo) { return function (l) { return texto(l[COL.codigo]) === codigo; }; }
+    // a linha da aba especial começa na 2; o nome confere que é a mesma pessoa
+    function especialNa(linha, nome) { return function (l, i) { return i === linha - 2 && chaveDoNome(l[0]) === chaveDoNome(nome); }; }
+
+    /* Dois celulares tocando a mesma pessoa no mesmo segundo: nesta instância,
+       o segundo espera o primeiro gravar e recebe "já entrou", em vez de os
+       dois lerem "não entrou" e os dois responderem "confirmado". */
+    const filas = new Map();
+    function emFila(chave, acao) {
+        const vez = (filas.get(chave) || Promise.resolve()).catch(function () {}).then(acao);
+        filas.set(chave, vez);
+        vez.catch(function () {}).then(function () { if (filas.get(chave) === vez) filas.delete(chave); });
+        return vez;
+    }
+
     function acharNaPortaria(linhas, codigo) {
         const i = linhas.findIndex(function (l) { return texto(l[COL.codigo]) === codigo; });
         return i < 0 ? null : { linha: i + 2, valores: linhas[i] };
@@ -487,106 +513,121 @@ function criarPortaria(armazem, opcoes) {
 
         /* Check-in especial: relê a aba antes de gravar, como o confirmar.
            Outro celular já marcou: devolve quando e quem, sem gravar. */
-        async confirmarEspecial(linha, nome, por) {
-            const achado = acharEspecial(await armazem.lerEspecial(), linha, nome);
-            const quem = texto(achado.valores[0]).replace(/\s+/g, ' ');
-            if (marcado(achado.valores[1])) {
-                return { situacao: 'ja-entrou', linha: achado.linha, nome: quem, entrada: texto(achado.valores[2]) || 'sim' };
-            }
-            const entrada = carimbo(agora(), por);
-            await armazem.marcarEspecial(achado.linha, true, entrada);
-            cache.em = 0;
-            return { situacao: 'confirmado', linha: achado.linha, nome: quem, entrada: entrada };
+        confirmarEspecial(linha, nome, por) {
+            return emFila('e:' + chaveDoNome(nome), async function () {
+                const achado = acharEspecial(await armazem.lerEspecial(), linha, nome);
+                const quem = texto(achado.valores[0]).replace(/\s+/g, ' ');
+                if (marcado(achado.valores[1])) {
+                    return { situacao: 'ja-entrou', linha: achado.linha, nome: quem, entrada: texto(achado.valores[2]) || 'sim' };
+                }
+                const entrada = carimbo(agora(), por);
+                await armazem.marcarEspecial(achado.linha, true, entrada);
+                anotar('especial', especialNa(achado.linha, quem), true, entrada);
+                return { situacao: 'confirmado', linha: achado.linha, nome: quem, entrada: entrada };
+            });
         },
 
         // como o desfazer: o motivo vai para a aba dos desfeitos antes de desmarcar
-        async desfazerEspecial(linha, nome, quem) {
-            quem = quem || {};
-            const achado = acharEspecial(await armazem.lerEspecial(), linha, nome);
-            if (!marcado(achado.valores[1])) return { situacao: 'desfeito', linha: achado.linha };
-            await armazem.registrarDesfeito([
-                carimbo(agora()),
-                texto(achado.valores[0]),
-                CODIGO_ESPECIAL,
-                texto(achado.valores[2]),
-                quem.motivo,
-                quem.detalhe,
-                quem.por,
-                quem.email
-            ]);
-            await armazem.marcarEspecial(achado.linha, false, '');
-            cache.em = 0;
-            return { situacao: 'desfeito', linha: achado.linha };
+        desfazerEspecial(linha, nome, quem) {
+            return emFila('e:' + chaveDoNome(nome), function () { return desfazerEspecial(linha, nome, quem); });
         },
 
-        /* Relê a Portaria antes de gravar: se outro celular já confirmou
-           este código, devolve quando e quem, sem gravar de novo. */
-        async confirmar(codigo, por) {
+        confirmar(codigo, por) {
             codigo = texto(codigo).toUpperCase();
-            const linhas = await armazem.lerPortaria();
-            let achado = acharNaPortaria(linhas, codigo);
-            let pago;
-
-            if (achado && marcado(achado.valores[COL.presente])) {
-                return { situacao: 'ja-entrou', codigo: codigo, entrada: texto(achado.valores[COL.entrada]) || 'sim' };
-            }
-            // confere que continua PAGO (e acha quem pagou depois da lista)
-            const dados = await lerTudo(!achado);
-            pago = dados.pagos.find(function (p) { return p.codigo === codigo; });
-            if (!pago) throw naoAchado();
-
-            const entrada = carimbo(agora(), por);
-            if (achado) {
-                await armazem.marcar(achado.linha, true, entrada);
-            } else {
-                await armazem.acrescentar([linhaDaAba(pago, true, entrada)]);
-            }
-            cache.em = 0;
-            return { situacao: 'confirmado', codigo: codigo, entrada: entrada };
+            return emFila('c:' + codigo, function () { return confirmar(codigo, por); });
         },
 
-        /* Pedido que acabou de ser pago: os ingressos dele entram na aba na
-           hora (pedidoService.confirmarPagamento). Relê a aba antes, para o
-           webhook e a página de pagamento não gravarem a mesma linha duas
-           vezes. Devolve quantas linhas entraram. */
-        async incluir(pedido) {
-            const codigos = (pedido.codigos || []).map(texto).filter(Boolean);
-            if (!codigos.length) return 0;
-            const linhas = await armazem.lerPortaria();
-            const faltam = codigos.filter(function (codigo) { return !acharNaPortaria(linhas, codigo); });
-            if (!faltam.length) return 0;
-            await armazem.acrescentar(faltam.map(function (codigo) {
-                return linhaDaAba({ nome: pedido.nome, codigo: codigo, cpf: pedido.cpf, telefone: pedido.telefone, pedido: pedido.pedidoId }, false, '');
-            }));
-            cache.em = 0;
-            return faltam.length;
-        },
+        incluir: incluir,
 
-        /* quem = { motivo, detalhe, por, email }, já conferido na rota. O
-           registro é gravado ANTES de desmarcar: se ele falhar, o check-in
-           continua valendo e a página avisa que não desfez. */
-        async desfazer(codigo, quem) {
+        desfazer(codigo, quem) {
             codigo = texto(codigo).toUpperCase();
-            quem = quem || {};
-            const achado = acharNaPortaria(await armazem.lerPortaria(), codigo);
-            if (!achado) throw naoAchado();
-            // outro celular já desfez: nada a desmarcar nem a registrar de novo
-            if (!marcado(achado.valores[COL.presente])) return { situacao: 'desfeito', codigo: codigo };
-            await armazem.registrarDesfeito([
-                carimbo(agora()),
-                texto(achado.valores[COL.nome]),
-                codigo,
-                texto(achado.valores[COL.entrada]),
-                quem.motivo,
-                quem.detalhe,
-                quem.por,
-                quem.email
-            ]);
-            await armazem.marcar(achado.linha, false, '');
-            cache.em = 0;
-            return { situacao: 'desfeito', codigo: codigo };
+            return emFila('c:' + codigo, function () { return desfazer(codigo, quem); });
         }
     };
+
+    async function desfazerEspecial(linha, nome, quem) {
+        quem = quem || {};
+        const achado = acharEspecial(await armazem.lerEspecial(), linha, nome);
+        if (!marcado(achado.valores[1])) return { situacao: 'desfeito', linha: achado.linha };
+        await armazem.registrarDesfeito([
+            carimbo(agora()),
+            texto(achado.valores[0]),
+            CODIGO_ESPECIAL,
+            texto(achado.valores[2]),
+            quem.motivo,
+            quem.detalhe,
+            quem.por,
+            quem.email
+        ]);
+        await armazem.marcarEspecial(achado.linha, false, '');
+        anotar('especial', especialNa(achado.linha, achado.valores[0]), false, '');
+        return { situacao: 'desfeito', linha: achado.linha };
+    }
+
+    /* Relê a planilha antes de gravar: se outro celular já confirmou este
+       código, devolve quando e quem, sem gravar de novo. Uma leitura só
+       (Pedidos + Portaria juntas): confere que continua PAGO, acha quem pagou
+       depois da lista e ainda renova a lista dos outros celulares. */
+    async function confirmar(codigo, por) {
+        const dados = await lerTudo(true);
+        const achado = acharNaPortaria(dados.portaria, codigo);
+        if (achado && marcado(achado.valores[COL.presente])) {
+            return { situacao: 'ja-entrou', codigo: codigo, entrada: texto(achado.valores[COL.entrada]) || 'sim' };
+        }
+        const pago = dados.pagos.find(function (p) { return p.codigo === codigo; });
+        if (!pago) throw naoAchado();
+
+        const entrada = carimbo(agora(), por);
+        if (achado) {
+            await armazem.marcar(achado.linha, true, entrada);
+            anotar('portaria', porCodigo(codigo), true, entrada);
+        } else {
+            await armazem.acrescentar([linhaDaAba(pago, true, entrada)]);
+            cache.em = 0;
+        }
+        return { situacao: 'confirmado', codigo: codigo, entrada: entrada };
+    }
+
+    /* Pedido que acabou de ser pago: os ingressos dele entram na aba na
+       hora (pedidoService.confirmarPagamento). Relê a aba antes, para o
+       webhook e a página de pagamento não gravarem a mesma linha duas
+       vezes. Devolve quantas linhas entraram. */
+    async function incluir(pedido) {
+        const codigos = (pedido.codigos || []).map(texto).filter(Boolean);
+        if (!codigos.length) return 0;
+        const linhas = await armazem.lerPortaria();
+        const faltam = codigos.filter(function (codigo) { return !acharNaPortaria(linhas, codigo); });
+        if (!faltam.length) return 0;
+        await armazem.acrescentar(faltam.map(function (codigo) {
+            return linhaDaAba({ nome: pedido.nome, codigo: codigo, cpf: pedido.cpf, telefone: pedido.telefone, pedido: pedido.pedidoId }, false, '');
+        }));
+        cache.em = 0;
+        return faltam.length;
+    }
+
+    /* quem = { motivo, detalhe, por, email }, já conferido na rota. O
+       registro é gravado ANTES de desmarcar: se ele falhar, o check-in
+       continua valendo e a página avisa que não desfez. */
+    async function desfazer(codigo, quem) {
+        quem = quem || {};
+        const achado = acharNaPortaria(await armazem.lerPortaria(), codigo);
+        if (!achado) throw naoAchado();
+        // outro celular já desfez: nada a desmarcar nem a registrar de novo
+        if (!marcado(achado.valores[COL.presente])) return { situacao: 'desfeito', codigo: codigo };
+        await armazem.registrarDesfeito([
+            carimbo(agora()),
+            texto(achado.valores[COL.nome]),
+            codigo,
+            texto(achado.valores[COL.entrada]),
+            quem.motivo,
+            quem.detalhe,
+            quem.por,
+            quem.email
+        ]);
+        await armazem.marcar(achado.linha, false, '');
+        anotar('portaria', porCodigo(codigo), false, '');
+        return { situacao: 'desfeito', codigo: codigo };
+    }
 }
 
 let instancia = null;

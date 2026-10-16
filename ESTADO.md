@@ -1,9 +1,42 @@
-# Estado do projeto — 15/10/2026
+# Estado do projeto — 16/10/2026
 
 Resumo para retomar o trabalho sem reler o histórico. Evento: **Conferência
 Mulheres Plenas, 16 e 17 de outubro de 2026, Paragominas–PA**.
 
 ---
+
+## Auditoria do check-in para 4–5 celulares (16/10, manhã do evento)
+
+Pedido do Jadison: garantir o check-in com 4 a 5 pessoas da equipe ao
+mesmo tempo. Código do check-in relido inteiro (serviço, rotas, página).
+- **Corrigido, cota do Google no pico da fila:** confirmar fazia 2 leituras
+  (Portaria e depois Pedidos+Portaria) e jogava fora a cópia da lista, então
+  o próximo "atualizar" de cada celular lia de novo. Com 5 pessoas fazendo ~5
+  check-ins/min cada, passava das 60 leituras/min (o Google responde 429 e
+  cada toque demora vários segundos). Agora **confirmar = 1 leitura** (Pedidos
+  + Portaria + especial numa só, `lerTudo(true)`) e o que foi gravado entra
+  na cópia em memória (`anotar`), sem reler. Pico estimado: ~40 leituras/min.
+- **Corrigido, dois celulares na mesma pessoa no mesmo segundo:** os dois
+  recebiam "confirmado". Agora, na mesma instância da Vercel, o 2º espera o 1º
+  (`emFila`, por código ou por nome especial) e recebe "Check-in já feito ·
+  por Ana". Instâncias diferentes ainda podem empatar (raro, e o pior caso é a
+  mesma pessoa marcada duas vezes, sem dano).
+- Pedir código de acesso: limite por IP subiu de 12 para 30 a cada 10 min
+  (os 5 celulares da equipe dividem o Wi-Fi da igreja); o de 4 por e-mail
+  ficou.
+- Página `?v=15`: nome especial repetido na planilha vira dois cartões (antes
+  os dois dividiam o mesmo código interno `ESP:<nome>`); "Sem conexão" no
+  check-in não afirma mais que não gravou (a resposta pode ter se perdido
+  depois da gravação; tocar de novo é seguro).
+- Provado: `npm test` 68 verdes + as mesmas 6 de data do Mercado Pago (3
+  testes novos: corrida com o Google lento, 1 leitura por check-in, 5 ao mesmo
+  tempo; os 2 primeiros falham no código antigo). Planilha real só lida, com a
+  gravação trocada por um registro: 459 inscritas, 67 especiais, 0 presentes;
+  1 leitura no check-in e a lista logo depois sem leitura. Chrome sem janela,
+  2 abas (celulares A e B) contra a API local com planilha em memória (459 +
+  4, um nome repetido, Google lento de 300 ms): um "confirmado" e um "já
+  feito por Bia" para a mesma pessoa, os dois "Maria José" confirmados
+  separados, B vê tudo ao atualizar, zero erro de JS.
 
 ## Check-in especial (15/10): convidadas, líderes e mídia — no ar (commit `3e1ea6e`)
 

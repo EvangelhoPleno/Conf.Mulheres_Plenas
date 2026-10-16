@@ -353,3 +353,83 @@ test('check-in especial: linha mudou na planilha vale o nome; nome apagado ou in
     assert.equal((await chamar('/portaria/especial/entrada', { linha: 2, nome: 'Nova Pessoa' }, {})).status, 401);
     assert.equal(armazem.especial[0][1], 'FALSE');
 });
+
+/* Dia do evento: 4 a 5 celulares na mesma fila. A planilha aceita 60
+   leituras por minuto (a mesma conta do site): cada check-in pode custar
+   uma leitura só, e a lista dos outros celulares não pode ser relida a cada
+   toque. */
+function contarLeituras() {
+    const conta = { n: 0 };
+    ['lerTudo', 'lerPortaria', 'lerEspecial'].forEach(function (nome) {
+        const original = armazem[nome];
+        armazem[nome] = function () { conta.n++; return original.apply(this, arguments); };
+    });
+    return conta;
+}
+
+// o Google demora: sem isso a planilha em memória responde antes de o 2º toque chegar
+function lerDevagar() {
+    ['lerTudo', 'lerPortaria', 'lerEspecial'].forEach(function (nome) {
+        const original = armazem[nome];
+        armazem[nome] = async function () {
+            const lido = await original.apply(this, arguments);
+            await new Promise(function (ok) { setTimeout(ok, 50); });
+            return lido;
+        };
+    });
+}
+
+test('dois celulares tocando a mesma pessoa no mesmo instante: um confirma, o outro recebe "já entrou"', async function () {
+    lerDevagar();
+    const respostas = await Promise.all([
+        chamar('/portaria/entrada', { codigo: ANA, por: 'Carla' }),
+        chamar('/portaria/entrada', { codigo: ANA, por: 'Dani' })
+    ]);
+    assert.deepEqual(respostas.map(function (r) { return r.status; }).sort(), [200, 409]);
+
+    armazem.especial.push(['Pra. Safira', 'FALSE', '', 'Líder']);
+    const especiais = await Promise.all([
+        chamar('/portaria/especial/entrada', { linha: 2, nome: 'Pra. Safira', por: 'Carla' }),
+        chamar('/portaria/especial/entrada', { linha: 2, nome: 'Pra. Safira', por: 'Dani' })
+    ]);
+    assert.deepEqual(especiais.map(function (r) { return r.status; }).sort(), [200, 409]);
+});
+
+test('check-in custa uma leitura; a lista dos outros celulares já sai com ele, sem ler de novo', async function () {
+    armazem.especial.push(['Gê', 'FALSE', '']);
+    await chamar('/portaria/lista');
+    const conta = contarLeituras();
+
+    assert.equal((await chamar('/portaria/entrada', { codigo: ANA, por: 'Carla' })).status, 200);
+    assert.equal(conta.n, 1);
+    let lista = await (await chamar('/portaria/lista')).json();
+    assert.equal(conta.n, 1);
+    assert.equal(lista.presentes, 1);
+    assert.equal(lista.ingressos.find(function (i) { return i.codigo === ANA; }).entrada, '16/10 18:42:00 · Carla');
+
+    assert.equal((await chamar('/portaria/especial/entrada', { linha: 2, nome: 'Gê', por: 'Carla' })).status, 200);
+    assert.equal(conta.n, 2);
+    lista = await (await chamar('/portaria/lista')).json();
+    assert.equal(conta.n, 2);
+    assert.equal(lista.especial.presentes, 1);
+
+    // desfazer também aparece na hora para os outros
+    assert.equal((await chamar('/portaria/desfazer', { codigo: ANA, por: 'Carla', motivo: 'Toquei sem querer' })).status, 200);
+    lista = await (await chamar('/portaria/lista')).json();
+    assert.equal(lista.presentes, 0);
+});
+
+test('cinco celulares confirmando pessoas diferentes ao mesmo tempo: todas gravadas', async function () {
+    const codigos = ['MP26-CCCC-CCC2', 'MP26-CCCC-CCC3', 'MP26-CCCC-CCC4', 'MP26-CCCC-CCC5', 'MP26-CCCC-CCC6'];
+    codigos.forEach(function (codigo, n) {
+        armazem.pagos.push({ codigo: codigo, nome: 'Pessoa ' + n, cpf: '', pedido: 'MP' + n });
+        armazem.portaria.push(['PESSOA ' + n, codigo, '', '', 'FALSE', '', 'MP' + n]);
+    });
+    const respostas = await Promise.all(codigos.map(function (codigo, n) {
+        return chamar('/portaria/entrada', { codigo: codigo, por: 'Porta ' + n });
+    }));
+    assert.deepEqual(respostas.map(function (r) { return r.status; }), [200, 200, 200, 200, 200]);
+    const lista = await (await chamar('/portaria/lista')).json();
+    assert.equal(lista.presentes, 5);
+    assert.equal(armazem.portaria.filter(function (l) { return l[4] === true; }).length, 5);
+});

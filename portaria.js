@@ -237,9 +237,13 @@
         var agora = Date.now();
         var novos = {};
         ingressos.forEach(function (i) { if (i.novo) novos[i.codigo] = i.novo; });
+        var usados = {};
         var todos = lista.concat((especiais || []).map(function (p) {
             p.especial = true;
             p.codigo = 'ESP:' + normalizar(p.nome);
+            // o mesmo nome escrito duas vezes na planilha: cada linha é um cartão
+            if (usados[p.codigo]) p.codigo += '#' + p.linha;
+            usados[p.codigo] = true;
             p.cpfMeio = '';
             return p;
         }));
@@ -654,7 +658,9 @@
         }).catch(function () {
             ocupado(botao, false);
             sinal(false);
-            aviso('erro', 'Sem conexão', i.nome, 'O check-in NÃO foi registrado. Confira a internet e toque de novo.', false);
+            // a resposta pode ter se perdido depois da gravação: tocar de
+            // novo é seguro (se já gravou, volta "Check-in já feito")
+            aviso('erro', 'Sem conexão', i.nome, 'Não deu para confirmar o check-in. Confira a internet e toque de novo: se ele já tiver sido feito, a tela avisa.', false);
         });
     }
 

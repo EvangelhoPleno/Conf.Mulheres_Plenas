@@ -19,8 +19,10 @@ const { PADRAO_INGRESSO } = require('../utils/codigos');
 const router = express.Router();
 const DEZ_MIN = 10 * 60 * 1000;
 
-// pedir código: por IP (os celulares da porta dividem o Wi-Fi) e por e-mail
-const pedidosPorIp = limitar({ janelaMs: DEZ_MIN, maximo: 12 });
+// pedir código: por IP (os celulares da porta dividem o Wi-Fi) e por e-mail.
+// 5 pessoas da equipe entrando juntas, com um ou outro reenvio, passavam de 12;
+// o e-mail só sai para quem está na aba, e o limite por e-mail continua 4
+const pedidosPorIp = limitar({ janelaMs: DEZ_MIN, maximo: 30 });
 const pedidosPorEmail = limitar({ janelaMs: DEZ_MIN, maximo: 4, chave: function (req) { return 'e:' + req.emailPortaria; } });
 // código errado: 5 por e-mail e 15 por IP a cada 10 minutos. O do e-mail
 // reserva a vaga na chegada: chutes mandados juntos não passam do limite
